@@ -1,75 +1,78 @@
+import json
 import os
 import time
 from collections import defaultdict
-from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import HTMLResponse, JSONResponse
-from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
-from dotenv import load_dotenv
-from generator import generate_accounting_task, validate_balance_sheet
+from pathlib import Path
 
-load_dotenv()
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import FileResponse, JSONResponse
+
+from generator import TOPIC_PROMPTS, generate_task_from_claude
+
+BASE_DIR = Path(__file__).resolve().parent
 
 app = FastAPI(title="Accounting Trainer")
 
-# Простой и надежный Rate Limiting по IP (максимум 10 запросов в минуту на генерацию)
+# Rate limiting по IP: максимум 10 генераций в минуту на пользователя
 REQUEST_COUNTS = defaultdict(list)
 RATE_LIMIT_WINDOW = 60  # секунды
-RATE_LIMIT_MAX = 10     # количество запросов
+RATE_LIMIT_MAX = 10
+
+
+def client_ip(request: Request) -> str:
+    # За прокси Render request.client.host — это адрес прокси (один на всех),
+    # реальный IP пользователя приходит в X-Forwarded-For.
+    forwarded = request.headers.get("x-forwarded-for")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+    return request.client.host if request.client else "unknown"
+
 
 @app.middleware("http")
 async def rate_limit_middleware(request: Request, call_next):
     if request.url.path.startswith("/api/generate"):
-        client_ip = request.client.host if request.client else "unknown"
+        ip = client_ip(request)
         now = time.time()
-        
-        # Очищаем старые запросы вне окна
-        REQUEST_COUNTS[client_ip] = [t for t in REQUEST_COUNTS[client_ip] if now - t < RATE_LIMIT_WINDOW]
-        
-        if len(REQUEST_COUNTS[client_ip]) >= RATE_LIMIT_MAX:
+        recent = [t for t in REQUEST_COUNTS[ip] if now - t < RATE_LIMIT_WINDOW]
+        if len(recent) >= RATE_LIMIT_MAX:
+            REQUEST_COUNTS[ip] = recent
             return JSONResponse(
                 status_code=429,
-                content={"detail": "Too many requests. Please wait a minute before generating a new task."}
+                content={"detail": "Too many requests. Please wait a minute before generating a new task."},
             )
-        
-        REQUEST_COUNTS[client_ip].append(now)
-        
-    response = await call_next(request)
-    return response
+        recent.append(now)
+        REQUEST_COUNTS[ip] = recent
+    return await call_next(request)
 
-class ValidationRequest(BaseModel):
-    user_answers: dict
-    correct_key: dict
 
-@app.get("/", response_class=HTMLResponse)
-async def read_root():
-    if os.path.exists("index.html"):
-        with open("index.html", "r", encoding="utf-8") as f:
-            return f.read()
-    return "index.html not found", 404
+@app.get("/")
+def read_root():
+    return FileResponse(BASE_DIR / "index.html")
+
 
 @app.get("/health")
-async def health_check():
-    """Эндпоинт для пинга, чтобы сервер не засыпал от бездействия"""
+def health_check():
+    """Пинг, чтобы сервер не засыпал от бездействия."""
     return {"status": "ok"}
 
-@app.get("/api/generate/{task_type}")
-async def generate_task(task_type: str):
+
+@app.get("/api/generate/{topic}")
+def generate_task(topic: str):
+    if topic not in TOPIC_PROMPTS:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Unknown topic '{topic}'. Available: {', '.join(TOPIC_PROMPTS)}",
+        )
     try:
-        task = generate_accounting_task(task_type)
-        return task
+        return generate_task_from_claude(topic)
+    except json.JSONDecodeError as e:
+        raise HTTPException(status_code=502, detail=f"Model returned invalid JSON: {e}")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/api/validate")
-async def validate_task(data: ValidationRequest):
-    try:
-        result = validate_balance_sheet(data.user_answers, data.correct_key)
-        return result
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
     import uvicorn
+
     port = int(os.environ.get("PORT", 8000))
-    uvicorn.run("app:app", host="0.0.0.0", port=port, reload=True)
+    uvicorn.run("app:app", host="0.0.0.0", port=port)
