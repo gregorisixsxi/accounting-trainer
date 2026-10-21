@@ -1,5 +1,7 @@
 import json
 import os
+import random
+import re
 from pathlib import Path
 
 from anthropic import Anthropic
@@ -23,11 +25,11 @@ MODEL =os.getenv("ANTHROPIC_MODEL", "claude-haiku-5-5")
 TOPIC_PROMPTS = {
     "income_statement": (
         "Generate an Income Statement practice exercise (Nature of expense or Function of "
-        "expense method) similar to introductory financial accounting tasks. Use data in million HUF."
+        "expense method) similar to introductory financial accounting tasks. Use USD ($) amounts, in whole numbers."
     ),
     "balance_sheet": (
         "Generate a Balance Sheet practice exercise with mixed assets, liabilities, and equity "
-        "items in thousand HUF, requiring the student to compile a formal balance sheet."
+        "items in USD ($), requiring the student to compile a formal balance sheet. Use a realistic English company name such as 'FitLife Gym & Club' and standard English item names such as 'Unearned Revenue', 'Retained Earnings', 'Equipment', 'Accounts Receivable'."
     ),
     "terminology": (
         "Generate a short accounting terminology and concepts quiz in the style of an "
@@ -41,12 +43,22 @@ TOPIC_PROMPTS = {
     ),
 }
 
+ENGLISH_RULE = (
+    "STRICT REQUIREMENT: All generated content MUST be 100% in English. Never use Russian or any "
+    "other language for company names, transaction descriptions, financial items, options, or "
+    "categories. Use USD ($) for amounts and international GAAP/IFRS account names (e.g., "
+    "'Accounts Payable', 'Raw Materials', 'Work in Process', 'Equipment', 'Debit:', 'Credit:'). "
+    "Do NOT use numeric account codes (like 10, 20, 43). Company names must be English-style names "
+    "(e.g. 'FitLife Gym & Club', 'Maple Street Bakery'). "
+)
+
 BALANCE_SHEET_SYSTEM_PROMPT = (
+    ENGLISH_RULE +
     "You are an expert financial accounting professor. "
     "Generate a brand new, randomized balance sheet exercise matching introductory university "
     "standards. The description lists 8-12 items (cash, receivables, inventory, equipment, "
     "buildings, share capital, retained earnings, loans, payables, etc.) with amounts, in "
-    "thousand HUF, and asks the student to compute the balance sheet totals. The items MUST "
+    "USD, and asks the student to compute the balance sheet totals. The items MUST "
     "balance: total assets = total equity and liabilities. Use whole numbers only.\n"
     "STRICT OUTPUT RULES: your entire reply must be one valid JSON object. The first character "
     "must be '{' and the last character must be '}'. No greetings, no explanations, no markdown, "
@@ -55,7 +67,7 @@ BALANCE_SHEET_SYSTEM_PROMPT = (
     "{\n"
     '  "task_title": "string",\n'
     '  "company_name": "string",\n'
-    '  "unit": "thousand HUF",\n'
+    '  "unit": "USD",\n'
     '  "description": "string (list every item with its amount, one per line, separated by \\n)",\n'
     '  "hint": "short hint about classifying items, without giving the answers",\n'
     '  "balance_sheet_key": {\n'
@@ -68,6 +80,7 @@ BALANCE_SHEET_SYSTEM_PROMPT = (
 )
 
 SYSTEM_PROMPT = (
+    ENGLISH_RULE +
     "You are an expert financial accounting professor. "
     "Generate a brand new, randomized practice exercise matching university standards. "
     "STRICT OUTPUT RULES: your entire reply must be one valid JSON object. The first character "
@@ -111,6 +124,14 @@ def _get_client() -> Anthropic:
     return _client
 
 
+_NON_ENGLISH = re.compile(r"[Ѐ-ӿ֐-ۿ一-鿿぀-ヿ]")  # Cyrillic, Hebrew/Arabic, CJK
+
+
+def _ensure_english(text: str) -> None:
+    if _NON_ENGLISH.search(text):
+        raise ValueError("Model returned non-English content")
+
+
 def _extract_json(text: str) -> dict:
     """Parse JSON even if the model wrapped it in ``` fences or added stray text."""
     text = text.strip()
@@ -144,8 +165,36 @@ def _validate_balance_sheet(data: dict) -> None:
         raise ValueError("Balance sheet does not balance")
 
 
-def generate_task_from_claude(topic: str) -> dict:
-    """Generate a new accounting task via the Claude API."""
+INDUSTRIES = [
+    "a bakery", "a software studio", "a car dealership", "a hotel", "a logistics company",
+    "a pharmacy", "a farm", "a fitness club", "a furniture manufacturer", "an online shop",
+    "a construction firm", "a law firm", "a cinema", "a craft brewery", "a travel agency",
+    "a dental clinic", "a bookstore", "a recycling plant", "a wine cellar", "a taxi company",
+]
+
+
+def _build_user_prompt(topic: str, avoid: list[str] | None) -> str:
+    prompt = TOPIC_PROMPTS[topic]
+    if avoid is None:
+        return prompt
+    if topic == "balance_sheet":
+        prompt += f" Set the company in this industry: {random.choice(INDUSTRIES)}."
+    if avoid:
+        listed = "\n".join(f"- {a}" for a in avoid)
+        prompt += (
+            "\n\nThe student has ALREADY solved the tasks below. Create a clearly different one: "
+            "different company, industry/scenario, items and amounts, and for quizzes different "
+            "questions and terms. Do not reuse anything from this list:\n" + listed
+        )
+    return prompt
+
+
+def generate_task_from_claude(topic: str, avoid: list[str] | None = None) -> dict:
+    """Generate a new accounting task via the Claude API.
+
+    avoid=None is the free mode (unchanged behaviour); a list (even empty) is the PRO mode
+    where the model is told which tasks the user has already seen.
+    """
     if topic not in TOPIC_PROMPTS:
         raise KeyError(topic)
 
@@ -155,7 +204,7 @@ def generate_task_from_claude(topic: str) -> dict:
             model=MODEL,
             max_tokens=MAX_TOKENS,
             system=BALANCE_SHEET_SYSTEM_PROMPT if topic == "balance_sheet" else SYSTEM_PROMPT,
-            messages=[{"role": "user", "content": TOPIC_PROMPTS[topic]}],
+            messages=[{"role": "user", "content": _build_user_prompt(topic, avoid)}],
         )
         raw_text = "".join(b.text for b in response.content if b.type == "text")
 
@@ -164,6 +213,7 @@ def generate_task_from_claude(topic: str) -> dict:
             print(f"[generator] attempt {attempt + 1}: {last_error}")
             continue
         try:
+            _ensure_english(raw_text)
             data = _extract_json(raw_text)
             if topic == "balance_sheet":
                 _validate_balance_sheet(data)
