@@ -9,13 +9,13 @@ from contextlib import contextmanager
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent
-# На Render задайте DB_PATH на путь persistent disk (например /var/data/app.db),
-# иначе файл БД будет стираться при каждом деплое.
+# On Render set DB_PATH to a persistent disk path (e.g. /var/data/app.db),
+# otherwise the database file is wiped on every deploy.
 DB_PATH = os.environ.get("DB_PATH") or str(BASE_DIR / "data.db")
 
-HISTORY_LIMIT = 300  # сколько последних задач хранить на пользователя
+HISTORY_LIMIT = 300  # how many recent tasks to keep per user
 
-# Логины, которым автоматически выдаётся PRO: PRO_USERS="alice,bob@gmail.com"
+# Usernames that automatically get PRO: PRO_USERS="alice,bob@gmail.com"
 PRO_USERS = {u.strip().lower() for u in os.environ.get("PRO_USERS", "").split(",") if u.strip()}
 
 

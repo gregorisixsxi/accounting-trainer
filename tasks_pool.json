@@ -2,471 +2,457 @@
   "balance_sheet": [
     {
       "id": "bs_1",
-      "title": "Магазин «Вкусный день» — розничная торговля продуктами",
+      "title": "FreshMart Retail Store",
       "assets": {
-        "Касса": 50000,
-        "Расчетный счет": 350000,
-        "Товары": 600000,
-        "Торговое оборудование": 400000
+        "Cash": 25000,
+        "Accounts Receivable": 15000,
+        "Inventory": 45000,
+        "Store Equipment": 65000
       },
       "liabilities": {
-        "Кредиторская задолженность поставщикам": 250000,
-        "Краткосрочный банковский кредит": 300000
+        "Accounts Payable": 20000,
+        "Short-term Notes Payable": 30000
       },
       "equity": {
-        "Уставный капитал": 600000,
-        "Нераспределенная прибыль": 250000
+        "Common Stock": 50000,
+        "Retained Earnings": 50000
       }
     },
     {
       "id": "bs_2",
-      "title": "ООО «МеталлПром» — производство металлоизделий",
+      "title": "Apex Manufacturing Corp",
       "assets": {
-        "Основные средства": 2500000,
-        "Сырье и материалы": 800000,
-        "Незавершенное производство": 450000,
-        "Готовая продукция": 600000,
-        "Расчетный счет": 350000
+        "Cash and Equivalents": 80000,
+        "Raw Materials": 35000,
+        "Finished Goods": 55000,
+        "Machinery": 200000,
+        "Buildings": 350000
       },
       "liabilities": {
-        "Долгосрочный кредит": 1500000,
-        "Задолженность перед персоналом": 200000,
-        "Задолженность по налогам": 100000
+        "Long-term Bank Loan": 250000,
+        "Accounts Payable": 70000
       },
       "equity": {
-        "Уставный капитал": 2000000,
-        "Нераспределенная прибыль": 900000
+        "Common Stock": 300000,
+        "Retained Earnings": 100000
       }
     },
     {
       "id": "bs_3",
-      "title": "ООО «СофтЛайн» — разработка программного обеспечения",
+      "title": "Nexus IT Solutions",
       "assets": {
-        "Расчетный счет": 900000,
-        "Дебиторская задолженность": 450000,
-        "Компьютерное оборудование": 750000,
-        "Нематериальные активы (ПО)": 400000
+        "Checking Account": 120000,
+        "Client Receivables": 40000,
+        "Computers & Servers": 85000,
+        "Software Licenses": 25000
       },
       "liabilities": {
-        "Кредиторская задолженность": 300000,
-        "Авансы полученные": 200000
+        "Unearned Revenue": 30000,
+        "Tax Payable": 10000
       },
       "equity": {
-        "Уставный капитал": 1000000,
-        "Нераспределенная прибыль": 1000000
+        "Owner's Capital": 150000,
+        "Retained Earnings": 80000
       }
     },
     {
       "id": "bs_4",
-      "title": "ООО «Чистый дом» — клининговые услуги",
+      "title": "Urban Clean Services",
       "assets": {
-        "Касса": 20000,
-        "Расчетный счет": 180000,
-        "Дебиторская задолженность": 120000,
-        "Оборудование": 280000,
-        "Хозяйственные материалы": 40000
+        "Petty Cash": 5000,
+        "Bank Account": 45000,
+        "Cleaning Equipment": 70000,
+        "Supplies": 10000
       },
       "liabilities": {
-        "Задолженность по заработной плате": 90000,
-        "Банковский кредит": 150000
+        "Wages Payable": 15000,
+        "Short-term Loan": 25000
       },
       "equity": {
-        "Уставный капитал": 300000,
-        "Нераспределенная прибыль": 100000
+        "Common Stock": 50000,
+        "Retained Earnings": 40000
       }
     },
     {
       "id": "bs_5",
-      "title": "ООО «ТрейдСнаб» — оптовая торговля",
+      "title": "Global Logistics & Transport",
       "assets": {
-        "Расчетный счет": 700000,
-        "Товары на складе": 1800000,
-        "Дебиторская задолженность": 900000,
-        "Автотранспорт": 1100000,
-        "Складское здание": 3000000
+        "Operating Cash": 110000,
+        "Delivery Trucks": 850000,
+        "Fuel Inventory": 40000,
+        "Accounts Receivable": 110000
       },
       "liabilities": {
-        "Кредиторская задолженность": 1400000,
-        "Банковский кредит": 2100000
+        "Lease Obligations": 400000,
+        "Accounts Payable": 150000
       },
       "equity": {
-        "Уставный капитал": 3000000,
-        "Нераспределенная прибыль": 1000000
+        "Common Stock": 400000,
+        "Retained Earnings": 160000
       }
     },
     {
       "id": "bs_6",
-      "title": "Ресторан «Олива» — общественное питание",
+      "title": "Bistro Olive Restaurant",
       "assets": {
-        "Касса": 45000,
-        "Расчетный счет": 255000,
-        "Продукты питания": 120000,
-        "Кухонное оборудование": 680000,
-        "Мебель": 300000
+        "Cash Register": 12000,
+        "Bank Account": 68000,
+        "Food Inventory": 25000,
+        "Kitchen Equipment": 145000,
+        "Furniture": 50000
       },
       "liabilities": {
-        "Кредиторская задолженность": 180000,
-        "Задолженность по налогам": 70000,
-        "Заем": 350000
+        "Accounts Payable": 40000,
+        "Notes Payable": 60000
       },
       "equity": {
-        "Уставный капитал": 500000,
-        "Нераспределенная прибыль": 300000
+        "Owner's Equity": 200000
       }
     },
     {
       "id": "bs_7",
-      "title": "ООО «СтройМонтаж» — строительство",
+      "title": "BuildPro Construction",
       "assets": {
-        "Расчетный счет": 600000,
-        "Строительные материалы": 900000,
-        "Незавершенное строительство": 1500000,
-        "Строительная техника": 2200000,
-        "Дебиторская задолженность": 800000
+        "Bank Account": 150000,
+        "Building Materials": 220000,
+        "Construction Tools": 450000,
+        "Work in Progress": 300000
       },
       "liabilities": {
-        "Авансы, полученные от заказчиков": 1200000,
-        "Кредиторская задолженность": 800000,
-        "Долгосрочный кредит": 1500000
+        "Customer Advances": 200000,
+        "Bank Loan": 400000
       },
       "equity": {
-        "Уставный капитал": 1500000,
-        "Нераспределенная прибыль": 1000000
+        "Common Stock": 300000,
+        "Retained Earnings": 220000
       }
     },
     {
       "id": "bs_8",
-      "title": "Стартап CloudNine — облачные IT-сервисы",
+      "title": "CloudWave SaaS",
       "assets": {
-        "Расчетный счет": 1200000,
-        "Серверное оборудование": 1800000,
-        "Дебиторская задолженность": 300000,
-        "Лицензии на ПО": 200000
+        "Operating Account": 300000,
+        "Server Hardware": 250000,
+        "Accounts Receivable": 50000
       },
       "liabilities": {
-        "Кредиторская задолженность": 400000,
-        "Задолженность по налогам": 100000
+        "Deferred Subscription Revenue": 80000,
+        "Accrued Expenses": 20000
       },
       "equity": {
-        "Уставный капитал": 2000000,
-        "Добавочный капитал": 500000,
-        "Нераспределенная прибыль": 500000
+        "Preferred Stock": 100000,
+        "Common Stock": 200000,
+        "Retained Earnings": 200000
       }
     },
     {
       "id": "bs_9",
-      "title": "Пекарня «Хлебный край» — пищевое производство",
+      "title": "Golden Grain Bakery",
       "assets": {
-        "Касса": 30000,
-        "Расчетный счет": 270000,
-        "Мука и ингредиенты": 150000,
-        "Готовая продукция": 50000,
-        "Печи и оборудование": 700000
+        "Cash": 8000,
+        "Checking": 62000,
+        "Flour & Ingredients": 15000,
+        "Ovens & Mixers": 180000,
+        "Finished Pastries": 10000
       },
       "liabilities": {
-        "Кредиторская задолженность": 140000,
-        "Банковский кредит": 360000
+        "Supplier Debt": 35000,
+        "Equipment Loan": 80000
       },
       "equity": {
-        "Уставный капитал": 400000,
-        "Нераспределенная прибыль": 300000
+        "Capital Stock": 100000,
+        "Retained Earnings": 60000
       }
     },
     {
       "id": "bs_10",
-      "title": "Аптека «Здоровье+» — розничная торговля лекарствами",
+      "title": "MediCare Pharmacy",
       "assets": {
-        "Касса": 60000,
-        "Расчетный счет": 440000,
-        "Лекарственные препараты": 1300000,
-        "Торговое оборудование": 500000,
-        "Расходы будущих периодов (аренда)": 100000
+        "Cash": 20000,
+        "Bank": 110000,
+        "Medicine Stock": 350000,
+        "Display Shelves": 90000
       },
       "liabilities": {
-        "Кредиторская задолженность поставщикам": 700000,
-        "Задолженность по заработной плате": 150000
+        "Supplier Payables": 200000,
+        "Salaries Payable": 30000
       },
       "equity": {
-        "Уставный капитал": 800000,
-        "Нераспределенная прибыль": 750000
+        "Owner Capital": 200000,
+        "Retained Earnings": 140000
       }
     },
     {
       "id": "bs_11",
-      "title": "ООО «ГрузТранс» — грузоперевозки",
+      "title": "Alpha Consulting Group",
       "assets": {
-        "Расчетный счет": 520000,
-        "Грузовые автомобили": 4200000,
-        "Топливо и запчасти": 380000,
-        "Дебиторская задолженность": 600000
+        "Bank": 210000,
+        "Client Invoices Due": 95000,
+        "Office Hardware": 45000
       },
       "liabilities": {
-        "Лизинговые обязательства": 1800000,
-        "Кредиторская задолженность": 500000,
-        "Задолженность по заработной плате": 200000
+        "Unearned Retainer": 50000,
+        "Taxes Payable": 25000
       },
       "equity": {
-        "Уставный капитал": 2000000,
-        "Нераспределенная прибыль": 1200000
+        "Common Stock": 150000,
+        "Retained Earnings": 125000
       }
     },
     {
       "id": "bs_12",
-      "title": "ООО «ПрофКонсалт» — консалтинговые услуги",
+      "title": "Stitch & Style Garments",
       "assets": {
-        "Расчетный счет": 800000,
-        "Касса": 20000,
-        "Дебиторская задолженность": 650000,
-        "Офисное оборудование": 330000
+        "Cash": 15000,
+        "Bank": 95000,
+        "Fabric & Accessories": 180000,
+        "Sewing Machines": 320000,
+        "Finished Garments": 90000
       },
       "liabilities": {
-        "Авансы полученные": 250000,
-        "Задолженность по налогам": 150000
+        "Bank Loan": 200000,
+        "Accounts Payable": 100000
       },
       "equity": {
-        "Уставный капитал": 500000,
-        "Нераспределенная прибыль": 900000
+        "Initial Capital": 300000,
+        "Retained Earnings": 100000
       }
     },
     {
       "id": "bs_13",
-      "title": "Швейная фабрика «Стиль» — легкая промышленность",
+      "title": "ElectroWorld E-Commerce",
       "assets": {
-        "Расчетный счет": 410000,
-        "Ткани и фурнитура": 950000,
-        "Незавершенное производство": 320000,
-        "Готовая продукция": 540000,
-        "Швейное оборудование": 1780000
+        "Merchant Account": 180000,
+        "Warehouse Stock": 650000,
+        "Delivery Vans": 240000,
+        "Domain & Website": 50000
       },
       "liabilities": {
-        "Кредиторская задолженность": 600000,
-        "Банковский кредит": 1200000,
-        "Задолженность по заработной плате": 200000
+        "Supplier Credit": 400000,
+        "Short-term Loan": 220000
       },
       "equity": {
-        "Уставный капитал": 1500000,
-        "Нераспределенная прибыль": 500000
+        "Common Stock": 300000,
+        "Retained Earnings": 200000
       }
     },
     {
       "id": "bs_14",
-      "title": "Интернет-магазин «ТехноМир» — электронная коммерция",
+      "title": "IronFit Gym & Fitness",
       "assets": {
-        "Расчетный счет": 650000,
-        "Товары": 2100000,
-        "Товары в пути": 350000,
-        "Сайт и ПО": 400000,
-        "Офисное оборудование": 500000
+        "Checking": 95000,
+        "Exercise Equipment": 550000,
+        "Facility Building": 1200000,
+        "Supplements Inventory": 15000
       },
       "liabilities": {
-        "Кредиторская задолженность": 1300000,
-        "Краткосрочный заем": 700000
+        "Unearned Memberships": 180000,
+        "Long-term Mortgage": 900000
       },
       "equity": {
-        "Уставный капитал": 1000000,
-        "Нераспределенная прибыль": 1000000
+        "Owner Capital": 500000,
+        "Retained Earnings": 280000
       }
     },
     {
       "id": "bs_15",
-      "title": "Фитнес-клуб «Энергия» — услуги",
+      "title": "Prime Auto Parts",
       "assets": {
-        "Расчетный счет": 380000,
-        "Спортивное оборудование": 2400000,
-        "Здание клуба": 3500000,
-        "Дебиторская задолженность": 120000
+        "Cash": 30000,
+        "Bank": 170000,
+        "Auto Spare Parts": 450000,
+        "Store Fixtures": 100000
       },
       "liabilities": {
-        "Доходы будущих периодов (абонементы)": 900000,
-        "Долгосрочный кредит": 2500000,
-        "Кредиторская задолженность": 300000
+        "Trade Creditors": 250000,
+        "Accrued Expenses": 20000
       },
       "equity": {
-        "Уставный капитал": 1500000,
-        "Нераспределенная прибыль": 1200000
+        "Common Stock": 300000,
+        "Retained Earnings": 180000
       }
     }
   ],
   "transactions": [
     {
       "id": "tr_1",
-      "title": "Поступление товара",
-      "description": "Магазин получил от поставщика партию товара на сумму 100 000 руб. (без НДС). Товар оприходован на склад, оплата пока не произведена.",
+      "title": "Purchase of merchandise on account",
+      "description": "The company purchased inventory worth $15,000 from a supplier on credit. Payment is due next month.",
       "options": [
-        "Дебет: 60 Расчеты с поставщиками | Кредит: 41 Товары",
-        "Дебет: 41 Товары | Кредит: 51 Расчетный счет",
-        "Дебет: 10 Материалы | Кредит: 60 Расчеты с поставщиками",
-        "Дебет: 41 Товары | Кредит: 60 Расчеты с поставщиками"
+        "Debit: Inventory | Credit: Accounts Payable",
+        "Debit: Accounts Payable | Credit: Inventory",
+        "Debit: Cash | Credit: Inventory",
+        "Debit: Purchases | Credit: Cash"
       ],
-      "correct_answer": "Дебет: 41 Товары | Кредит: 60 Расчеты с поставщиками"
+      "correct_answer": "Debit: Inventory | Credit: Accounts Payable"
     },
     {
       "id": "tr_2",
-      "title": "Оплата поставщику",
-      "description": "Организация перечислила с расчетного счета 60 000 руб. поставщику за ранее полученные товары.",
+      "title": "Collection from customer",
+      "description": "A customer paid $5,000 previously owed to the company on account. Funds deposited directly into the bank.",
       "options": [
-        "Дебет: 51 Расчетный счет | Кредит: 60 Расчеты с поставщиками",
-        "Дебет: 60 Расчеты с поставщиками | Кредит: 50 Касса",
-        "Дебет: 60 Расчеты с поставщиками | Кредит: 51 Расчетный счет",
-        "Дебет: 41 Товары | Кредит: 51 Расчетный счет"
+        "Debit: Accounts Receivable | Credit: Cash",
+        "Debit: Cash | Credit: Accounts Receivable",
+        "Debit: Cash | Credit: Sales Revenue",
+        "Debit: Sales Revenue | Credit: Accounts Receivable"
       ],
-      "correct_answer": "Дебет: 60 Расчеты с поставщиками | Кредит: 51 Расчетный счет"
+      "correct_answer": "Debit: Cash | Credit: Accounts Receivable"
     },
     {
       "id": "tr_3",
-      "title": "Продажа товара в кредит",
-      "description": "Торговая фирма отгрузила покупателю товар с отсрочкой платежа. Продажная стоимость — 150 000 руб.",
+      "title": "Accrual of monthly salaries",
+      "description": "The business recorded employee salaries for the current month amounting to $12,000, to be paid on payday.",
       "options": [
-        "Дебет: 90 Продажи (выручка) | Кредит: 62 Расчеты с покупателями",
-        "Дебет: 62 Расчеты с покупателями | Кредит: 90 Продажи (выручка)",
-        "Дебет: 51 Расчетный счет | Кредит: 90 Продажи (выручка)",
-        "Дебет: 62 Расчеты с покупателями | Кредит: 41 Товары"
+        "Debit: Salaries Expense | Credit: Salaries Payable",
+        "Debit: Salaries Payable | Credit: Cash",
+        "Debit: Cash | Credit: Salaries Expense",
+        "Debit: Operating Expenses | Credit: Accounts Payable"
       ],
-      "correct_answer": "Дебет: 62 Расчеты с покупателями | Кредит: 90 Продажи (выручка)"
+      "correct_answer": "Debit: Salaries Expense | Credit: Salaries Payable"
     },
     {
       "id": "tr_4",
-      "title": "Списание себестоимости",
-      "description": "Себестоимость проданных покупателю товаров составила 90 000 руб. Отразите списание товаров.",
+      "title": "Payment to supplier",
+      "description": "The company paid $8,000 to its main supplier via bank transfer to settle an outstanding invoice.",
       "options": [
-        "Дебет: 90 Продажи (себестоимость) | Кредит: 41 Товары",
-        "Дебет: 41 Товары | Кредит: 90 Продажи (себестоимость)",
-        "Дебет: 90 Продажи (себестоимость) | Кредит: 62 Расчеты с покупателями",
-        "Дебет: 62 Расчеты с покупателями | Кредит: 41 Товары"
+        "Debit: Accounts Payable | Credit: Cash",
+        "Debit: Cash | Credit: Accounts Payable",
+        "Debit: Inventory | Credit: Cash",
+        "Debit: Expenses | Credit: Bank"
       ],
-      "correct_answer": "Дебет: 90 Продажи (себестоимость) | Кредит: 41 Товары"
+      "correct_answer": "Debit: Accounts Payable | Credit: Cash"
     },
     {
       "id": "tr_5",
-      "title": "Начисление зарплаты",
-      "description": "Производственная компания начислила заработную плату рабочим основного производства в размере 200 000 руб.",
+      "title": "Issuance of short-term bank loan",
+      "description": "The bank approved and transferred a short-term loan of $50,000 directly to the company's checking account.",
       "options": [
-        "Дебет: 70 Расчеты с персоналом по оплате труда | Кредит: 20 Основное производство",
-        "Дебет: 26 Общехозяйственные расходы | Кредит: 51 Расчетный счет",
-        "Дебет: 20 Основное производство | Кредит: 50 Касса",
-        "Дебет: 20 Основное производство | Кредит: 70 Расчеты с персоналом по оплате труда"
+        "Debit: Cash | Credit: Short-term Notes Payable",
+        "Debit: Short-term Notes Payable | Credit: Cash",
+        "Debit: Cash | Credit: Common Stock",
+        "Debit: Bank Loan | Credit: Revenue"
       ],
-      "correct_answer": "Дебет: 20 Основное производство | Кредит: 70 Расчеты с персоналом по оплате труда"
+      "correct_answer": "Debit: Cash | Credit: Short-term Notes Payable"
     },
     {
       "id": "tr_6",
-      "title": "Выплата зарплаты из кассы",
-      "description": "Из кассы организации выдана заработная плата сотрудникам в размере 80 000 руб.",
+      "title": "Owner's capital contribution",
+      "description": "The owner invested an additional $25,000 of personal funds into the business bank account.",
       "options": [
-        "Дебет: 50 Касса | Кредит: 70 Расчеты с персоналом по оплате труда",
-        "Дебет: 70 Расчеты с персоналом по оплате труда | Кредит: 51 Расчетный счет",
-        "Дебет: 70 Расчеты с персоналом по оплате труда | Кредит: 50 Касса",
-        "Дебет: 20 Основное производство | Кредит: 50 Касса"
+        "Debit: Cash | Credit: Common Stock (or Owner's Capital)",
+        "Debit: Common Stock | Credit: Cash",
+        "Debit: Cash | Credit: Retained Earnings",
+        "Debit: Owner's Draw | Credit: Cash"
       ],
-      "correct_answer": "Дебет: 70 Расчеты с персоналом по оплате труда | Кредит: 50 Касса"
+      "correct_answer": "Debit: Cash | Credit: Common Stock (or Owner's Capital)"
     },
     {
       "id": "tr_7",
-      "title": "Получение кредита",
-      "description": "Банк предоставил организации краткосрочный кредит в размере 500 000 руб. Деньги поступили на расчетный счет.",
+      "title": "Depreciation of equipment",
+      "description": "Recorded monthly depreciation on office and store equipment in the amount of $2,500.",
       "options": [
-        "Дебет: 66 Краткосрочные кредиты | Кредит: 51 Расчетный счет",
-        "Дебет: 51 Расчетный счет | Кредит: 66 Краткосрочные кредиты",
-        "Дебет: 51 Расчетный счет | Кредит: 62 Расчеты с покупателями",
-        "Дебет: 50 Касса | Кредит: 66 Краткосрочные кредиты"
+        "Debit: Depreciation Expense | Credit: Accumulated Depreciation",
+        "Debit: Accumulated Depreciation | Credit: Equipment",
+        "Debit: Equipment | Credit: Depreciation Expense",
+        "Debit: Depreciation Expense | Credit: Equipment"
       ],
-      "correct_answer": "Дебет: 51 Расчетный счет | Кредит: 66 Краткосрочные кредиты"
+      "correct_answer": "Debit: Depreciation Expense | Credit: Accumulated Depreciation"
     },
     {
       "id": "tr_8",
-      "title": "Взнос учредителя",
-      "description": "Учредитель внес на расчетный счет 300 000 руб. в оплату своей доли в уставном капитале (капитал уже объявлен).",
+      "title": "Cash sale of goods",
+      "description": "The retail store sold goods for $4,000 in cash. The customer received the merchandise immediately.",
       "options": [
-        "Дебет: 51 Расчетный счет | Кредит: 75 Расчеты с учредителями",
-        "Дебет: 75 Расчеты с учредителями | Кредит: 51 Расчетный счет",
-        "Дебет: 51 Расчетный счет | Кредит: 80 Уставный капитал",
-        "Дебет: 80 Уставный капитал | Кредит: 75 Расчеты с учредителями"
+        "Debit: Cash | Credit: Sales Revenue",
+        "Debit: Accounts Receivable | Credit: Sales Revenue",
+        "Debit: Sales Revenue | Credit: Cash",
+        "Debit: Cash | Credit: Inventory"
       ],
-      "correct_answer": "Дебет: 51 Расчетный счет | Кредит: 75 Расчеты с учредителями"
+      "correct_answer": "Debit: Cash | Credit: Sales Revenue"
     },
     {
       "id": "tr_9",
-      "title": "Покупка сырья",
-      "description": "Швейная фабрика получила от поставщика ткани и фурнитуру на 50 000 руб. (без НДС). Оплата не произведена.",
+      "title": "Purchase of office supplies for cash",
+      "description": "The company bought stationery and printer paper for $600, paying immediately from petty cash.",
       "options": [
-        "Дебет: 60 Расчеты с поставщиками | Кредит: 10 Материалы",
-        "Дебет: 10 Материалы | Кредит: 51 Расчетный счет",
-        "Дебет: 20 Основное производство | Кредит: 60 Расчеты с поставщиками",
-        "Дебет: 10 Материалы | Кредит: 60 Расчеты с поставщиками"
+        "Debit: Supplies Expense (or Supplies) | Credit: Cash",
+        "Debit: Cash | Credit: Supplies",
+        "Debit: Office Equipment | Credit: Cash",
+        "Debit: Expenses | Credit: Accounts Payable"
       ],
-      "correct_answer": "Дебет: 10 Материалы | Кредит: 60 Расчеты с поставщиками"
+      "correct_answer": "Debit: Supplies Expense (or Supplies) | Credit: Cash"
     },
     {
       "id": "tr_10",
-      "title": "Отпуск материалов в производство",
-      "description": "Со склада в основное производство отпущены материалы на сумму 70 000 руб.",
+      "title": "Prepayment of annual insurance",
+      "description": "Paid $12,000 in advance for a 1-year commercial insurance policy covering upcoming months.",
       "options": [
-        "Дебет: 10 Материалы | Кредит: 20 Основное производство",
-        "Дебет: 20 Основное производство | Кредит: 60 Расчеты с поставщиками",
-        "Дебет: 20 Основное производство | Кредит: 10 Материалы",
-        "Дебет: 43 Готовая продукция | Кредит: 10 Материалы"
+        "Debit: Prepaid Insurance | Credit: Cash",
+        "Debit: Insurance Expense | Credit: Cash",
+        "Debit: Cash | Credit: Prepaid Insurance",
+        "Debit: Insurance Expense | Credit: Accounts Payable"
       ],
-      "correct_answer": "Дебет: 20 Основное производство | Кредит: 10 Материалы"
+      "correct_answer": "Debit: Prepaid Insurance | Credit: Cash"
     },
     {
       "id": "tr_11",
-      "title": "Выпуск готовой продукции",
-      "description": "Из производства на склад сдана готовая продукция по фактической себестоимости 250 000 руб.",
+      "title": "Receipt of customer advance payment",
+      "description": "A client paid $10,000 in advance for future consulting services that will be delivered next month.",
       "options": [
-        "Дебет: 20 Основное производство | Кредит: 43 Готовая продукция",
-        "Дебет: 43 Готовая продукция | Кредит: 20 Основное производство",
-        "Дебет: 90 Продажи (себестоимость) | Кредит: 43 Готовая продукция",
-        "Дебет: 43 Готовая продукция | Кредит: 10 Материалы"
+        "Debit: Cash | Credit: Unearned Revenue",
+        "Debit: Cash | Credit: Service Revenue",
+        "Debit: Accounts Receivable | Credit: Unearned Revenue",
+        "Debit: Unearned Revenue | Credit: Cash"
       ],
-      "correct_answer": "Дебет: 43 Готовая продукция | Кредит: 20 Основное производство"
+      "correct_answer": "Debit: Cash | Credit: Unearned Revenue"
     },
     {
       "id": "tr_12",
-      "title": "Начисление амортизации",
-      "description": "Начислена амортизация производственного оборудования за месяц — 25 000 руб.",
+      "title": "Payment of utility bill",
+      "description": "The company received and immediately paid the monthly electricity and water bill of $1,800 via bank transfer.",
       "options": [
-        "Дебет: 20 Основное производство | Кредит: 02 Амортизация ОС",
-        "Дебет: 02 Амортизация ОС | Кредит: 20 Основное производство",
-        "Дебет: 20 Основное производство | Кредит: 01 Основные средства",
-        "Дебет: 26 Общехозяйственные расходы | Кредит: 08 Вложения во внеоборотные активы"
+        "Debit: Utilities Expense | Credit: Cash",
+        "Debit: Cash | Credit: Utilities Expense",
+        "Debit: Accounts Payable | Credit: Cash",
+        "Debit: Operating Expenses | Credit: Utilities Expense"
       ],
-      "correct_answer": "Дебет: 20 Основное производство | Кредит: 02 Амортизация ОС"
+      "correct_answer": "Debit: Utilities Expense | Credit: Cash"
     },
     {
       "id": "tr_13",
-      "title": "Получение аванса",
-      "description": "Клиент IT-компании предоплатил разработку ПО: на расчетный счет поступило 120 000 руб. Услуги еще не оказаны.",
+      "title": "Declaration of dividends",
+      "description": "The board of directors declared cash dividends of $10,000 to shareholders, payable next month.",
       "options": [
-        "Дебет: 62 Расчеты с покупателями | Кредит: 51 Расчетный счет",
-        "Дебет: 51 Расчетный счет | Кредит: 90 Продажи (выручка)",
-        "Дебет: 62 Расчеты с покупателями | Кредит: 90 Продажи (выручка)",
-        "Дебет: 51 Расчетный счет | Кредит: 62 Расчеты с покупателями"
+        "Debit: Retained Earnings (or Dividends) | Credit: Dividends Payable",
+        "Debit: Dividends Payable | Credit: Cash",
+        "Debit: Cash | Credit: Dividends Payable",
+        "Debit: Expenses | Credit: Retained Earnings"
       ],
-      "correct_answer": "Дебет: 51 Расчетный счет | Кредит: 62 Расчеты с покупателями"
+      "correct_answer": "Debit: Retained Earnings (or Dividends) | Credit: Dividends Payable"
     },
     {
       "id": "tr_14",
-      "title": "Выдача под отчет",
-      "description": "Из кассы выдано 10 000 руб. сотруднику под отчет на командировочные расходы.",
+      "title": "Payment of advertising expenses on credit",
+      "description": "The firm placed an ad in a local magazine for $3,500, receiving an invoice due in 30 days.",
       "options": [
-        "Дебет: 50 Касса | Кредит: 71 Расчеты с подотчетными лицами",
-        "Дебет: 71 Расчеты с подотчетными лицами | Кредит: 51 Расчетный счет",
-        "Дебет: 71 Расчеты с подотчетными лицами | Кредит: 50 Касса",
-        "Дебет: 26 Общехозяйственные расходы | Кредит: 50 Касса"
+        "Debit: Advertising Expense | Credit: Accounts Payable",
+        "Debit: Accounts Payable | Credit: Advertising Expense",
+        "Debit: Advertising Expense | Credit: Cash",
+        "Debit: Cash | Credit: Accounts Payable"
       ],
-      "correct_answer": "Дебет: 71 Расчеты с подотчетными лицами | Кредит: 50 Касса"
+      "correct_answer": "Debit: Advertising Expense | Credit: Accounts Payable"
     },
     {
       "id": "tr_15",
-      "title": "Начисление аренды",
-      "description": "Консалтинговая компания получила счет от арендодателя за аренду офиса — 40 000 руб. (без НДС), услуга не оплачена.",
+      "title": "Recognition of cost of goods sold",
+      "description": "Following a product sale, the company recorded the cost of inventory sold, amounting to $2,400.",
       "options": [
-        "Дебет: 60 Расчеты с поставщиками | Кредит: 26 Общехозяйственные расходы",
-        "Дебет: 26 Общехозяйственные расходы | Кредит: 60 Расчеты с поставщиками",
-        "Дебет: 26 Общехозяйственные расходы | Кредит: 51 Расчетный счет",
-        "Дебет: 26 Общехозяйственные расходы | Кредит: 70 Расчеты с персоналом по оплате труда"
+        "Debit: Cost of Goods Sold (COGS) | Credit: Inventory",
+        "Debit: Inventory | Credit: Cost of Goods Sold (COGS)",
+        "Debit: Sales Revenue | Credit: Inventory",
+        "Debit: COGS | Credit: Accounts Payable"
       ],
-      "correct_answer": "Дебет: 26 Общехозяйственные расходы | Кредит: 60 Расчеты с поставщиками"
+      "correct_answer": "Debit: Cost of Goods Sold (COGS) | Credit: Inventory"
     }
   ]
 }

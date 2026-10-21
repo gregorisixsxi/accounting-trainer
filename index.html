@@ -321,7 +321,7 @@ async function load(topic, pro = false) {
           body: JSON.stringify({ topic }),
           signal: ctrl.signal,
         })
-      : await fetch(`${API}/api/generate/${topic}?exclude=${recentIds.join(",")}`, { signal: ctrl.signal });
+      : await fetch(`${API}/api/generate/${topic}?exclude=${recentIds.join(",")}&t=${Date.now()}`, { signal: ctrl.signal, cache: "no-store" });
     status = res.status;
     if (res.status === 401 && pro) { setSession(null); renderAuth(); }
     if (!res.ok) {

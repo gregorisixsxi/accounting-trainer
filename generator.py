@@ -10,15 +10,15 @@ from dotenv import load_dotenv
 BASE_DIR = Path(__file__).resolve().parent
 ENV_PATH = BASE_DIR / ".env"
 
-# override=True: пустая переменная ANTHROPIC_API_KEY в системе иначе блокирует значение из .env.
-# Путь явный, поэтому не зависит от папки, из которой запущен uvicorn.
+# override=True: an empty ANTHROPIC_API_KEY in the system environment would otherwise block the .env value.
+# The path is explicit, so it does not depend on the folder uvicorn is started from.
 load_dotenv(ENV_PATH, override=True)
 
-# Для быстрого теста можно вставить ключ сюда (НЕ коммитьте файл с ключом в git!).
+# For a quick local test you can paste the key here (NEVER commit a file containing a key!).
 HARDCODED_API_KEY = ""
 
 MAX_TOKENS = 4000
-MAX_ATTEMPTS = 3 # одна повторная попытка, если ответ обрезан или JSON невалиден
+MAX_ATTEMPTS = 3  # retry if the response is cut off, is invalid JSON, or is not English
 
 MODEL =os.getenv("ANTHROPIC_MODEL", "claude-haiku-5-5")
 
@@ -108,10 +108,10 @@ def _resolve_api_key() -> str:
     key = (os.environ.get("ANTHROPIC_API_KEY") or HARDCODED_API_KEY).strip().strip("\"'")
     if not key:
         print(
-            "[generator] ANTHROPIC_API_KEY не найден.\n"
-            f"  Искал .env здесь: {ENV_PATH} (существует: {ENV_PATH.exists()})\n"
-            "  Формат строки в .env: ANTHROPIC_API_KEY=sk-ant-...  (без кавычек и пробелов)\n"
-            "  Либо задайте HARDCODED_API_KEY в generator.py для теста."
+            "[generator] ANTHROPIC_API_KEY not found.\n"
+            f"  Looked for .env here: {ENV_PATH} (exists: {ENV_PATH.exists()})\n"
+            "  Line format in .env: ANTHROPIC_API_KEY=sk-ant-...  (no quotes, no spaces)\n"
+            "  Or set HARDCODED_API_KEY in generator.py for a quick test."
         )
         raise RuntimeError(f"ANTHROPIC_API_KEY is not set (looked in {ENV_PATH})")
     return key

@@ -1,7 +1,7 @@
-"""Бесплатный режим: задачи из локального tasks_pool.json, без обращений к Claude API.
+"""Free mode: tasks from the local English pools (tasks_pool.json, terminology_pool.json), no Claude API calls.
 
-Файл читается один раз при старте. Каждая задача проверяется; некорректные пропускаются
-(с сообщением в лог), чтобы одна ошибка в JSON не ломала сайт.
+Files are read once at startup. Every task is validated; invalid ones are skipped
+(with a log message) so one bad entry cannot break the site. Pools are English/USD only.
 """
 import json
 import random
@@ -12,7 +12,7 @@ TASKS_PATH = BASE_DIR / "tasks_pool.json"            # balance_sheet, transactio
 TERMINOLOGY_PATH = BASE_DIR / "terminology_pool.json"  # terminology
 CURRENCY = "USD"
 
-# Статьи, которые относятся к внеоборотным активам (Fixed Assets). Всё остальное в разделе assets — оборотные.
+# Items that count as fixed (non-current) assets. Everything else under assets is current.
 FIXED_ASSETS = {
     "Buildings", "Facility Building", "Cleaning Equipment", "Computers & Servers", "Construction Tools",
     "Delivery Trucks", "Delivery Vans", "Display Shelves", "Domain & Website", "Exercise Equipment",
@@ -101,7 +101,7 @@ def _balance_sheet_task(t: dict) -> dict:
     total_liab, total_eq = sum(liabilities.values()), sum(equity.values())
 
     items = list({**assets, **liabilities, **equity}.items())
-    random.shuffle(items)  # статьи без разделов: студент сам классифицирует
+    random.shuffle(items)  # items without section labels: the student classifies them
     lines = "\n".join(f"{name}: {value:,}" for name, value in items)
     return {
         "id": t["id"],
@@ -131,7 +131,7 @@ def _balance_sheet_task(t: dict) -> dict:
 
 def _transaction_task(t: dict) -> dict:
     options = list(t["options"])
-    random.shuffle(options)  # в исходном файле верный ответ почти всегда первый
+    random.shuffle(options)  # in the source file the correct answer is almost always first
     return {
         "id": t["id"],
         "task_title": t["title"],
@@ -159,7 +159,7 @@ def _terminology_task(t: dict) -> dict:
 
 
 def get_task(topic: str, exclude: set[str] | None = None) -> dict | None:
-    """Возвращает задачу в формате фронтенда или None, если для темы нет пула."""
+    """Returns a task in the frontend format, or None if the topic has no pool."""
     if topic not in POOL_TOPICS:
         return None
     t = _pick(topic, exclude or set())

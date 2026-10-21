@@ -18,17 +18,17 @@ BASE_DIR = Path(__file__).resolve().parent
 app = FastAPI(title="Accounting Trainer")
 db.init()
 
-# Rate limiting по IP. Бакеты: генерация задач и попытки входа (защита от перебора паролей).
+# Per-IP rate limiting. Buckets: AI task generation and login attempts (brute-force protection).
 RATE_LIMITS = {
-    "generate": (10, 60),  # 10 запросов в минуту
+    "generate": (10, 60),  # 10 requests per minute
     "auth": (10, 60),
 }
 REQUEST_COUNTS = defaultdict(list)
 
 
 def client_ip(request: Request) -> str:
-    # За прокси Render request.client.host — это адрес прокси (один на всех),
-    # реальный IP пользователя приходит в X-Forwarded-For.
+    # Behind Render's proxy request.client.host is the proxy address (shared by everyone);
+    # the real user IP arrives in X-Forwarded-For.
     forwarded = request.headers.get("x-forwarded-for")
     if forwarded:
         return forwarded.split(",")[0].strip()
@@ -38,7 +38,7 @@ def client_ip(request: Request) -> str:
 def bucket_for(path: str) -> str | None:
     if path.startswith("/api/generate"):
         topic = path.rsplit("/", 1)[-1]
-        # задачи из локального пула бесплатны для нас, лимит нужен только для вызовов Claude API
+        # pool tasks cost nothing, so the limit only applies to Claude API calls
         return None if topic in pool.POOL_TOPICS and path != "/api/generate/pro" else "generate"
     if path in ("/api/login", "/api/register"):
         return "auth"
@@ -61,11 +61,14 @@ async def rate_limit_middleware(request: Request, call_next):
             )
         recent.append(now)
         REQUEST_COUNTS[key] = recent
-    return await call_next(request)
+    response = await call_next(request)
+    if request.url.path.startswith("/api/"):
+        response.headers["Cache-Control"] = "no-store"  # API answers must never be cached by the browser or a proxy
+    return response
 
 
 # ---------------- auth ----------------
-USERNAME_RE = re.compile(r"^\S.{1,62}\S$")  # 3-64 символа, любая строка (логин или e-mail)
+USERNAME_RE = re.compile(r"^\S.{1,62}\S$")  # 3-64 characters, any string (username or e-mail)
 
 
 class Credentials(BaseModel):
@@ -146,20 +149,20 @@ def logout(authorization: str | None = Header(default=None)):
 # ---------------- pages / health ----------------
 @app.get("/")
 def read_root():
-    # no-cache: после деплоя пользователи сразу получают свежую страницу, а не закешированную
+    # no-cache: after a deploy users get the fresh page instead of a cached one
     return FileResponse(BASE_DIR / "index.html", headers={"Cache-Control": "no-cache"})
 
 
 @app.get("/health")
 def health_check():
-    """Пинг, чтобы сервер не засыпал от бездействия."""
+    """Ping endpoint, keeps the server from sleeping."""
     return {"status": "ok"}
 
 
 # ---------------- task generation ----------------
 @app.get("/api/generate/{topic}")
 def generate_task(topic: str, exclude: str = ""):
-    """Бесплатный режим: пул из tasks_pool.json (без затрат API), остальные темы — как раньше через Claude."""
+    """Free mode: tasks come from the local pools (no API cost); other topics fall back to Claude."""
     recent = {x for x in exclude.split(",") if x}
     task = pool.get_task(topic, recent)
     if task is not None:
@@ -176,7 +179,7 @@ def generate_task(topic: str, exclude: str = ""):
 
 
 PRO_TOPICS = ("balance_sheet", "terminology")
-AVOID_LIMIT = 40  # сколько последних задач показываем модели
+AVOID_LIMIT = 40  # how many recent tasks are shown to the model
 PRO_ATTEMPTS = 2
 
 
@@ -189,7 +192,7 @@ def _norm(s: str) -> str:
 
 
 def task_summary(topic: str, task: dict) -> tuple[str, str]:
-    """(описание для промпта «не повторяй», ключ для точного сравнения)."""
+    """(description for the "do not repeat" prompt, key for exact duplicate comparison)."""
     if topic == "balance_sheet":
         company = str(task.get("company_name", "")).strip()
         total = (task.get("balance_sheet_key") or {}).get("total_assets", "")
@@ -216,7 +219,7 @@ def generate_pro(body: ProRequest, user: dict = Depends(current_user)):
             summary, key = task_summary(body.topic, task)
             if key not in seen_keys:
                 break
-            avoid.append(summary)  # дубль: просим модель обойти и его
+            avoid.append(summary)  # duplicate: ask the model to avoid this one too
         else:
             raise HTTPException(status_code=502, detail="Could not create a new unique task, please try again.")
     except HTTPException:
