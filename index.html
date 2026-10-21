@@ -54,6 +54,14 @@
   .fb-pop { animation: fbpop .3s cubic-bezier(.2,.8,.2,1) both; }
   @keyframes fbfade { from { opacity: 0; } to { opacity: 1; } }
   @keyframes fbpop { from { opacity: 0; transform: translateY(14px) scale(.97); } to { opacity: 1; transform: none; } }
+  /* Fixed top bar: solid-ish blurred backdrop, slides away on scroll down, returns on scroll up */
+  .site-header { position: fixed; top: 0; left: 0; right: 0; z-index: 40;
+    background: rgba(18, 18, 18, 0.85);
+    -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(255,255,255,.10);
+    transition: transform 0.3s ease, opacity 0.3s ease; will-change: transform; }
+  .site-header.hdr-hidden { transform: translateY(-100%); opacity: 0; pointer-events: none; }
+  @media (prefers-reduced-motion: reduce) { .site-header { transition: none; } }
   .hidden { display: none !important; }
 </style>
 </head>
@@ -99,20 +107,20 @@
 
 <!-- ============ TRAINER ============ -->
 <div id="trainer" class="hidden">
-  <header class="sticky top-0 z-10 border-b border-white/10 bg-black/40 backdrop-blur-md">
-    <div class="max-w-3xl mx-auto px-4 py-3 flex flex-wrap items-center gap-3 justify-between">
-      <button id="backBtn" class="glass-btn glass px-4 py-2 text-sm !rounded-xl">← Back to Home</button>
+  <header id="siteHeader" class="site-header">
+    <div class="max-w-5xl mx-auto px-4 py-2.5 flex flex-wrap items-center gap-x-3 gap-y-2 justify-between">
+      <button id="backBtn" class="glass-btn glass px-3.5 py-1.5 text-sm !rounded-xl">← Back to Home</button>
       <nav class="flex flex-wrap gap-2">
-        <button data-topic="balance_sheet" class="mode-btn glass-btn glass px-4 py-2 text-sm !rounded-xl">Balance Sheet</button>
-        <button data-topic="terminology" class="mode-btn glass-btn glass px-4 py-2 text-sm !rounded-xl">Terminology</button>
-        <button data-topic="transactions" class="mode-btn glass-btn glass px-4 py-2 text-sm !rounded-xl">Journal Entries</button>
-        <button type="button" data-feedback class="glass-btn glass px-4 py-2 text-sm !rounded-xl text-zinc-300">💬 Feedback / Bug</button>
-        <button type="button" data-auth class="glass-btn glass px-4 py-2 text-sm !rounded-xl">Sign in</button>
+        <button data-topic="balance_sheet" class="mode-btn glass-btn glass px-3.5 py-1.5 text-sm !rounded-xl">Balance Sheet</button>
+        <button data-topic="terminology" class="mode-btn glass-btn glass px-3.5 py-1.5 text-sm !rounded-xl">Terminology</button>
+        <button data-topic="transactions" class="mode-btn glass-btn glass px-3.5 py-1.5 text-sm !rounded-xl">Journal Entries</button>
+        <button type="button" data-feedback class="glass-btn glass px-3.5 py-1.5 text-sm !rounded-xl text-zinc-300">💬 Feedback / Bug</button>
+        <button type="button" data-auth class="glass-btn glass px-3.5 py-1.5 text-sm !rounded-xl">Sign in</button>
       </nav>
     </div>
   </header>
 
-  <main class="max-w-3xl mx-auto px-4 py-8">
+  <main id="trainerMain" class="max-w-3xl mx-auto px-4 pb-8" style="padding-top: calc(var(--hdr-h, 72px) + 1.5rem);">
     <div id="loading" class="hidden flex flex-col items-center gap-4 py-24 text-zinc-400">
       <div class="spinner"></div><span class="serif italic">Loading…</span>
       <span id="slowHint" class="hidden text-xs text-zinc-500">The server is waking up, this can take up to a minute…</span>
@@ -256,12 +264,14 @@ let recentIds = [];
 let currentTopic = null, currentPro = false, task = null, hintStep = 0;
 
 function view(name) {               // "welcome" | "trainer"
+  showHeader(); lastY = 0;
   const show = $(name), hide = $(name === "welcome" ? "trainer" : "welcome");
   hide.classList.add("hidden");
   show.classList.remove("hidden", "fade-in");
   void show.offsetWidth;
   show.classList.add("fade-in");
   window.scrollTo(0, 0);
+  if (name === "trainer") syncHeaderHeight();
 }
 
 function panel(which) {             // "loading" | "error" | "task"
@@ -503,6 +513,34 @@ $("hintBtn").onclick = () => {
     if (next) next.classList.remove("hidden");
   }
 };
+
+// --- header: hide on scroll down, show on scroll up / at the top ---
+const siteHeader = $("siteHeader");
+let lastY = window.scrollY;
+
+function syncHeaderHeight() {
+  // reserve exactly the header's height above the task so the first lines are never covered
+  const h = siteHeader.offsetHeight;
+  if (h) document.documentElement.style.setProperty("--hdr-h", h + "px");
+}
+const showHeader = () => siteHeader.classList.remove("hdr-hidden");
+const hideHeader = () => siteHeader.classList.add("hdr-hidden");
+
+function onScroll() {
+  const y = Math.max(window.scrollY, 0);
+  const delta = y - lastY;
+  if (y <= 0) showHeader();
+  else if (Math.abs(delta) > 6) {                         // ignore tiny jitters
+    if (delta > 0 && y > siteHeader.offsetHeight) hideHeader();   // scrolling down
+    else if (delta < 0) showHeader();                              // scrolling up
+  }
+  lastY = y;
+}
+window.addEventListener("scroll", onScroll, { passive: true });
+siteHeader.addEventListener("focusin", showHeader);       // keyboard users never lose the bar
+window.addEventListener("resize", syncHeaderHeight);
+if ("ResizeObserver" in window) new ResizeObserver(syncHeaderHeight).observe(siteHeader);
+syncHeaderHeight();
 
 // --- feedback modal (Formspree) ---
 const fbModal = $("fbModal"), fbForm = $("fbForm"), fbStatus = $("fbStatus");
