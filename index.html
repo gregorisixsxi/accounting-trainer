@@ -1,0 +1,364 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Accounting Trainer</title>
+<script src="https://cdn.tailwindcss.com/3.4.16"></script>
+<style>
+  :root { color-scheme: dark; }
+  html, body { background: #09090b; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Inter, sans-serif; color: #f4f4f5;
+         min-height: 100vh; display: flex; flex-direction: column; overflow-y: auto; }
+  .serif { font-family: "Times New Roman", Times, "Liberation Serif", serif; }
+
+  .glow { position: fixed; inset: 0; z-index: -1; pointer-events: none;
+    background:
+      radial-gradient(600px 400px at 15% 10%, rgba(99,102,241,.22), transparent 70%),
+      radial-gradient(500px 400px at 85% 20%, rgba(236,72,153,.14), transparent 70%),
+      radial-gradient(700px 500px at 50% 100%, rgba(20,184,166,.14), transparent 70%); }
+
+  .glass { position: relative; background: rgba(255,255,255,.05);
+    -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
+    border: 1px solid rgba(255,255,255,.10); border-radius: 20px;
+    box-shadow: 0 8px 32px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.06); }
+  .glass::before { content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px; pointer-events: none;
+    background: linear-gradient(135deg, rgba(255,255,255,.28), rgba(255,255,255,0) 40%, rgba(255,255,255,.10));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude; }
+  .glass-btn { transition: transform .2s ease, background .2s ease, box-shadow .2s ease; cursor: pointer; }
+  .glass-btn:hover:not(:disabled) { background: rgba(255,255,255,.10); transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(0,0,0,.5), 0 0 0 1px rgba(255,255,255,.08); }
+  .glass-btn:active:not(:disabled) { transform: translateY(0) scale(.99); }
+  .glass-btn:disabled { opacity: .5; cursor: default; }
+  .pill-active { background: rgba(255,255,255,.92) !important; color: #09090b !important; }
+
+  .field { width: 100%; background: rgba(0,0,0,.40); border: 1px solid rgba(255,255,255,.10);
+    border-radius: 12px; padding: .6rem .85rem; font-size: .9rem; color: #f4f4f5; outline: none; transition: border-color .2s, box-shadow .2s; }
+  .field::placeholder { color: #71717a; }
+  .field:focus { border-color: rgba(129,140,248,.7); box-shadow: 0 0 0 3px rgba(99,102,241,.25); }
+  .field.ok  { border-color: rgba(52,211,153,.7); background: rgba(16,185,129,.12); box-shadow: 0 0 0 3px rgba(16,185,129,.15); }
+  .field.bad { border-color: rgba(251,113,133,.7); background: rgba(244,63,94,.12); box-shadow: 0 0 0 3px rgba(244,63,94,.15); }
+  .num { text-align: right; font-variant-numeric: tabular-nums; }
+
+  .bs-row { display: grid; grid-template-columns: 1fr 9.5rem; gap: .75rem; align-items: center; padding: .55rem 0; }
+  .bs-total { border-top: 1px solid rgba(255,255,255,.18); margin-top: .35rem; padding-top: .9rem; font-weight: 600; }
+  .expected { font-size: .7rem; color: #fda4af; text-align: right; margin-top: 2px; }
+
+  .fade-in { animation: fade .55s ease both; }
+  @keyframes fade { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+  .spinner { width: 30px; height: 30px; border: 3px solid rgba(255,255,255,.15); border-top-color: #fff;
+    border-radius: 9999px; animation: spin .8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+<div class="glow"></div>
+
+<div class="flex-1">
+
+<!-- ============ WELCOME ============ -->
+<section id="welcome" class="flex items-center justify-center px-5 py-16 sm:py-24 fade-in">
+  <div class="max-w-2xl w-full text-center">
+    <p class="text-xs tracking-[.3em] uppercase text-zinc-400">Financial Accounting · Practice</p>
+    <h1 class="serif mt-5 text-6xl sm:text-7xl leading-tight font-normal tracking-tight">
+      Accounting <span class="italic">Trainer</span>
+    </h1>
+    <div class="mx-auto mt-6 h-px w-24 bg-gradient-to-r from-transparent via-white/40 to-transparent"></div>
+    <p class="serif mt-6 text-lg sm:text-xl text-zinc-300 leading-relaxed">
+      Made for students who are learning financial accounting, compiling
+      <span class="italic">Balance Sheets</span> and want to sharpen their skills.
+      Fresh tasks every time, with instant feedback.
+    </p>
+
+    <div class="mt-10 grid sm:grid-cols-2 gap-4">
+      <button data-start="balance_sheet" class="glass glass-btn p-6 text-left">
+        <span class="text-2xl">📒</span>
+        <span class="serif block mt-3 text-xl">Balance Sheet Trainer</span>
+        <span class="block mt-1 text-sm text-zinc-400">Fill in a balance sheet from raw figures.</span>
+      </button>
+      <button data-start="terminology" class="glass glass-btn p-6 text-left">
+        <span class="text-2xl">🎓</span>
+        <span class="serif block mt-3 text-xl">Terminology &amp; Questions</span>
+        <span class="block mt-1 text-sm text-zinc-400">Test the core concepts and definitions.</span>
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ TRAINER ============ -->
+<div id="trainer" class="hidden">
+  <header class="sticky top-0 z-10 border-b border-white/10 bg-black/40 backdrop-blur-md">
+    <div class="max-w-3xl mx-auto px-4 py-3 flex flex-wrap items-center gap-3 justify-between">
+      <button id="backBtn" class="glass-btn glass px-4 py-2 text-sm !rounded-xl">← Back to Home</button>
+      <nav class="flex gap-2">
+        <button data-topic="balance_sheet" class="mode-btn glass-btn glass px-4 py-2 text-sm !rounded-xl">Balance Sheet</button>
+        <button data-topic="terminology" class="mode-btn glass-btn glass px-4 py-2 text-sm !rounded-xl">Terminology</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="max-w-3xl mx-auto px-4 py-8">
+    <div id="loading" class="hidden flex flex-col items-center gap-4 py-24 text-zinc-400">
+      <div class="spinner"></div><span class="serif italic">Loading…</span>
+    </div>
+
+    <div id="error" class="hidden glass p-5 text-sm text-red-300"></div>
+
+    <section id="task" class="hidden fade-in">
+      <p id="company" class="text-xs tracking-[.2em] uppercase text-zinc-400"></p>
+      <h2 id="title" class="serif mt-2 text-3xl sm:text-4xl leading-tight"></h2>
+
+      <div id="description" class="glass mt-6 p-5 text-sm leading-relaxed text-zinc-200 whitespace-pre-wrap"></div>
+
+      <!-- Balance sheet table mode -->
+      <div id="bsBox" class="hidden glass mt-6 p-5 sm:p-6">
+        <div class="flex items-baseline justify-between">
+          <h3 class="serif text-xl">Balance Sheet</h3>
+          <span id="bsUnit" class="text-xs text-zinc-400"></span>
+        </div>
+        <div class="mt-4 grid sm:grid-cols-2 gap-x-10">
+          <div>
+            <p class="text-xs tracking-[.2em] uppercase text-zinc-400 pb-1 border-b border-white/10">Assets</p>
+            <div class="bs-row"><label for="bs_fixed_assets">Fixed Assets</label><div><input id="bs_fixed_assets" data-key="fixed_assets" class="field num" inputmode="decimal" placeholder="0"></div></div>
+            <div class="bs-row"><label for="bs_current_assets">Current Assets</label><div><input id="bs_current_assets" data-key="current_assets" class="field num" inputmode="decimal" placeholder="0"></div></div>
+            <div class="bs-row bs-total"><label for="bs_total_assets">Total Assets</label><div><input id="bs_total_assets" data-key="total_assets" class="field num" inputmode="decimal" placeholder="0"></div></div>
+          </div>
+          <div class="mt-6 sm:mt-0">
+            <p class="text-xs tracking-[.2em] uppercase text-zinc-400 pb-1 border-b border-white/10">Equity &amp; Liabilities</p>
+            <div class="bs-row"><label for="bs_equity">Equity</label><div><input id="bs_equity" data-key="equity" class="field num" inputmode="decimal" placeholder="0"></div></div>
+            <div class="bs-row"><label for="bs_liabilities">Liabilities</label><div><input id="bs_liabilities" data-key="liabilities" class="field num" inputmode="decimal" placeholder="0"></div></div>
+            <div class="bs-row bs-total"><label for="bs_total_equity_and_liabilities">Total Equity &amp; Liabilities</label><div><input id="bs_total_equity_and_liabilities" data-key="total_equity_and_liabilities" class="field num" inputmode="decimal" placeholder="0"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Question list mode -->
+      <form id="answers" class="hidden mt-6 space-y-5" autocomplete="off" onsubmit="return false"></form>
+
+      <p id="hintText" class="hidden mt-5 text-sm text-amber-300 bg-amber-400/10 border border-amber-300/20 rounded-xl px-4 py-2.5"></p>
+      <div id="explain" class="hidden mt-5 text-sm text-zinc-200 glass p-4"></div>
+
+      <div class="mt-7 flex flex-wrap gap-3">
+        <button id="hintBtn" type="button" class="glass-btn glass px-5 py-2.5 text-sm !rounded-xl">💡 Hint</button>
+        <button id="checkBtn" type="button" class="glass-btn px-5 py-2.5 text-sm font-medium rounded-xl bg-white text-zinc-900 hover:bg-zinc-200">Check Answer</button>
+        <button id="newBtn" type="button" class="glass-btn px-4 py-2.5 text-sm text-zinc-400 hover:text-white ml-auto">New task ↻</button>
+      </div>
+      <p id="score" class="hidden serif mt-6 text-2xl"></p>
+    </section>
+  </main>
+</div>
+
+</div>
+
+<!-- ============ FOOTER ============ -->
+<footer class="px-4 pb-8 pt-4">
+  <div class="glass max-w-3xl mx-auto px-6 py-7 text-center">
+    <p class="serif text-lg text-zinc-200">If you enjoyed this tool and want to support the project, you can buy me a coffee!</p>
+    <div class="mt-5 flex flex-wrap justify-center gap-3">
+      <a href="https://ko-fi.com/sixzersis" target="_blank" rel="noopener noreferrer"
+         class="glass-btn glass px-5 py-2.5 text-sm !rounded-xl">☕ Buy me a coffee (Ko-fi)</a>
+      <a href="https://www.instagram.com/sixzersis/" target="_blank" rel="noopener noreferrer"
+         class="glass-btn glass px-5 py-2.5 text-sm !rounded-xl">📷 Instagram / Services</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+// Same origin when served by FastAPI; fall back to the local backend when opened as a file.
+const API = location.protocol.startsWith("http") ? "" : "http://127.0.0.1:8000";
+const $ = (id) => document.getElementById(id);
+const BS_KEYS = ["fixed_assets", "current_assets", "total_assets", "equity", "liabilities", "total_equity_and_liabilities"];
+let currentTopic = null, task = null, hintStep = 0;
+
+function view(name) {               // "welcome" | "trainer"
+  const show = $(name), hide = $(name === "welcome" ? "trainer" : "welcome");
+  hide.classList.add("hidden");
+  show.classList.remove("hidden", "fade-in");
+  void show.offsetWidth;
+  show.classList.add("fade-in");
+  window.scrollTo(0, 0);
+}
+
+function panel(which) {             // "loading" | "error" | "task"
+  for (const id of ["loading", "error", "task"]) $(id).classList.toggle("hidden", id !== which);
+}
+
+function setActive(topic) {
+  document.querySelectorAll(".mode-btn").forEach((b) => b.classList.toggle("pill-active", b.dataset.topic === topic));
+}
+
+function setBusy(busy) {
+  document.querySelectorAll(".mode-btn, #newBtn, #checkBtn, #hintBtn").forEach((b) => (b.disabled = busy));
+}
+
+// Question-mode data: {question, hint} / {answer, explanation}; accept plain strings and objects too.
+function normalize(data) {
+  const reqs = (data.requirements || []).map((r) =>
+    typeof r === "string" ? { question: r, hint: "" } : { question: r.question || r.text || "", hint: r.hint || "" });
+  let key = data.solution_key || [];
+  if (!Array.isArray(key)) key = Object.entries(key).map(([k, v]) => ({ answer: String(v), explanation: k }));
+  key = key.map((k) =>
+    typeof k === "object" && k !== null ? { answer: String(k.answer ?? ""), explanation: k.explanation || "" }
+                                         : { answer: String(k), explanation: "" });
+  return { ...data, requirements: reqs, solution_key: key };
+}
+
+async function load(topic) {
+  currentTopic = topic;
+  setActive(topic);
+  view("trainer");
+  setBusy(true);
+  panel("loading");
+  try {
+    const res = await fetch(`${API}/api/generate/${topic}`);
+    if (!res.ok) {
+      let msg = res.statusText;
+      try { msg = (await res.json()).detail || msg; } catch {}
+      throw new Error(msg);
+    }
+    task = normalize(await res.json());
+    render();
+  } catch (e) {
+    $("error").textContent = "Could not load the task: " + e.message;
+    panel("error");
+  } finally {
+    setBusy(false);
+  }
+}
+
+const isBS = () => task && task.balance_sheet_key && typeof task.balance_sheet_key === "object";
+
+function render() {
+  hintStep = 0;
+  $("company").textContent = task.company_name || "";
+  $("title").textContent = task.task_title || "Task";
+  $("description").textContent = task.description || "";
+  for (const id of ["score", "hintText", "explain"]) { $(id).classList.add("hidden"); $(id).textContent = ""; }
+
+  $("bsBox").classList.toggle("hidden", !isBS());
+  $("answers").classList.toggle("hidden", isBS());
+
+  if (isBS()) {
+    $("bsUnit").textContent = task.unit ? "Amounts in " + task.unit : "";
+    document.querySelectorAll("#bsBox input").forEach((inp) => {
+      inp.value = "";
+      inp.className = "field num";
+      const old = inp.parentElement.querySelector(".expected");
+      if (old) old.remove();
+    });
+  } else {
+    const form = $("answers");
+    form.innerHTML = "";
+    task.requirements.forEach((r, i) => {
+      const wrap = document.createElement("div");
+      wrap.className = "glass p-4";
+      wrap.innerHTML = `
+        <label class="block text-sm font-medium mb-2 text-zinc-100"></label>
+        <input type="text" class="field" placeholder="Your answer">
+        <p class="hint hidden mt-2 text-xs text-amber-300 bg-amber-400/10 border border-amber-300/20 rounded-lg px-3 py-1.5"></p>
+        <div class="feedback hidden mt-2 text-sm rounded-lg px-3 py-2 border"></div>`;
+      wrap.querySelector("label").textContent = `${i + 1}. ${r.question}`;
+      wrap.querySelector(".hint").textContent = "Hint: " + (r.hint || "no hint available");
+      form.appendChild(wrap);
+    });
+  }
+  panel("task");
+}
+
+// --- comparison helpers ---
+function parseAmount(s) {
+  let t = String(s).replace(/[\s ]/g, "").replace(/[A-Za-z]/g, "");
+  if (/^-?\d{1,3}(\.\d{3})+$/.test(t)) t = t.replace(/\./g, "");   // 1.250.000
+  t = t.replace(/,/g, "");                                          // 1,250
+  return /^-?\d+(\.\d+)?$/.test(t) ? parseFloat(t) : null;
+}
+const fmt = (n) => Number(n).toLocaleString("en-US");
+
+const num = (s) => {
+  const m = String(s).replace(/\s/g, "").replace(/,/g, ".").match(/-?\d+(\.\d+)?/);
+  return m ? parseFloat(m[0]) : null;
+};
+const words = (s) => String(s).toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, " ").split(/\s+/).filter((w) => w.length > 2);
+
+function isCorrect(user, expected) {
+  if (!user.trim()) return false;
+  const a = num(user), b = num(expected);
+  if (a !== null && b !== null && /^[\s\-\d.,%a-zA-Z]*$/.test(String(expected)) && words(expected).length <= 2) {
+    return Math.abs(a - b) <= Math.max(0.005 * Math.abs(b), 0.01);
+  }
+  const exp = new Set(words(expected)), got = new Set(words(user));
+  if (!exp.size) return user.trim().toLowerCase() === String(expected).trim().toLowerCase();
+  let hit = 0;
+  exp.forEach((w) => got.has(w) && hit++);
+  return hit / exp.size >= 0.6;
+}
+
+function checkBalanceSheet() {
+  let ok = 0;
+  document.querySelectorAll("#bsBox input").forEach((inp) => {
+    const expected = Number(task.balance_sheet_key[inp.dataset.key]);
+    const got = parseAmount(inp.value);
+    const good = got !== null && Math.abs(got - expected) <= 0.5;
+    if (good) ok++;
+    inp.className = "field num " + (good ? "ok" : "bad");
+    let hint = inp.parentElement.querySelector(".expected");
+    if (hint) hint.remove();
+    if (!good) {
+      hint = document.createElement("div");
+      hint.className = "expected";
+      hint.textContent = "Correct: " + fmt(expected);
+      inp.parentElement.appendChild(hint);
+    }
+  });
+  if (task.explanation) {
+    $("explain").textContent = task.explanation;
+    $("explain").classList.remove("hidden");
+  }
+  return [ok, BS_KEYS.length];
+}
+
+function checkQuestions() {
+  const blocks = $("answers").children;
+  let ok = 0;
+  task.requirements.forEach((_, i) => {
+    const key = task.solution_key[i] || { answer: "—", explanation: "" };
+    const good = isCorrect(blocks[i].querySelector("input").value, key.answer);
+    if (good) ok++;
+    const fb = blocks[i].querySelector(".feedback");
+    fb.className = "feedback mt-2 text-sm rounded-lg px-3 py-2 border " +
+      (good ? "bg-emerald-400/10 border-emerald-300/20 text-emerald-300"
+            : "bg-rose-400/10 border-rose-300/20 text-rose-300");
+    fb.textContent = (good ? "✓ Correct. " : "✗ Expected: " + key.answer + ". ") + key.explanation;
+  });
+  return [ok, task.requirements.length];
+}
+
+$("checkBtn").onclick = () => {
+  if (!task) return;
+  const [ok, total] = isBS() ? checkBalanceSheet() : checkQuestions();
+  const s = $("score");
+  s.innerHTML = `Score: <span class="italic">${ok} / ${total}</span>`;
+  s.classList.remove("hidden");
+};
+
+$("hintBtn").onclick = () => {
+  if (!task) return;
+  if (isBS()) {
+    const h = $("hintText");
+    h.textContent = "Hint: " + (task.hint || "Classify every item as fixed asset, current asset, equity or liability, then add them up.");
+    h.classList.remove("hidden");
+  } else {   // reveal question hints one by one, top to bottom
+    const next = document.querySelector("#answers .hint.hidden");
+    if (next) next.classList.remove("hidden");
+  }
+};
+
+$("newBtn").onclick = () => currentTopic && load(currentTopic);
+$("backBtn").onclick = () => view("welcome");
+document.querySelectorAll("[data-start]").forEach((b) => (b.onclick = () => load(b.dataset.start)));
+document.querySelectorAll(".mode-btn").forEach((b) => (b.onclick = () => load(b.dataset.topic)));
+</script>
+</body>
+</html>
