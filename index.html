@@ -50,6 +50,10 @@
   .spinner { width: 30px; height: 30px; border: 3px solid rgba(255,255,255,.15); border-top-color: #fff;
     border-radius: 9999px; animation: spin .8s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
+  .fb-fade { animation: fbfade .25s ease both; }
+  .fb-pop { animation: fbpop .3s cubic-bezier(.2,.8,.2,1) both; }
+  @keyframes fbfade { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes fbpop { from { opacity: 0; transform: translateY(14px) scale(.97); } to { opacity: 1; transform: none; } }
   .hidden { display: none !important; }
 </style>
 </head>
@@ -59,7 +63,8 @@
 <div class="flex-1">
 
 <!-- ============ WELCOME ============ -->
-<section id="welcome" class="flex items-center justify-center px-5 py-16 sm:py-24 fade-in">
+<section id="welcome" class="relative flex items-center justify-center px-5 py-16 sm:py-24 fade-in">
+  <button type="button" data-auth class="glass-btn glass absolute top-4 right-4 px-4 py-2 text-sm !rounded-xl">Sign in</button>
   <div class="max-w-2xl w-full text-center">
     <p class="text-xs tracking-[.3em] uppercase text-zinc-400">Financial Accounting · Practice</p>
     <h1 class="serif mt-5 text-6xl sm:text-7xl leading-tight font-normal tracking-tight">
@@ -83,6 +88,11 @@
         <span class="serif block mt-3 text-xl">Terminology &amp; Questions</span>
         <span class="block mt-1 text-sm text-zinc-400">Test the core concepts and definitions.</span>
       </button>
+      <button data-start="transactions" class="glass glass-btn p-6 text-left sm:col-span-2">
+        <span class="text-2xl">🧾</span>
+        <span class="serif block mt-3 text-xl">Journal Entries</span>
+        <span class="block mt-1 text-sm text-zinc-400">Pick the correct debit and credit for a business transaction.</span>
+      </button>
     </div>
   </div>
 </section>
@@ -92,9 +102,12 @@
   <header class="sticky top-0 z-10 border-b border-white/10 bg-black/40 backdrop-blur-md">
     <div class="max-w-3xl mx-auto px-4 py-3 flex flex-wrap items-center gap-3 justify-between">
       <button id="backBtn" class="glass-btn glass px-4 py-2 text-sm !rounded-xl">← Back to Home</button>
-      <nav class="flex gap-2">
+      <nav class="flex flex-wrap gap-2">
         <button data-topic="balance_sheet" class="mode-btn glass-btn glass px-4 py-2 text-sm !rounded-xl">Balance Sheet</button>
         <button data-topic="terminology" class="mode-btn glass-btn glass px-4 py-2 text-sm !rounded-xl">Terminology</button>
+        <button data-topic="transactions" class="mode-btn glass-btn glass px-4 py-2 text-sm !rounded-xl">Journal Entries</button>
+        <button type="button" data-feedback class="glass-btn glass px-4 py-2 text-sm !rounded-xl text-zinc-300">💬 Feedback / Bug</button>
+        <button type="button" data-auth class="glass-btn glass px-4 py-2 text-sm !rounded-xl">Sign in</button>
       </nav>
     </div>
   </header>
@@ -102,9 +115,13 @@
   <main class="max-w-3xl mx-auto px-4 py-8">
     <div id="loading" class="hidden flex flex-col items-center gap-4 py-24 text-zinc-400">
       <div class="spinner"></div><span class="serif italic">Loading…</span>
+      <span id="slowHint" class="hidden text-xs text-zinc-500">The server is waking up, this can take up to a minute…</span>
     </div>
 
-    <div id="error" class="hidden glass p-5 text-sm text-red-300"></div>
+    <div id="error" class="hidden glass p-5 text-sm text-red-300" role="alert">
+      <p id="errorText"></p>
+      <button id="retryBtn" type="button" class="glass-btn glass mt-4 px-4 py-2 text-sm !rounded-xl text-white">Try again</button>
+    </div>
 
     <section id="task" class="hidden fade-in">
       <p id="company" class="text-xs tracking-[.2em] uppercase text-zinc-400"></p>
@@ -134,6 +151,12 @@
         </div>
       </div>
 
+      <!-- Multiple choice (journal entries) -->
+      <div id="mcBox" class="hidden glass mt-6 p-5">
+        <p id="mcLabel" class="text-sm font-medium text-zinc-100 mb-3">Choose the correct answer:</p>
+        <div id="mcOptions" class="space-y-2" role="radiogroup"></div>
+      </div>
+
       <!-- Question list mode -->
       <form id="answers" class="hidden mt-6 space-y-5" autocomplete="off" onsubmit="return false"></form>
 
@@ -143,8 +166,10 @@
       <div class="mt-7 flex flex-wrap gap-3">
         <button id="hintBtn" type="button" class="glass-btn glass px-5 py-2.5 text-sm !rounded-xl">💡 Hint</button>
         <button id="checkBtn" type="button" class="glass-btn px-5 py-2.5 text-sm font-medium rounded-xl bg-white text-zinc-900 hover:bg-zinc-200">Check Answer</button>
+        <button id="proBtn" type="button" class="hidden glass-btn px-5 py-2.5 text-sm font-medium rounded-xl text-white border border-indigo-300/40 bg-indigo-400/20 hover:bg-indigo-400/30">✨ Generate PRO task (AI)</button>
         <button id="newBtn" type="button" class="glass-btn px-4 py-2.5 text-sm text-zinc-400 hover:text-white ml-auto">New task ↻</button>
       </div>
+      <p id="proMsg" class="hidden mt-4 text-sm text-indigo-200 bg-indigo-400/10 border border-indigo-300/20 rounded-xl px-4 py-2.5"></p>
       <p id="score" class="hidden serif mt-6 text-2xl"></p>
     </section>
   </main>
@@ -161,16 +186,74 @@
          class="glass-btn glass px-5 py-2.5 text-sm !rounded-xl">☕ Buy me a coffee (Ko-fi)</a>
       <a href="https://www.instagram.com/sixzersis/" target="_blank" rel="noopener noreferrer"
          class="glass-btn glass px-5 py-2.5 text-sm !rounded-xl">📷 Instagram / Services</a>
+      <button type="button" data-feedback class="glass-btn glass px-5 py-2.5 text-sm !rounded-xl">💬 Feedback / Bug</button>
     </div>
   </div>
 </footer>
+
+<!-- ============ AUTH MODAL ============ -->
+<div id="authModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+  <div id="authBackdrop" class="absolute inset-0 bg-black/60 backdrop-blur-sm fb-fade"></div>
+  <div class="glass relative w-full max-w-md p-6 fb-pop" style="background: rgba(24,24,27,.85);">
+    <button type="button" id="authClose" aria-label="Close" class="absolute top-3 right-4 text-2xl leading-none text-zinc-400 hover:text-white">×</button>
+
+    <form id="authForm" class="space-y-3" autocomplete="on">
+      <h3 id="authTitle" class="serif text-2xl pr-6">Sign in or create an account</h3>
+      <p class="text-sm text-zinc-400">Enter any username or email and a password. New here? We'll create your account instantly, no email confirmation.</p>
+      <input type="text" name="username" required minlength="3" maxlength="64" autocomplete="username" class="field mt-2" placeholder="Username or email">
+      <input type="password" name="password" required minlength="6" maxlength="128" autocomplete="current-password" class="field" placeholder="Password (min. 6 characters)">
+      <p id="authStatus" class="hidden text-sm rounded-lg px-3 py-2 border"></p>
+      <div class="flex justify-end gap-3 pt-1">
+        <button type="button" id="authCancel" class="glass-btn glass px-5 py-2.5 text-sm !rounded-xl">Cancel</button>
+        <button type="submit" id="authSubmit" class="glass-btn px-5 py-2.5 text-sm font-medium rounded-xl bg-white text-zinc-900 hover:bg-zinc-200">Continue</button>
+      </div>
+    </form>
+
+    <div id="authAccount" class="hidden space-y-3">
+      <h3 class="serif text-2xl pr-6">Your account</h3>
+      <p class="text-sm text-zinc-300">Signed in as <span id="accName" class="font-medium text-white"></span></p>
+      <p id="accPlan" class="text-sm"></p>
+      <div id="histBox" class="hidden rounded-xl border border-white/10 bg-black/30 p-3">
+        <p id="histText" class="text-sm text-zinc-300"></p>
+        <p class="mt-1 text-xs text-zinc-500">PRO tasks never repeat. Clear the history if you want the AI to be allowed to create similar tasks again.</p>
+        <button type="button" id="histReset" class="glass-btn glass mt-3 px-4 py-2 text-xs !rounded-xl">Clear solved history</button>
+      </div>
+      <div class="flex justify-end gap-3 pt-1">
+        <button type="button" id="authDone" class="glass-btn glass px-5 py-2.5 text-sm !rounded-xl">Close</button>
+        <button type="button" id="logoutBtn" class="glass-btn px-5 py-2.5 text-sm font-medium rounded-xl bg-white text-zinc-900 hover:bg-zinc-200">Log out</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ FEEDBACK MODAL ============ -->
+<div id="fbModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="fbTitle">
+  <div id="fbBackdrop" class="absolute inset-0 bg-black/60 backdrop-blur-sm fb-fade"></div>
+  <div class="glass relative w-full max-w-md p-6 fb-pop" style="background: rgba(24,24,27,.85);">
+    <button type="button" id="fbClose" aria-label="Close" class="absolute top-3 right-4 text-2xl leading-none text-zinc-400 hover:text-white">×</button>
+    <h3 id="fbTitle" class="serif text-2xl pr-6">Found a bug or have an idea?</h3>
+    <p class="mt-2 text-sm text-zinc-400">Tell us what could be improved or what error you ran into.</p>
+
+    <form id="fbForm" action="https://formspree.io/f/mzednkgr" method="POST" class="mt-5 space-y-3">
+      <textarea name="message" required rows="5" class="field" style="resize: vertical;" placeholder="Describe the problem or your suggestion..."></textarea>
+      <input type="email" name="email" class="field" placeholder="Your email for a reply (optional)">
+      <input type="text" name="_gotcha" tabindex="-1" autocomplete="off" class="hidden" aria-hidden="true">
+      <p id="fbStatus" class="hidden text-sm rounded-lg px-3 py-2 border"></p>
+      <div class="flex justify-end gap-3 pt-1">
+        <button type="button" id="fbCancel" class="glass-btn glass px-5 py-2.5 text-sm !rounded-xl">Cancel</button>
+        <button type="submit" id="fbSend" class="glass-btn px-5 py-2.5 text-sm font-medium rounded-xl bg-white text-zinc-900 hover:bg-zinc-200">Send</button>
+      </div>
+    </form>
+  </div>
+</div>
 
 <script>
 // Same origin when served by FastAPI; fall back to the local backend when opened as a file.
 const API = location.protocol.startsWith("http") ? "" : "http://127.0.0.1:8000";
 const $ = (id) => document.getElementById(id);
 const BS_KEYS = ["fixed_assets", "current_assets", "total_assets", "equity", "liabilities", "total_equity_and_liabilities"];
-let currentTopic = null, task = null, hintStep = 0;
+let recentIds = [];
+let currentTopic = null, currentPro = false, task = null, hintStep = 0;
 
 function view(name) {               // "welcome" | "trainer"
   const show = $(name), hide = $(name === "welcome" ? "trainer" : "welcome");
@@ -190,7 +273,7 @@ function setActive(topic) {
 }
 
 function setBusy(busy) {
-  document.querySelectorAll(".mode-btn, #newBtn, #checkBtn, #hintBtn").forEach((b) => (b.disabled = busy));
+  document.querySelectorAll(".mode-btn, #newBtn, #checkBtn, #hintBtn, #proBtn").forEach((b) => (b.disabled = busy));
 }
 
 // Question-mode data: {question, hint} / {answer, explanation}; accept plain strings and objects too.
@@ -205,29 +288,61 @@ function normalize(data) {
   return { ...data, requirements: reqs, solution_key: key };
 }
 
-async function load(topic) {
+const LOAD_TIMEOUT_MS = 70000;   // a sleeping free-tier server + a Claude call can take a while
+
+function friendlyError(e, status) {
+  if (e && e.name === "AbortError") return "The server took too long to respond. Please try again.";
+  if (status === 429) return e.message;                                   // "Too many requests..." from the server
+  if (status === 401) return "Your session has expired. Please sign in again.";
+  if (status === 403) return e.message;
+  if (status >= 500 || status === 502) return "Something went wrong on our side while creating the task. Please try again.";
+  if (status) return e.message;
+  return "Can't reach the server. Check your internet connection and try again.";
+}
+
+async function load(topic, pro = false) {
   currentTopic = topic;
+  currentPro = pro;
   setActive(topic);
   view("trainer");
   setBusy(true);
   panel("loading");
+  $("proMsg").classList.add("hidden");
+  $("slowHint").classList.add("hidden");
+  const slowTimer = setTimeout(() => $("slowHint").classList.remove("hidden"), 8000);
+  const ctrl = new AbortController();
+  const killTimer = setTimeout(() => ctrl.abort(), LOAD_TIMEOUT_MS);
+  let status = 0;
   try {
-    const res = await fetch(`${API}/api/generate/${topic}`);
+    const res = pro
+      ? await fetch(`${API}/api/generate/pro`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", ...authHeader() },
+          body: JSON.stringify({ topic }),
+          signal: ctrl.signal,
+        })
+      : await fetch(`${API}/api/generate/${topic}?exclude=${recentIds.join(",")}`, { signal: ctrl.signal });
+    status = res.status;
+    if (res.status === 401 && pro) { setSession(null); renderAuth(); }
     if (!res.ok) {
       let msg = res.statusText;
       try { msg = (await res.json()).detail || msg; } catch {}
-      throw new Error(msg);
+      throw new Error(typeof msg === "string" ? msg : "Request failed");
     }
     task = normalize(await res.json());
+    if (task.id) { recentIds.push(task.id); recentIds = recentIds.slice(-8); }   // do not repeat pool tasks right away
     render();
   } catch (e) {
-    $("error").textContent = "Could not load the task: " + e.message;
+    $("errorText").textContent = friendlyError(e, status);
     panel("error");
   } finally {
+    clearTimeout(slowTimer);
+    clearTimeout(killTimer);
     setBusy(false);
   }
 }
 
+const isMC = () => task && Array.isArray(task.options) && task.options.length > 1;
 const isBS = () => task && task.balance_sheet_key && typeof task.balance_sheet_key === "object";
 
 function render() {
@@ -238,9 +353,23 @@ function render() {
   for (const id of ["score", "hintText", "explain"]) { $(id).classList.add("hidden"); $(id).textContent = ""; }
 
   $("bsBox").classList.toggle("hidden", !isBS());
-  $("answers").classList.toggle("hidden", isBS());
+  $("mcBox").classList.toggle("hidden", !isMC());
+  $("answers").classList.toggle("hidden", isBS() || isMC());
 
-  if (isBS()) {
+  $("hintBtn").classList.toggle("hidden", isMC() && !task.hint);   // pool questions without a hint: no empty hint button
+  if (isMC()) {
+    $("mcLabel").textContent = task.choose_label || "Choose the correct answer:";
+    const box = $("mcOptions");
+    box.innerHTML = "";
+    task.options.forEach((opt, i) => {
+      const lab = document.createElement("label");
+      lab.className = "mc-opt flex items-start gap-3 rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm cursor-pointer hover:bg-white/5 transition";
+      lab.innerHTML = '<input type="radio" name="mc" class="mt-1 accent-indigo-400"><span></span>';
+      lab.querySelector("input").value = opt;
+      lab.querySelector("span").textContent = opt;
+      box.appendChild(lab);
+    });
+  } else if (isBS()) {
     $("bsUnit").textContent = task.unit ? "Amounts in " + task.unit : "";
     document.querySelectorAll("#bsBox input").forEach((inp) => {
       inp.value = "";
@@ -319,6 +448,26 @@ function checkBalanceSheet() {
   return [ok, BS_KEYS.length];
 }
 
+function checkChoice() {
+  const labels = [...document.querySelectorAll("#mcOptions .mc-opt")];
+  const chosen = labels.find((l) => l.querySelector("input").checked);
+  let good = false;
+  labels.forEach((l) => {
+    const isRight = l.querySelector("input").value === task.correct_answer;
+    const isChosen = l === chosen;
+    l.className = "mc-opt flex items-start gap-3 rounded-xl border px-4 py-3 text-sm transition " +
+      (isRight ? "border-emerald-300/40 bg-emerald-400/10 text-emerald-300"
+        : isChosen ? "border-rose-300/40 bg-rose-400/10 text-rose-300"
+        : "border-white/10 bg-black/30 text-zinc-400");
+    if (isRight && isChosen) good = true;
+  });
+  const ex = $("explain");
+  ex.textContent = chosen ? (good ? "Correct!" : "Not quite. The correct answer is highlighted in green.")
+                          : "Pick an option first. The correct answer is highlighted in green.";
+  ex.classList.remove("hidden");
+  return [good ? 1 : 0, 1];
+}
+
 function checkQuestions() {
   const blocks = $("answers").children;
   let ok = 0;
@@ -337,7 +486,7 @@ function checkQuestions() {
 
 $("checkBtn").onclick = () => {
   if (!task) return;
-  const [ok, total] = isBS() ? checkBalanceSheet() : checkQuestions();
+  const [ok, total] = isMC() ? checkChoice() : isBS() ? checkBalanceSheet() : checkQuestions();
   const s = $("score");
   s.innerHTML = `Score: <span class="italic">${ok} / ${total}</span>`;
   s.classList.remove("hidden");
@@ -345,7 +494,7 @@ $("checkBtn").onclick = () => {
 
 $("hintBtn").onclick = () => {
   if (!task) return;
-  if (isBS()) {
+  if (isBS() || isMC()) {
     const h = $("hintText");
     h.textContent = "Hint: " + (task.hint || "Classify every item as fixed asset, current asset, equity or liability, then add them up.");
     h.classList.remove("hidden");
@@ -355,7 +504,181 @@ $("hintBtn").onclick = () => {
   }
 };
 
-$("newBtn").onclick = () => currentTopic && load(currentTopic);
+// --- feedback modal (Formspree) ---
+const fbModal = $("fbModal"), fbForm = $("fbForm"), fbStatus = $("fbStatus");
+let fbTimer = null;
+
+function fbMessage(text, ok) {
+  fbStatus.textContent = text;
+  fbStatus.className = "text-sm rounded-lg px-3 py-2 border " +
+    (ok ? "bg-emerald-400/10 border-emerald-300/20 text-emerald-300"
+        : "bg-rose-400/10 border-rose-300/20 text-rose-300");
+}
+function openFeedback() {
+  clearTimeout(fbTimer);
+  fbStatus.classList.add("hidden");
+  fbModal.classList.remove("hidden");
+  fbForm.elements.message.focus();
+}
+function closeFeedback() {
+  clearTimeout(fbTimer);
+  fbModal.classList.add("hidden");
+}
+document.querySelectorAll("[data-feedback]").forEach((b) => (b.onclick = openFeedback));
+$("fbClose").onclick = $("fbCancel").onclick = $("fbBackdrop").onclick = closeFeedback;
+document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !fbModal.classList.contains("hidden")) closeFeedback(); });
+
+fbForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const btn = $("fbSend");
+  btn.disabled = true; btn.textContent = "Sending…";
+  try {
+    const res = await fetch(fbForm.action, {
+      method: "POST",
+      body: new FormData(fbForm),
+      headers: { Accept: "application/json" },
+    });
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    fbForm.reset();
+    fbMessage("Thank you! Your message was sent ✓", true);
+    fbTimer = setTimeout(closeFeedback, 1500);
+  } catch (err) {
+    fbMessage("Could not send your message. Please try again later.", false);
+  } finally {
+    btn.disabled = false; btn.textContent = "Send";
+  }
+});
+
+// --- auth (token in localStorage) ---
+let session = null;   // {token, username, is_pro}
+try { session = JSON.parse(localStorage.getItem("session") || "null"); } catch {}
+
+function setSession(s) {
+  session = s;
+  try { s ? localStorage.setItem("session", JSON.stringify(s)) : localStorage.removeItem("session"); } catch {}
+}
+const authHeader = () => (session ? { Authorization: "Bearer " + session.token } : {});
+
+function renderAuth() {
+  document.querySelectorAll("[data-auth]").forEach((b) => {
+    b.textContent = session ? "👤 " + session.username + (session.is_pro ? " · PRO" : "") : "Sign in";
+  });
+  // PRO button only for signed-in users; free accounts see it locked
+  const pb = $("proBtn");
+  pb.classList.toggle("hidden", !session);
+  pb.textContent = session && !session.is_pro ? "🔒 PRO task (AI)" : "✨ Generate PRO task (AI)";
+}
+
+const authModal = $("authModal"), authForm = $("authForm"), authStatus = $("authStatus");
+
+function authMessage(text, ok) {
+  authStatus.textContent = text;
+  authStatus.className = "text-sm rounded-lg px-3 py-2 border " +
+    (ok ? "bg-emerald-400/10 border-emerald-300/20 text-emerald-300"
+        : "bg-rose-400/10 border-rose-300/20 text-rose-300");
+}
+function openAuth() {
+  authStatus.classList.add("hidden");
+  authForm.classList.toggle("hidden", !!session);
+  $("authAccount").classList.toggle("hidden", !session);
+  if (session) {
+    $("accName").textContent = session.username;
+    $("accPlan").textContent = session.is_pro
+      ? "Plan: PRO ✨ You can generate unique AI tasks that never repeat."
+      : "Plan: Free. PRO (unique AI tasks that never repeat) is available on request, use Feedback or Instagram to contact us.";
+    $("accPlan").className = "text-sm " + (session.is_pro ? "text-indigo-200" : "text-zinc-400");
+  }
+  $("histBox").classList.toggle("hidden", !(session && session.is_pro));
+  if (session && session.is_pro) refreshHistory();
+  authModal.classList.remove("hidden");
+  if (!session) authForm.elements.username.focus();
+}
+async function refreshHistory() {
+  $("histText").textContent = "Solved PRO tasks remembered: …";
+  try {
+    const r = await fetch(API + "/api/history", { headers: authHeader() });
+    if (!r.ok) throw new Error();
+    const n = (await r.json()).count;
+    $("histText").textContent = `Solved PRO tasks remembered: ${n}`;
+    $("histReset").disabled = n === 0;
+  } catch { $("histText").textContent = "Could not load your history."; }
+}
+$("histReset").onclick = async () => {
+  if (!confirm("Clear your solved-task history? The AI may then generate similar tasks again.")) return;
+  try {
+    const r = await fetch(API + "/api/history/reset", { method: "POST", headers: authHeader() });
+    if (!r.ok) throw new Error();
+    refreshHistory();
+  } catch { $("histText").textContent = "Could not clear the history. Please try again."; }
+};
+const closeAuth = () => authModal.classList.add("hidden");
+
+async function authRequest(path, body) {
+  const res = await fetch(API + path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+  let data = {};
+  try { data = await res.json(); } catch {}
+  return { status: res.status, ok: res.ok, data };
+}
+
+authForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const body = { username: authForm.elements.username.value.trim(), password: authForm.elements.password.value };
+  const btn = $("authSubmit");
+  btn.disabled = true; btn.textContent = "Please wait…";
+  try {
+    // Try to log in; if the user does not exist yet, create the account right away.
+    let r = await authRequest("/api/login", body);
+    if (r.status === 404) r = await authRequest("/api/register", body);
+    if (!r.ok) {
+      const d = r.data.detail;
+      throw new Error(typeof d === "string" ? d : "Please check the username and password.");
+    }
+    setSession({ token: r.data.token, username: r.data.username, is_pro: r.data.is_pro });
+    authForm.reset();
+    renderAuth();
+    closeAuth();
+  } catch (err) {
+    authMessage(err.message || "Could not sign in. Please try again.", false);
+  } finally {
+    btn.disabled = false; btn.textContent = "Continue";
+  }
+});
+
+$("logoutBtn").onclick = async () => {
+  try { await fetch(API + "/api/logout", { method: "POST", headers: authHeader() }); } catch {}
+  setSession(null);
+  renderAuth();
+  closeAuth();
+};
+document.querySelectorAll("[data-auth]").forEach((b) => (b.onclick = openAuth));
+$("authClose").onclick = $("authCancel").onclick = $("authDone").onclick = $("authBackdrop").onclick = closeAuth;
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeAuth(); });
+
+$("proBtn").onclick = () => {
+  if (!session) return openAuth();
+  if (!session.is_pro) {
+    const m = $("proMsg");
+    m.textContent = "PRO unlocks unique AI-generated tasks that never repeat. It is available on request. Contact us via Feedback or Instagram.";
+    m.classList.remove("hidden");
+    return;
+  }
+  load(currentTopic || "balance_sheet", true);
+};
+
+// Validate the stored token and refresh the PRO flag (it can change on the server).
+renderAuth();
+if (session) {
+  fetch(API + "/api/me", { headers: authHeader() })
+    .then(async (r) => {
+      if (r.status === 401) { setSession(null); }
+      else if (r.ok) { const d = await r.json(); setSession({ ...session, username: d.username, is_pro: d.is_pro }); }
+    })
+    .catch(() => {})   // offline / server asleep: keep the stored session
+    .finally(renderAuth);
+}
+
+$("newBtn").onclick = () => currentTopic && load(currentTopic, currentPro);
+$("retryBtn").onclick = () => currentTopic && load(currentTopic, currentPro);
 $("backBtn").onclick = () => view("welcome");
 document.querySelectorAll("[data-start]").forEach((b) => (b.onclick = () => load(b.dataset.start)));
 document.querySelectorAll(".mode-btn").forEach((b) => (b.onclick = () => load(b.dataset.topic)));

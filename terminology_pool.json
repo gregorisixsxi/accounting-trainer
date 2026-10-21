@@ -1,0 +1,169 @@
+{
+  "terminology": [
+    {
+      "id": "term_1",
+      "question": "What is the primary purpose of Financial Accounting?",
+      "options": [
+        "To provide financial information for external users like investors and creditors",
+        "To create internal budgets and forecasts for managers",
+        "To calculate daily employee salaries and bonuses",
+        "To track physical inventory in warehouse locations"
+      ],
+      "correct_answer": "To provide financial information for external users like investors and creditors"
+    },
+    {
+      "id": "term_2",
+      "question": "What does the fundamental Accounting Equation state?",
+      "options": [
+        "Assets = Liabilities + Stockholders’ Equity",
+        "Assets = Revenues − Expenses",
+        "Net Income = Assets − Liabilities",
+        "Cash = Revenues + Common Stock"
+      ],
+      "correct_answer": "Assets = Liabilities + Stockholders’ Equity"
+    },
+    {
+      "id": "term_3",
+      "question": "Which of the following is classified as a Current Asset?",
+      "options": [
+        "Accounts Receivable",
+        "Long-term Bank Loan",
+        "Common Stock",
+        "Production Machinery"
+      ],
+      "correct_answer": "Accounts Receivable"
+    },
+    {
+      "id": "term_4",
+      "question": "What does the term 'On Account' mean in business transactions?",
+      "options": [
+        "Payment is deferred to a later date (creating a receivable or payable)",
+        "The transaction is paid immediately in cash",
+        "It represents a direct owner's equity contribution",
+        "It is a non-taxable corporate revenue"
+      ],
+      "correct_answer": "Payment is deferred to a later date (creating a receivable or payable)"
+    },
+    {
+      "id": "term_5",
+      "question": "How does Net Income (Profit) affect Stockholders' Equity?",
+      "options": [
+        "Profit increases Equity",
+        "Profit decreases Equity",
+        "Profit has no effect on Equity",
+        "Profit converts Equity into Liabilities"
+      ],
+      "correct_answer": "Profit increases Equity"
+    },
+    {
+      "id": "term_6",
+      "question": "What is the normal balance side for Assets and Expenses?",
+      "options": [
+        "Debit",
+        "Credit",
+        "Both Debit and Credit",
+        "Neither Debit nor Credit"
+      ],
+      "correct_answer": "Debit"
+    },
+    {
+      "id": "term_7",
+      "question": "What is the normal balance side for Liabilities, Equity, and Revenue?",
+      "options": [
+        "Credit",
+        "Debit",
+        "Zero balance",
+        "Variable balance"
+      ],
+      "correct_answer": "Credit"
+    },
+    {
+      "id": "term_8",
+      "question": "Of the three main financial statements, which is typically prepared first because its net income is needed by the others?",
+      "options": [
+        "Income Statement (P&L)",
+        "Balance Sheet",
+        "Statement of Cash Flows",
+        "Statement of Changes in Equity"
+      ],
+      "correct_answer": "Income Statement (P&L)"
+    },
+    {
+      "id": "term_9",
+      "question": "Where does 'Cost of Goods Sold (COGS)' appear under the Nature of Expense method?",
+      "options": [
+        "Material type expenses",
+        "Other expenses",
+        "Financial expenses",
+        "Depreciation"
+      ],
+      "correct_answer": "Material type expenses"
+    },
+    {
+      "id": "term_10",
+      "question": "What type of transaction is it when one asset increases and another asset decreases by the same amount?",
+      "options": [
+        "Asset circulation",
+        "Capital increment",
+        "Capital decrement",
+        "Liability circulation"
+      ],
+      "correct_answer": "Asset circulation"
+    },
+    {
+      "id": "term_11",
+      "question": "Are dividends declared and paid considered an Expense?",
+      "options": [
+        "No, dividends reduce Retained Earnings directly without affecting net profit",
+        "Yes, they are treated as operating expenses",
+        "Yes, they are classified as financial expenses",
+        "Yes, they reduce gross profit"
+      ],
+      "correct_answer": "No, dividends reduce Retained Earnings directly without affecting net profit"
+    },
+    {
+      "id": "term_12",
+      "question": "What does an 'Allowance for Doubtful Accounts' represent in accounting?",
+      "options": [
+        "A contra-asset account that reduces Accounts Receivable to its net realizable value",
+        "A current liability owed to the bank",
+        "An operating revenue account",
+        "A long-term investment fund"
+      ],
+      "correct_answer": "A contra-asset account that reduces Accounts Receivable to its net realizable value"
+    },
+    {
+      "id": "term_13",
+      "question": "What are Cash Equivalents?",
+      "options": [
+        "Highly liquid investments with original maturities of three months or less",
+        "Long-term bonds maturing in 5 years",
+        "Accounts receivable due within 60 days",
+        "Company office supplies inventory"
+      ],
+      "correct_answer": "Highly liquid investments with original maturities of three months or less"
+    },
+    {
+      "id": "term_14",
+      "question": "Which items require adjusting entries on the company's books during a Bank Reconciliation?",
+      "options": [
+        "Bank service charges, NSF checks, and interest earned",
+        "Outstanding checks and deposits in transit",
+        "Bank errors made by the financial institution",
+        "All bank statement items unconditionally"
+      ],
+      "correct_answer": "Bank service charges, NSF checks, and interest earned"
+    },
+    {
+      "id": "term_15",
+      "question": "What does the Fraud Triangle consist of?",
+      "options": [
+        "Opportunity, Rationalization, Pressure",
+        "Debit, Credit, Balance",
+        "Assets, Liabilities, Equity",
+        "Revenue, Expenses, Profit"
+      ],
+      "correct_answer": "Opportunity, Rationalization, Pressure"
+    }
+  ]
+}
