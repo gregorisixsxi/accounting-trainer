@@ -177,7 +177,6 @@
         <button id="proBtn" type="button" class="hidden glass-btn px-5 py-2.5 text-sm font-medium rounded-xl text-white border border-indigo-300/40 bg-indigo-400/20 hover:bg-indigo-400/30">✨ Generate PRO task (AI)</button>
         <button id="newBtn" type="button" class="glass-btn px-4 py-2.5 text-sm text-zinc-400 hover:text-white ml-auto">New task ↻</button>
       </div>
-      <p id="proMsg" class="hidden mt-4 text-sm text-indigo-200 bg-indigo-400/10 border border-indigo-300/20 rounded-xl px-4 py-2.5"></p>
       <p id="score" class="hidden serif mt-6 text-2xl"></p>
     </section>
   </main>
@@ -198,6 +197,27 @@
     </div>
   </div>
 </footer>
+
+<!-- ============ UPGRADE MODAL ============ -->
+<div id="upgradeModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="upTitle">
+  <div id="upBackdrop" class="absolute inset-0 bg-black/60 backdrop-blur-sm fb-fade"></div>
+  <div class="glass relative w-full max-w-md p-6 fb-pop" style="background: rgba(24,24,27,.85);">
+    <button type="button" id="upClose" aria-label="Close" class="absolute top-3 right-4 text-2xl leading-none text-zinc-400 hover:text-white">×</button>
+    <p class="text-xs tracking-[.2em] uppercase text-indigo-300">PRO</p>
+    <h3 id="upTitle" class="serif text-3xl mt-1 pr-6">Upgrade to PRO</h3>
+    <ul class="mt-4 space-y-2 text-sm text-zinc-300">
+      <li>✨ Unlimited AI-generated Balance Sheet and Terminology tasks</li>
+      <li>♻️ Tasks never repeat: we remember what you have already solved</li>
+      <li>🎯 Fresh companies, industries and numbers every time</li>
+    </ul>
+    <p id="upStatus" class="hidden mt-4 text-sm rounded-lg px-3 py-2 border"></p>
+    <div class="mt-6 flex flex-col gap-2">
+      <button type="button" id="upSubscribe" class="glass-btn px-5 py-3 text-sm font-medium rounded-xl bg-white text-zinc-900 hover:bg-zinc-200">Subscribe</button>
+      <button type="button" id="upCancel" class="glass-btn px-5 py-2 text-xs text-zinc-400 hover:text-white">Maybe later</button>
+    </div>
+    <p class="mt-3 text-center text-xs text-zinc-500">Secure checkout by Lemon Squeezy. Cancel anytime.</p>
+  </div>
+</div>
 
 <!-- ============ AUTH MODAL ============ -->
 <div id="authModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="authTitle">
@@ -221,6 +241,7 @@
       <h3 class="serif text-2xl pr-6">Your account</h3>
       <p class="text-sm text-zinc-300">Signed in as <span id="accName" class="font-medium text-white"></span></p>
       <p id="accPlan" class="text-sm"></p>
+      <button type="button" id="accUpgrade" class="hidden glass-btn w-full px-5 py-2.5 text-sm font-medium rounded-xl text-white border border-indigo-300/40 bg-indigo-400/20 hover:bg-indigo-400/30">✨ Upgrade to PRO</button>
       <div id="histBox" class="hidden rounded-xl border border-white/10 bg-black/30 p-3">
         <p id="histText" class="text-sm text-zinc-300"></p>
         <p class="mt-1 text-xs text-zinc-500">PRO tasks never repeat. Clear the history if you want the AI to be allowed to create similar tasks again.</p>
@@ -317,7 +338,6 @@ async function load(topic, pro = false) {
   view("trainer");
   setBusy(true);
   panel("loading");
-  $("proMsg").classList.add("hidden");
   $("slowHint").classList.add("hidden");
   const slowTimer = setTimeout(() => $("slowHint").classList.remove("hidden"), 8000);
   const ctrl = new AbortController();
@@ -615,6 +635,8 @@ function authMessage(text, ok) {
     (ok ? "bg-emerald-400/10 border-emerald-300/20 text-emerald-300"
         : "bg-rose-400/10 border-rose-300/20 text-rose-300");
 }
+const dateOnly = (iso) => { const d = new Date(iso); return isNaN(d) ? "" : d.toISOString().slice(0, 10); };   // UTC date, YYYY-MM-DD
+
 function openAuth() {
   authStatus.classList.add("hidden");
   authForm.classList.toggle("hidden", !!session);
@@ -622,9 +644,10 @@ function openAuth() {
   if (session) {
     $("accName").textContent = session.username;
     $("accPlan").textContent = session.is_pro
-      ? "Plan: PRO ✨ You can generate unique AI tasks that never repeat."
-      : "Plan: Free. PRO (unique AI tasks that never repeat) is available on request, use Feedback or Instagram to contact us.";
+      ? (session.pro_expires_at ? "PRO active until " + dateOnly(session.pro_expires_at) + " ✨" : "PRO active ✨")
+      : "Plan: Free. Upgrade to PRO for unique AI tasks that never repeat.";
     $("accPlan").className = "text-sm " + (session.is_pro ? "text-indigo-200" : "text-zinc-400");
+    $("accUpgrade").classList.toggle("hidden", session.is_pro);
   }
   $("histBox").classList.toggle("hidden", !(session && session.is_pro));
   if (session && session.is_pro) refreshHistory();
@@ -671,7 +694,7 @@ authForm.addEventListener("submit", async (e) => {
       const d = r.data.detail;
       throw new Error(typeof d === "string" ? d : "Please check the username and password.");
     }
-    setSession({ token: r.data.token, username: r.data.username, is_pro: r.data.is_pro });
+    setSession({ token: r.data.token, username: r.data.username, is_pro: r.data.is_pro, pro_expires_at: r.data.pro_expires_at });
     authForm.reset();
     renderAuth();
     closeAuth();
@@ -694,14 +717,94 @@ document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeAuth(
 
 $("proBtn").onclick = () => {
   if (!session) return openAuth();
-  if (!session.is_pro) {
-    const m = $("proMsg");
-    m.textContent = "PRO unlocks unique AI-generated tasks that never repeat. It is available on request. Contact us via Feedback or Instagram.";
-    m.classList.remove("hidden");
-    return;
-  }
+  if (!session.is_pro) return openUpgrade();
   load(currentTopic || "balance_sheet", true);
 };
+
+// --- upgrade / checkout (Lemon Squeezy) ---
+const upgradeModal = $("upgradeModal"), upStatus = $("upStatus");
+let plan = { price_label: "", checkout_available: true };
+
+function upMessage(text, kind) {
+  const colors = { ok: "bg-emerald-400/10 border-emerald-300/20 text-emerald-300",
+                   err: "bg-rose-400/10 border-rose-300/20 text-rose-300",
+                   info: "bg-indigo-400/10 border-indigo-300/20 text-indigo-200" };
+  upStatus.textContent = text;
+  upStatus.className = "mt-4 text-sm rounded-lg px-3 py-2 border " + colors[kind || "info"];
+}
+function setSubscribeLabel() {
+  const b = $("upSubscribe");
+  b.textContent = !session ? "Sign in to subscribe"
+    : plan.price_label ? "Subscribe for " + plan.price_label : "Subscribe";
+}
+async function openUpgrade() {
+  closeAuth();
+  upStatus.classList.add("hidden");
+  $("upSubscribe").classList.remove("hidden");
+  $("upSubscribe").disabled = false;
+  $("upCancel").textContent = "Maybe later";
+  setSubscribeLabel();
+  upgradeModal.classList.remove("hidden");
+  try {
+    const r = await fetch(API + "/api/plans");
+    if (r.ok) plan = await r.json();
+  } catch {}
+  setSubscribeLabel();
+  if (!plan.checkout_available) upMessage("Payments are not available yet. Please check back soon.", "info");
+}
+const closeUpgrade = () => upgradeModal.classList.add("hidden");
+function goTo(url) { window.location.href = url; }
+
+$("upSubscribe").onclick = async () => {
+  if (!session) { closeUpgrade(); return openAuth(); }
+  const btn = $("upSubscribe"), label = btn.textContent;
+  btn.disabled = true; btn.textContent = "Opening checkout…";
+  try {
+    const res = await fetch(API + "/api/create-checkout-session", { method: "POST", headers: authHeader() });
+    let data = {};
+    try { data = await res.json(); } catch {}
+    if (res.status === 401) { setSession(null); renderAuth(); closeUpgrade(); return openAuth(); }
+    if (!res.ok || !data.checkout_url) {
+      throw new Error(typeof data.detail === "string" ? data.detail : "Could not start the checkout. Please try again.");
+    }
+    goTo(data.checkout_url);
+  } catch (e) {
+    upMessage(e.message && e.message !== "Failed to fetch" ? e.message : "Can't reach the server. Check your connection and try again.", "err");
+    btn.disabled = false; btn.textContent = label;
+  }
+};
+$("upClose").onclick = $("upCancel").onclick = $("upBackdrop").onclick = closeUpgrade;
+$("accUpgrade").onclick = openUpgrade;
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeUpgrade(); });
+
+// Back from the checkout (?upgraded=1): the webhook may take a few seconds, so poll until PRO shows up.
+async function handleUpgradeReturn() {
+  if (!new URLSearchParams(location.search).has("upgraded")) return;
+  history.replaceState(null, "", location.pathname);
+  if (!session) return;
+  closeAuth();
+  upgradeModal.classList.remove("hidden");
+  $("upSubscribe").classList.add("hidden");
+  upMessage("Thank you! Activating your PRO access…", "info");
+  for (let i = 0; i < 12; i++) {
+    try {
+      const r = await fetch(API + "/api/me", { headers: authHeader() });
+      if (r.ok) {
+        const d = await r.json();
+        if (d.is_pro) {
+          setSession({ ...session, is_pro: true, pro_expires_at: d.pro_expires_at });
+          renderAuth();
+          upMessage("PRO is active. Enjoy unlimited AI tasks! 🎉", "ok");
+          $("upCancel").textContent = "Close";
+          return;
+        }
+      }
+    } catch {}
+    await new Promise((res) => setTimeout(res, 2500));
+  }
+  upMessage("Payment received. PRO can take a minute to activate, please refresh the page shortly.", "info");
+  $("upCancel").textContent = "Close";
+}
 
 // Validate the stored token and refresh the PRO flag (it can change on the server).
 renderAuth();
@@ -709,10 +812,10 @@ if (session) {
   fetch(API + "/api/me", { headers: authHeader() })
     .then(async (r) => {
       if (r.status === 401) { setSession(null); }
-      else if (r.ok) { const d = await r.json(); setSession({ ...session, username: d.username, is_pro: d.is_pro }); }
+      else if (r.ok) { const d = await r.json(); setSession({ ...session, username: d.username, is_pro: d.is_pro, pro_expires_at: d.pro_expires_at }); }
     })
     .catch(() => {})   // offline / server asleep: keep the stored session
-    .finally(renderAuth);
+    .finally(() => { renderAuth(); handleUpgradeReturn(); });
 }
 
 $("newBtn").onclick = () => currentTopic && load(currentTopic, currentPro);

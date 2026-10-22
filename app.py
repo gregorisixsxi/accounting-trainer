@@ -1,13 +1,23 @@
+import hashlib
+import hmac
 import json
 import os
 import re
 import time
+import urllib.error
+import urllib.request
 from collections import defaultdict
+from datetime import timedelta
 from pathlib import Path
 
+from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, Header, HTTPException, Request
+from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel
+
+# Load .env before db/generator read their settings (real environment variables still win).
+load_dotenv(Path(__file__).resolve().parent / ".env")
 
 import db
 import pool
@@ -40,7 +50,7 @@ def bucket_for(path: str) -> str | None:
         topic = path.rsplit("/", 1)[-1]
         # pool tasks cost nothing, so the limit only applies to Claude API calls
         return None if topic in pool.POOL_TOPICS and path != "/api/generate/pro" else "generate"
-    if path in ("/api/login", "/api/register"):
+    if path in ("/api/login", "/api/register", "/api/create-checkout-session"):
         return "auth"
     return None
 
@@ -90,6 +100,7 @@ def auth_response(user: dict) -> dict:
         "token": db.create_session(user["id"]),
         "username": user["username"],
         "is_pro": user["is_pro"],
+        "pro_expires_at": user["pro_expires_at"],
     }
 
 
@@ -125,7 +136,7 @@ def login(creds: Credentials):
 
 @app.get("/api/me")
 def me(user: dict = Depends(current_user)):
-    return {"username": user["username"], "is_pro": user["is_pro"]}
+    return {"username": user["username"], "is_pro": user["is_pro"], "pro_expires_at": user["pro_expires_at"]}
 
 
 @app.get("/api/history")
@@ -144,6 +155,161 @@ def logout(authorization: str | None = Header(default=None)):
     if authorization and authorization.lower().startswith("bearer "):
         db.delete_session(authorization[7:].strip())
     return {"status": "ok"}
+
+
+# ---------------- billing (Lemon Squeezy) ----------------
+# Env: LEMON_SQUEEZY_API_KEY, LEMON_SQUEEZY_STORE_ID, LEMON_SQUEEZY_VARIANT_ID, LEMON_SQUEEZY_WEBHOOK_SECRET,
+# optional: PUBLIC_URL (https://your-site), PRO_PRICE_LABEL ("$5/mo"), LEMON_SQUEEZY_TEST_MODE=1
+LEMON_API = "https://api.lemonsqueezy.com/v1"
+PRO_PERIOD = timedelta(days=30)   # used when the webhook has no renews_at
+PRO_GRACE = timedelta(days=2)     # slack so a late renewal webhook does not cut access for a moment
+EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+
+
+def lemon_config() -> dict:
+    return {
+        "api_key": os.getenv("LEMON_SQUEEZY_API_KEY", ""),
+        "store_id": os.getenv("LEMON_SQUEEZY_STORE_ID", ""),
+        "variant_id": os.getenv("LEMON_SQUEEZY_VARIANT_ID", ""),
+        "secret": os.getenv("LEMON_SQUEEZY_WEBHOOK_SECRET", ""),
+    }
+
+
+def public_base_url(request: Request) -> str:
+    configured = os.getenv("PUBLIC_URL", "").strip().rstrip("/")
+    if configured:
+        return configured
+    scheme = request.headers.get("x-forwarded-proto") or request.url.scheme
+    host = request.headers.get("x-forwarded-host") or request.headers.get("host") or request.url.netloc
+    return f"{scheme}://{host}"
+
+
+@app.get("/api/plans")
+def plans():
+    cfg = lemon_config()
+    return {
+        "price_label": os.getenv("PRO_PRICE_LABEL", "").strip(),
+        "checkout_available": bool(cfg["api_key"] and cfg["store_id"] and cfg["variant_id"]),
+    }
+
+
+@app.post("/api/create-checkout-session")
+def create_checkout_session(request: Request, user: dict = Depends(current_user)):
+    cfg = lemon_config()
+    if not (cfg["api_key"] and cfg["store_id"] and cfg["variant_id"]):
+        raise HTTPException(status_code=503, detail="Payments are not configured yet.")
+    if user["is_pro"]:
+        raise HTTPException(status_code=409, detail="You already have PRO access.")
+
+    checkout_data = {"custom": {"user_id": str(user["id"])}}
+    if EMAIL_RE.match(user["username"]):
+        checkout_data["email"] = user["username"]
+    attributes = {
+        "checkout_data": checkout_data,
+        "product_options": {"redirect_url": public_base_url(request) + "/?upgraded=1"},
+    }
+    if os.getenv("LEMON_SQUEEZY_TEST_MODE", "").lower() in ("1", "true", "yes"):
+        attributes["test_mode"] = True
+    body = {
+        "data": {
+            "type": "checkouts",
+            "attributes": attributes,
+            "relationships": {
+                "store": {"data": {"type": "stores", "id": str(cfg["store_id"])}},
+                "variant": {"data": {"type": "variants", "id": str(cfg["variant_id"])}},
+            },
+        }
+    }
+    req = urllib.request.Request(
+        LEMON_API + "/checkouts",
+        data=json.dumps(body).encode(),
+        method="POST",
+        headers={
+            "Accept": "application/vnd.api+json",
+            "Content-Type": "application/vnd.api+json",
+            "Authorization": "Bearer " + cfg["api_key"],
+        },
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            payload = json.loads(resp.read())
+        return {"checkout_url": payload["data"]["attributes"]["url"]}
+    except urllib.error.HTTPError as e:
+        print(f"[billing] Lemon Squeezy checkout failed: {e.code} {e.read()[:300]!r}")
+    except Exception as e:
+        print(f"[billing] Lemon Squeezy checkout error: {e!r}")
+    raise HTTPException(status_code=502, detail="Could not start the checkout. Please try again later.")
+
+
+def process_lemon_event(payload: dict) -> str:
+    """Applies one verified webhook event to the user record. Returns a short status string."""
+    meta = payload.get("meta") or {}
+    event = meta.get("event_name", "")
+    data = payload.get("data") or {}
+    attrs = data.get("attributes") or {}
+    custom = meta.get("custom_data") or {}
+
+    # invoices carry the subscription id in attributes; subscription objects carry it as their own id
+    sub_id = attrs.get("subscription_id") if data.get("type") == "subscription-invoices" else data.get("id")
+    user_id = db.find_user_id(custom.get("user_id"), sub_id, attrs.get("user_email"))
+    if user_id is None:
+        print(f"[billing] {event}: user not found (subscription {sub_id})")
+        return "user_not_found"
+
+    customer_id = attrs.get("customer_id")
+    now = db.now_utc()
+
+    def grant():
+        renews = db.parse_dt(attrs.get("renews_at")) or db.parse_dt(attrs.get("trial_ends_at"))
+        expires = (renews if renews and renews > now else now + PRO_PERIOD) + PRO_GRACE
+        db.set_subscription(user_id, True, expires, customer_id, sub_id)
+        return "granted"
+
+    def cancel():
+        # a cancelled subscription stays paid until the end of the billing period
+        ends = db.parse_dt(attrs.get("ends_at"))
+        if ends and ends > now:
+            db.set_subscription(user_id, True, ends, customer_id, sub_id)
+            return "cancelled_until_period_end"
+        db.set_subscription(user_id, False, None, customer_id, sub_id)
+        return "revoked"
+
+    def revoke():
+        db.set_subscription(user_id, False, None, customer_id, sub_id)
+        return "revoked"
+
+    if event == "subscription_expired":
+        return revoke()
+    if event == "subscription_cancelled":
+        return cancel()
+    if event in ("subscription_created", "subscription_updated", "subscription_payment_success",
+                 "subscription_resumed", "subscription_unpaused"):
+        status = attrs.get("status") if data.get("type") == "subscriptions" else None
+        if status == "cancelled":
+            return cancel()
+        if status in ("expired", "unpaid", "paused"):
+            return revoke()
+        if status == "past_due":
+            return "ignored_past_due"
+        return grant()
+    return "ignored_event"
+
+
+@app.post("/api/webhook/lemon")
+async def lemon_webhook(request: Request):
+    secret = lemon_config()["secret"]
+    if not secret:
+        raise HTTPException(status_code=503, detail="Webhook secret is not configured.")
+    raw = await request.body()
+    expected = hmac.new(secret.encode(), raw, hashlib.sha256).hexdigest()
+    if not hmac.compare_digest(expected, request.headers.get("x-signature", "")):
+        raise HTTPException(status_code=401, detail="Invalid signature.")
+    try:
+        payload = json.loads(raw)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid JSON.")
+    result = await run_in_threadpool(process_lemon_event, payload)
+    return {"status": result}
 
 
 # ---------------- pages / health ----------------

@@ -6,6 +6,7 @@ import os
 import secrets
 import sqlite3
 from contextlib import contextmanager
+from datetime import datetime, timezone
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -45,6 +46,7 @@ def init() -> None:
                    created_at    TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
                )"""
         )
+        _migrate(c)
         c.execute(
             """CREATE TABLE IF NOT EXISTS sessions (
                    token_hash TEXT PRIMARY KEY,
@@ -52,6 +54,54 @@ def init() -> None:
                    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
                )"""
         )
+
+
+# Columns added after the first release. SQLite has no "ADD COLUMN IF NOT EXISTS",
+# so the existing columns are checked first and only the missing ones are added.
+USER_MIGRATIONS = (
+    ("is_pro", "INTEGER NOT NULL DEFAULT 0"),
+    ("pro_expires_at", "TEXT DEFAULT NULL"),         # UTC ISO-8601; NULL = no expiry
+    ("lemon_customer_id", "TEXT DEFAULT NULL"),
+    ("lemon_subscription_id", "TEXT DEFAULT NULL"),
+)
+
+
+def _migrate(c: sqlite3.Connection) -> None:
+    existing = {row["name"] for row in c.execute("PRAGMA table_info(users)")}
+    for name, ddl in USER_MIGRATIONS:
+        if name not in existing:
+            c.execute(f"ALTER TABLE users ADD COLUMN {name} {ddl}")
+    c.execute("CREATE INDEX IF NOT EXISTS idx_users_lemon_sub ON users(lemon_subscription_id)")
+
+
+# ---------- time / PRO status ----------
+def now_utc() -> datetime:
+    return datetime.now(timezone.utc)
+
+
+def parse_dt(value: str | None) -> datetime | None:
+    """Parses ISO-8601 (also Lemon Squeezy's '...Z' form) into an aware UTC datetime."""
+    if not value:
+        return None
+    try:
+        dt = datetime.fromisoformat(str(value).strip().replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    return dt.replace(tzinfo=timezone.utc) if dt.tzinfo is None else dt.astimezone(timezone.utc)
+
+
+def iso(dt: datetime) -> str:
+    return dt.astimezone(timezone.utc).replace(microsecond=0).isoformat()
+
+
+def is_pro_active(username: str, is_pro, pro_expires_at: str | None) -> bool:
+    """PRO if the user is on the admin list, or has a paid flag that has not expired yet (UTC)."""
+    if username.lower() in PRO_USERS:
+        return True
+    if not is_pro:
+        return False
+    expires = parse_dt(pro_expires_at)
+    return expires is None or expires > now_utc()
 
 
 # ---------- passwords ----------
@@ -72,10 +122,13 @@ def verify_password(password: str, stored: str) -> bool:
 
 # ---------- users ----------
 def _public(row: sqlite3.Row) -> dict:
+    active = is_pro_active(row["username"], row["is_pro"], row["pro_expires_at"])
+    paid = bool(row["is_pro"]) and active and row["username"].lower() not in PRO_USERS
     return {
         "id": row["id"],
         "username": row["username"],
-        "is_pro": bool(row["is_pro"]) or row["username"].lower() in PRO_USERS,
+        "is_pro": active,
+        "pro_expires_at": row["pro_expires_at"] if paid else None,
     }
 
 
@@ -154,3 +207,49 @@ def add_to_history(user_id: int, entry: dict) -> None:
 def clear_history(user_id: int) -> None:
     with connect() as c:
         c.execute("UPDATE users SET solved_tasks = '[]' WHERE id = ?", (user_id,))
+
+
+# ---------- subscriptions (Lemon Squeezy webhooks) ----------
+def find_user_id(user_id: str | int | None = None, subscription_id: str | None = None, email: str | None = None) -> int | None:
+    """Locates the paying user: checkout custom data first, then the stored subscription id, then the e-mail."""
+    with connect() as c:
+        if user_id not in (None, ""):
+            try:
+                row = c.execute("SELECT id FROM users WHERE id = ?", (int(user_id),)).fetchone()
+            except (TypeError, ValueError):
+                row = None
+            if row:
+                return row["id"]
+        if subscription_id:
+            row = c.execute("SELECT id FROM users WHERE lemon_subscription_id = ?", (str(subscription_id),)).fetchone()
+            if row:
+                return row["id"]
+        if email:
+            row = c.execute("SELECT id FROM users WHERE username = ?", (email,)).fetchone()
+            if row:
+                return row["id"]
+    return None
+
+
+def set_subscription(user_id: int, is_pro: bool, expires_at: datetime | None,
+                     customer_id: str | None = None, subscription_id: str | None = None) -> None:
+    with connect() as c:
+        c.execute(
+            """UPDATE users SET is_pro = ?, pro_expires_at = ?,
+                      lemon_customer_id = COALESCE(?, lemon_customer_id),
+                      lemon_subscription_id = COALESCE(?, lemon_subscription_id)
+               WHERE id = ?""",
+            (
+                1 if is_pro else 0,
+                iso(expires_at) if expires_at else None,
+                str(customer_id) if customer_id else None,
+                str(subscription_id) if subscription_id else None,
+                user_id,
+            ),
+        )
+
+
+def get_user(user_id: int) -> dict | None:
+    with connect() as c:
+        row = c.execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
+    return _public(row) if row else None
