@@ -5,6 +5,7 @@ import json
 import os
 import secrets
 import sqlite3
+import time
 from contextlib import contextmanager
 from datetime import datetime, timezone
 from pathlib import Path
@@ -15,6 +16,11 @@ BASE_DIR = Path(__file__).resolve().parent
 DB_PATH = os.environ.get("DB_PATH") or str(BASE_DIR / "data.db")
 
 HISTORY_LIMIT = 300  # how many recent tasks to keep per user
+
+SESSION_DAYS = int(os.environ.get("SESSION_DAYS", "30"))          # session token lifetime
+LOGIN_MAX_FAILS = int(os.environ.get("LOGIN_MAX_FAILS", "5"))     # failed logins allowed per login name ...
+LOGIN_WINDOW = int(os.environ.get("LOGIN_WINDOW_SECONDS", "900")) # ... within this window (15 min)
+PRO_DAILY_LIMIT = int(os.environ.get("PRO_DAILY_LIMIT", "60"))    # AI generations per PRO user per UTC day
 
 # Usernames that automatically get PRO: PRO_USERS="alice,bob@gmail.com"
 PRO_USERS = {u.strip().lower() for u in os.environ.get("PRO_USERS", "").split(",") if u.strip()}
@@ -47,6 +53,21 @@ def init() -> None:
                )"""
         )
         _migrate(c)
+        c.execute(
+            """CREATE TABLE IF NOT EXISTS login_attempts (
+                   login_key TEXT NOT NULL,
+                   ts        INTEGER NOT NULL
+               )"""
+        )
+        c.execute("CREATE INDEX IF NOT EXISTS idx_login_attempts ON login_attempts(login_key, ts)")
+        c.execute(
+            """CREATE TABLE IF NOT EXISTS pro_usage (
+                   user_id INTEGER NOT NULL,
+                   day     TEXT NOT NULL,
+                   count   INTEGER NOT NULL DEFAULT 0,
+                   PRIMARY KEY (user_id, day)
+               )"""
+        )
         c.execute(
             """CREATE TABLE IF NOT EXISTS sessions (
                    token_hash TEXT PRIMARY KEY,
@@ -165,6 +186,7 @@ def _hash_token(token: str) -> str:
 def create_session(user_id: int) -> str:
     token = secrets.token_urlsafe(32)
     with connect() as c:
+        c.execute("DELETE FROM sessions WHERE created_at <= datetime('now', ?)", (f"-{SESSION_DAYS} days",))  # purge expired
         c.execute("INSERT INTO sessions (token_hash, user_id) VALUES (?, ?)", (_hash_token(token), user_id))
     return token
 
@@ -172,8 +194,9 @@ def create_session(user_id: int) -> str:
 def user_by_token(token: str) -> dict | None:
     with connect() as c:
         row = c.execute(
-            "SELECT u.* FROM sessions s JOIN users u ON u.id = s.user_id WHERE s.token_hash = ?",
-            (_hash_token(token),),
+            "SELECT u.* FROM sessions s JOIN users u ON u.id = s.user_id "
+            "WHERE s.token_hash = ? AND s.created_at > datetime('now', ?)",   # tokens expire after SESSION_DAYS
+            (_hash_token(token), f"-{SESSION_DAYS} days"),
         ).fetchone()
     return _public(row) if row else None
 
@@ -253,3 +276,56 @@ def get_user(user_id: int) -> dict | None:
     with connect() as c:
         row = c.execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
     return _public(row) if row else None
+
+
+# ---------- failed-login throttle (per login name, stored in the DB so it survives restarts) ----------
+def login_lock_seconds(login_key: str) -> int:
+    """0 if the login may try again, otherwise how many seconds until the oldest counted failure expires."""
+    now = int(time.time())
+    with connect() as c:
+        rows = c.execute(
+            "SELECT ts FROM login_attempts WHERE login_key = ? AND ts > ? ORDER BY ts",
+            (login_key, now - LOGIN_WINDOW),
+        ).fetchall()
+    if len(rows) < LOGIN_MAX_FAILS:
+        return 0
+    return max(1, rows[-LOGIN_MAX_FAILS]["ts"] + LOGIN_WINDOW - now)
+
+
+def record_login_failure(login_key: str) -> int:
+    """Stores a failure and returns how many attempts are left in the current window."""
+    now = int(time.time())
+    with connect() as c:
+        c.execute("DELETE FROM login_attempts WHERE ts <= ?", (now - LOGIN_WINDOW,))
+        c.execute("INSERT INTO login_attempts (login_key, ts) VALUES (?, ?)", (login_key, now))
+        n = c.execute("SELECT COUNT(*) AS n FROM login_attempts WHERE login_key = ?", (login_key,)).fetchone()["n"]
+    return max(0, LOGIN_MAX_FAILS - n)
+
+
+def clear_login_failures(login_key: str) -> None:
+    with connect() as c:
+        c.execute("DELETE FROM login_attempts WHERE login_key = ?", (login_key,))
+
+
+# ---------- daily PRO generation quota (protects the Anthropic budget) ----------
+def _today() -> str:
+    return now_utc().strftime("%Y-%m-%d")
+
+
+def consume_pro_quota(user_id: int, limit: int = PRO_DAILY_LIMIT) -> tuple[bool, int]:
+    """Atomically takes one generation from today's quota. Returns (allowed, used_after)."""
+    with connect() as c:
+        c.execute("BEGIN IMMEDIATE")
+        c.execute("INSERT OR IGNORE INTO pro_usage (user_id, day, count) VALUES (?, ?, 0)", (user_id, _today()))
+        used = c.execute("SELECT count FROM pro_usage WHERE user_id = ? AND day = ?", (user_id, _today())).fetchone()["count"]
+        if used >= limit:
+            return False, used
+        c.execute("UPDATE pro_usage SET count = count + 1 WHERE user_id = ? AND day = ?", (user_id, _today()))
+        return True, used + 1
+
+
+def refund_pro_quota(user_id: int) -> None:
+    """Gives the unit back when a generation failed before producing a task."""
+    with connect() as c:
+        c.execute("UPDATE pro_usage SET count = MAX(count - 1, 0) WHERE user_id = ? AND day = ?", (user_id, _today()))
+        c.execute("DELETE FROM pro_usage WHERE day < date('now', '-7 days')")

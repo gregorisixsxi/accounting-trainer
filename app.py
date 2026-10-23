@@ -13,7 +13,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, Header, HTTPException, Request
 from fastapi.concurrency import run_in_threadpool
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, PlainTextResponse, Response
 from pydantic import BaseModel
 
 # Load .env before db/generator read their settings (real environment variables still win).
@@ -37,11 +37,17 @@ REQUEST_COUNTS = defaultdict(list)
 
 
 def client_ip(request: Request) -> str:
-    # Behind Render's proxy request.client.host is the proxy address (shared by everyone);
-    # the real user IP arrives in X-Forwarded-For.
-    forwarded = request.headers.get("x-forwarded-for")
+    """Real client IP. Cloudflare sets CF-Connecting-IP; then X-Forwarded-For; then the direct peer.
+
+    For X-Forwarded-For the LAST entry is used: it is appended by the nearest trusted proxy,
+    while the first entries can be forged by the client to dodge the rate limits.
+    """
+    cf = request.headers.get("cf-connecting-ip", "").strip()
+    if cf:
+        return cf
+    forwarded = request.headers.get("x-forwarded-for", "")
     if forwarded:
-        return forwarded.split(",")[0].strip()
+        return forwarded.split(",")[-1].strip()
     return request.client.host if request.client else "unknown"
 
 
@@ -126,11 +132,24 @@ def register(creds: Credentials):
 @app.post("/api/login")
 def login(creds: Credentials):
     username, password = validate_credentials(creds)
+    key = username.lower()
+    wait = db.login_lock_seconds(key)
+    if wait:
+        raise HTTPException(
+            status_code=429,
+            detail=f"Too many failed attempts. Try again in {(wait + 59) // 60} min.",
+            headers={"Retry-After": str(wait)},
+        )
     status, user = db.check_credentials(username, password)
     if status == "no_user":
         raise HTTPException(status_code=404, detail="No such user.")
     if status == "bad_password":
-        raise HTTPException(status_code=401, detail="Wrong password.")
+        left = db.record_login_failure(key)
+        detail = "Wrong password." if left else "Wrong password. This account is locked for 15 minutes."
+        if left and left <= 2:
+            detail += f" {left} attempt{'s' if left != 1 else ''} left."
+        raise HTTPException(status_code=401, detail=detail)
+    db.clear_login_failures(key)
     return auth_response(user)
 
 
@@ -313,10 +332,57 @@ async def lemon_webhook(request: Request):
 
 
 # ---------------- pages / health ----------------
+STATIC_DIR = BASE_DIR / "static"
+
+
 @app.get("/")
-def read_root():
-    # no-cache: after a deploy users get the fresh page instead of a cached one
-    return FileResponse(BASE_DIR / "index.html", headers={"Cache-Control": "no-cache"})
+def read_root(request: Request):
+    # __SITE_URL__ in the meta tags becomes the real absolute address (social crawlers need absolute URLs).
+    # no-cache: after a deploy users get the fresh page instead of a cached one.
+    html = (BASE_DIR / "index.html").read_text(encoding="utf-8").replace("__SITE_URL__", public_base_url(request))
+    return HTMLResponse(html, headers={"Cache-Control": "no-cache"})
+
+
+def static_file(name: str, media_type: str) -> FileResponse:
+    return FileResponse(STATIC_DIR / name, media_type=media_type, headers={"Cache-Control": "public, max-age=86400"})
+
+
+@app.get("/og.png")
+def og_image():
+    return static_file("og.png", "image/png")
+
+
+@app.get("/favicon.svg")
+def favicon_svg():
+    return static_file("favicon.svg", "image/svg+xml")
+
+
+@app.get("/favicon.ico")
+def favicon_ico():
+    return static_file("favicon.png", "image/png")   # browsers accept PNG content for /favicon.ico
+
+
+@app.get("/apple-touch-icon.png")
+def apple_touch_icon():
+    return static_file("apple-touch-icon.png", "image/png")
+
+
+@app.get("/robots.txt")
+def robots(request: Request):
+    body = f"User-agent: *\nAllow: /\nDisallow: /api/\n\nSitemap: {public_base_url(request)}/sitemap.xml\n"
+    return PlainTextResponse(body, headers={"Cache-Control": "public, max-age=3600"})
+
+
+@app.get("/sitemap.xml")
+def sitemap(request: Request):
+    lastmod = time.strftime("%Y-%m-%d", time.gmtime((BASE_DIR / "index.html").stat().st_mtime))
+    xml = (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+        f"  <url><loc>{public_base_url(request)}/</loc><lastmod>{lastmod}</lastmod></url>\n"
+        "</urlset>\n"
+    )
+    return Response(xml, media_type="application/xml", headers={"Cache-Control": "public, max-age=3600"})
 
 
 @app.get("/health")
@@ -326,6 +392,9 @@ def health_check():
 
 
 # ---------------- task generation ----------------
+FREE_TOPICS = ("balance_sheet", "terminology", "transactions")   # what the UI offers; other topics are not public
+
+
 @app.get("/api/generate/{topic}")
 def generate_task(topic: str, exclude: str = ""):
     """Free mode: tasks come from the local pools (no API cost); other topics fall back to Claude."""
@@ -333,15 +402,17 @@ def generate_task(topic: str, exclude: str = ""):
     task = pool.get_task(topic, recent)
     if task is not None:
         return task
-    if topic not in TOPIC_PROMPTS:
-        available = sorted(set(TOPIC_PROMPTS) | pool.POOL_TOPICS)
-        raise HTTPException(status_code=404, detail=f"Unknown topic '{topic}'. Available: {', '.join(available)}")
+    if topic not in FREE_TOPICS:
+        raise HTTPException(status_code=404, detail=f"Unknown topic '{topic}'. Available: {', '.join(FREE_TOPICS)}")
+    # only reached if a pool file is missing: keep the site working, still limited by the per-IP rate limit
     try:
         return generate_task_from_claude(topic)
     except json.JSONDecodeError as e:
-        raise HTTPException(status_code=502, detail=f"Model returned invalid JSON: {e}")
+        print(f"[generate] invalid JSON from model: {e}")
+        raise HTTPException(status_code=502, detail="The task generator returned an invalid answer. Please try again.")
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        print(f"[generate] failed: {e!r}")
+        raise HTTPException(status_code=500, detail="Could not generate a task. Please try again.")
 
 
 PRO_TOPICS = ("balance_sheet", "terminology")
@@ -375,6 +446,13 @@ def generate_pro(body: ProRequest, user: dict = Depends(current_user)):
     if body.topic not in PRO_TOPICS:
         raise HTTPException(status_code=404, detail=f"Unknown PRO topic. Available: {', '.join(PRO_TOPICS)}")
 
+    allowed, used = db.consume_pro_quota(user["id"])
+    if not allowed:
+        raise HTTPException(
+            status_code=429,
+            detail=f"Daily PRO limit reached ({db.PRO_DAILY_LIMIT} tasks per day). It resets at 00:00 UTC.",
+        )
+
     history = db.get_history(user["id"], body.topic)
     seen_keys = {h.get("key") for h in history}
     avoid = [h["summary"] for h in history[-AVOID_LIMIT:] if h.get("summary")]
@@ -389,11 +467,16 @@ def generate_pro(body: ProRequest, user: dict = Depends(current_user)):
         else:
             raise HTTPException(status_code=502, detail="Could not create a new unique task, please try again.")
     except HTTPException:
+        db.refund_pro_quota(user["id"])
         raise
     except json.JSONDecodeError as e:
-        raise HTTPException(status_code=502, detail=f"Model returned invalid JSON: {e}")
+        db.refund_pro_quota(user["id"])
+        print(f"[pro] invalid JSON from model: {e}")
+        raise HTTPException(status_code=502, detail="The task generator returned an invalid answer. Please try again.")
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        db.refund_pro_quota(user["id"])
+        print(f"[pro] generation failed: {e!r}")
+        raise HTTPException(status_code=500, detail="Could not generate a task. Please try again.")
 
     db.add_to_history(user["id"], {"topic": body.topic, "summary": summary, "key": key, "ts": int(time.time())})
     return task
