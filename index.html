@@ -169,19 +169,32 @@
   .trainer-main { padding: calc(var(--hdr-h, 96px) + 22px) 18px 72px; }
   .trainer-col { max-width: 760px; margin: 0 auto; }
 
+  .nav-handle { display: none; }
+
   @media (min-width: 1024px) {
-    .site-nav { top: 0; bottom: 0; left: auto; right: 0; width: var(--nav-w); flex-direction: column; flex-wrap: nowrap; align-items: stretch; gap: 0;
-      padding: 22px 14px 16px; border-bottom: 0; border-left: 1px solid var(--border); background: rgba(12,12,14,.72); overflow-y: auto;
-      transform: none !important; opacity: 1 !important; pointer-events: auto !important; }
+    /* the menu waits behind the right edge and slides over the content on hover (or click on the handle) */
+    .site-nav, .site-nav.hdr-hidden { top: 0; bottom: 0; left: auto; right: 0; width: var(--nav-w); flex-direction: column; flex-wrap: nowrap; align-items: stretch; gap: 0;
+      padding: 22px 14px 16px; border-bottom: 0; border-left: 1px solid var(--border-strong); background: rgba(12,12,14,.96);
+      transform: translateX(100%); opacity: 1; pointer-events: auto; overflow: visible;
+      box-shadow: none; transition: transform .3s ease, box-shadow .3s ease; }
+    .site-nav.nav-open { transform: none; box-shadow: -28px 0 60px -24px rgba(0,0,0,.85); }
+    .nav-handle { display: grid; place-items: center; position: absolute; left: -27px; top: 50%; transform: translateY(-50%); width: 27px; height: 76px;
+      border-radius: 14px 0 0 14px; color: var(--muted); background: rgba(22,22,27,.92); border: 1px solid var(--border-strong); border-right: 0; cursor: pointer;
+      opacity: .75; transition: opacity .2s, color .2s, background .2s; }
+    .nav-handle:hover, .site-nav.nav-open .nav-handle { opacity: 1; color: var(--text); background: rgba(34,34,40,.96); }
+    .nav-handle .ico { width: 16px; height: 16px; transition: transform .3s ease; transform: rotate(90deg); }      /* "<": open me */
+    .site-nav.nav-open .nav-handle .ico { transform: rotate(-90deg); }                                              /* ">": close me */
     .nav-brand { flex: none; font-size: 22px; padding: 4px 10px 18px; }
-    .nav-list { order: 0; flex: 1; flex-direction: column; align-items: stretch; gap: 2px; overflow: visible; width: auto; padding: 0; }
+    .nav-list { order: 0; flex: 1; min-height: 0; flex-direction: column; align-items: stretch; gap: 2px; overflow-y: auto; width: auto; padding: 0; }
     .nav-label { display: block; padding: 14px 12px 6px; }
     .nav-spacer { display: block; flex: 1; min-height: 12px; }
     .nav-item { height: 40px; }
-    .nav-item.active::before { content: ""; position: absolute; right: -14px; top: 10px; bottom: 10px; width: 3px; border-radius: 3px; background: linear-gradient(var(--accent), var(--accent-2)); }
+    .nav-item.active::before { content: ""; position: absolute; left: -14px; top: 10px; bottom: 10px; width: 3px; border-radius: 3px; background: linear-gradient(var(--accent), var(--accent-2)); }
     .site-nav .nav-account { order: 0; max-width: none; width: 100%; height: 48px; border-radius: 14px; padding: 0 12px 0 8px; margin-top: 10px; }
     .site-nav .nav-account .acc-name { flex: 1; text-align: left; }
-    .trainer-main { margin-right: var(--nav-w); padding: 56px 44px 96px; }
+    /* the task area uses the whole width while the menu is closed */
+    .trainer-main { margin-right: 0; padding: 56px clamp(28px, 5vw, 96px) 96px; }
+    .trainer-col { max-width: none; }
   }
 
   /* ============ Welcome ============ */
@@ -293,6 +306,7 @@
 <!-- ============ TRAINER ============ -->
 <div id="trainer" class="hidden">
   <aside id="siteNav" class="site-nav" aria-label="Main navigation">
+    <button type="button" id="navHandle" class="nav-handle" aria-label="Open menu" aria-expanded="false" aria-controls="siteNav"><span class="ico" data-icon="chevron"></span></button>
     <button type="button" class="nav-brand serif" data-home aria-label="Home">Accounting <span class="italic">Trainer</span></button>
 
     <nav class="nav-list">
@@ -954,6 +968,43 @@ function onScroll() {
   lastY = y;
 }
 window.addEventListener("scroll", onScroll, { passive: true });
+
+// --- desktop: the menu slides out from the right edge on hover / click and hides again when the mouse leaves ---
+const desktopMq = window.matchMedia("(min-width: 1024px)");
+const navHandle = $("navHandle");
+let navTimer = null;
+function openNav() {
+  if (!desktopMq.matches) return;
+  clearTimeout(navTimer);
+  siteNav.classList.add("nav-open");
+  navHandle.setAttribute("aria-expanded", "true");
+  navHandle.setAttribute("aria-label", "Close menu");
+}
+function closeNav(delay = 250) {
+  clearTimeout(navTimer);
+  navTimer = setTimeout(() => {
+    if (siteNav.matches(":hover")) return;                                       // the mouse is back on the panel
+    if (siteNav.contains(document.activeElement) && document.activeElement.matches(":focus-visible")) return;   // keyboard user is inside
+    siteNav.classList.remove("nav-open");
+    navHandle.setAttribute("aria-expanded", "false");
+    navHandle.setAttribute("aria-label", "Open menu");
+  }, delay);
+}
+siteNav.addEventListener("mouseenter", openNav);          // also fires when the mouse reaches the handle on the right edge
+siteNav.addEventListener("mouseleave", () => closeNav());
+siteNav.addEventListener("focusin", openNav);
+siteNav.addEventListener("focusout", () => closeNav(150));
+siteNav.addEventListener("click", (e) => { if (e.target.closest(".nav-item, .nav-account, .nav-brand")) closeNav(200); });
+navHandle.addEventListener("click", () => (siteNav.classList.contains("nav-open") ? closeNavNow() : openNav()));
+function closeNavNow() {
+  clearTimeout(navTimer);
+  siteNav.classList.remove("nav-open");
+  navHandle.setAttribute("aria-expanded", "false");
+  navHandle.setAttribute("aria-label", "Open menu");
+  if (siteNav.contains(document.activeElement)) document.activeElement.blur();
+}
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeNavNow(); });
+desktopMq.addEventListener("change", closeNavNow);
 siteNav.addEventListener("focusin", showHeader);               // keyboard users never lose the bar
 window.addEventListener("resize", () => { showHeader(); syncNavHeight(); });
 if ("ResizeObserver" in window) new ResizeObserver(syncNavHeight).observe(siteNav);
