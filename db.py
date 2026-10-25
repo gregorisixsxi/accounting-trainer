@@ -216,13 +216,13 @@ def _public(row: sqlite3.Row) -> dict:
     }
 
 
-def create_user(username: str, password: str) -> dict | None:
+def create_user(username: str, password: str, verified: bool = False) -> dict | None:
     """Returns the new user, or None if the username is taken."""
     with connect() as c:
         try:
             cur = c.execute(
-                "INSERT INTO users (username, password_hash) VALUES (?, ?)",
-                (username, hash_password(password)),
+                "INSERT INTO users (username, password_hash, is_verified) VALUES (?, ?, ?)",
+                (username, hash_password(password), 1 if verified else 0),
             )
         except sqlite3.IntegrityError:
             return None

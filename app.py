@@ -141,6 +141,18 @@ class ResetRequest(BaseModel):
     password: str
 
 
+def verification_required() -> bool:
+    """E-mail confirmation is enforced only when mail can actually be sent (or REQUIRE_EMAIL_VERIFICATION=1).
+    Without an SMTP provider nobody could ever confirm, so sign-up and sign-in work without it.
+    REQUIRE_EMAIL_VERIFICATION=0 switches the requirement off even when SMTP is configured."""
+    flag = os.getenv("REQUIRE_EMAIL_VERIFICATION", "").strip().lower()
+    if flag in ("1", "true", "yes", "on"):
+        return True
+    if flag in ("0", "false", "no", "off"):
+        return False
+    return email_service.is_configured()
+
+
 def mail_ready() -> None:
     if not (email_service.is_configured() or email_service.dev_log_enabled()):
         raise HTTPException(status_code=503, detail="Email service is not available right now. Please try again later.")
@@ -181,8 +193,16 @@ def register(creds: Credentials, request: Request, background: BackgroundTasks):
     username, password = validate_credentials(creds)
     if not EMAIL_RE.match(username):
         raise HTTPException(status_code=422, detail="Please use a valid email address to create an account.")
-    mail_ready()
     email = username.lower()
+    if not verification_required():
+        # temporary open mode: the account is confirmed right away and the user is signed in
+        if db.get_user_by_email(email):
+            raise HTTPException(status_code=409, detail="An account with this email already exists. Sign in or reset your password.")
+        user = db.create_user(email, password, verified=True)
+        if user is None:
+            raise HTTPException(status_code=409, detail="An account with this email already exists. Sign in or reset your password.")
+        return auth_response(user)
+    mail_ready()
     existing = db.get_user_by_email(email)
     if existing and existing["is_verified"]:
         raise HTTPException(status_code=409, detail="An account with this email already exists. Sign in or reset your password.")
@@ -259,7 +279,7 @@ def login(creds: Credentials):
             detail += f" {left} attempt{'s' if left != 1 else ''} left."
         raise HTTPException(status_code=401, detail=detail)
     db.clear_login_failures(key)
-    if not user["is_verified"]:
+    if not user["is_verified"] and verification_required():
         raise HTTPException(status_code=403, detail="Please check your inbox to verify your email first.")
     return auth_response(user)
 

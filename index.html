@@ -1369,6 +1369,14 @@ authForm.addEventListener("submit", async (e) => {
     if (r.status === 404) {
       if (!EMAIL_RX.test(body.username)) throw new Error("No account with that name. To create one, use a valid email address.");
       r = await authRequest("/api/auth/register", body);
+      if (r.ok && r.data.token) {                    // no e-mail confirmation required: signed in right away
+        setSession({ token: r.data.token, username: r.data.username, nickname: r.data.nickname, avatar: r.data.avatar, is_pro: r.data.is_pro,
+                     pro_expires_at: r.data.pro_expires_at, profile: r.data.profile });
+        authForm.reset();
+        renderAuth();
+        closeAuth();
+        return;
+      }
       if (r.ok) {                                    // account created, now confirm the email
         pendingEmail = r.data.email || body.username;
         $("sentEmail").textContent = pendingEmail;
