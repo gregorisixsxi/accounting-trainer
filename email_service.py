@@ -1,9 +1,7 @@
 """Transactional e-mail (verification, password reset) through the Resend HTTP API.
 
   RESEND_API_KEY  your Resend API key (re_...). Without it nothing is sent and the app keeps running.
-  MAIL_FROM       sender, e.g. 'Accounting Trainer <no-reply@yourdomain.com>'. Defaults to Resend's test sender
-                  'Accounting Trainer <onboarding@resend.dev>', which only delivers to the e-mail address of your
-                  own Resend account until you verify a domain at resend.com/domains.
+  MAIL_FROM       sender address on your verified Resend domain. Defaults to 'Accounting Trainer <auth@accountingtrainer.app>'.
   EMAIL_DEV_LOG   1 = print the e-mails (with their links) to the console instead of sending (local development).
 """
 import html
@@ -14,7 +12,7 @@ import urllib.request
 
 APP_NAME = "Accounting Trainer"
 RESEND_URL = "https://api.resend.com/emails"
-DEFAULT_FROM = f"{APP_NAME} <onboarding@resend.dev>"
+DEFAULT_FROM = f"{APP_NAME} <auth@accountingtrainer.app>"   # the verified domain; MAIL_FROM overrides it
 TIMEOUT_SECONDS = 15
 
 

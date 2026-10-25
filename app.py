@@ -154,13 +154,24 @@ def mail_ready() -> None:
         raise HTTPException(status_code=503, detail="Email service is not available right now. Please try again later.")
 
 
-def issue_verification(user_id: int, email: str, request: Request, background: BackgroundTasks) -> None:
+def fail_open() -> bool:
+    """While mail cannot be delivered (no Resend key, or no verified domain: Resend answers 403 for every address except the
+    owner's), an account is confirmed anyway instead of leaving the user stuck. Strict again with EMAIL_FAIL_OPEN=0.
+    When mail does work, the confirmation e-mail is still required: nothing needs to be switched back on."""
+    return os.getenv("EMAIL_FAIL_OPEN", "1").strip().lower() not in ("0", "false", "no", "off")
+
+
+def send_verification(user_id: int, email: str, request: Request) -> bool:
+    """Sends the confirmation e-mail now. True = it went out (or one went out a minute ago)."""
     age = db.token_age_seconds(user_id, "verify")
     if age is not None and age < RESEND_COOLDOWN_SECONDS:
-        return   # a fresh mail was just sent
+        return True
     token = secrets.token_urlsafe(32)
     db.set_verify_token(user_id, token)
-    background.add_task(email_service.send_verification_email, email, f"{public_base_url(request)}/verify?token={token}")
+    sent = email_service.send_verification_email(email, f"{public_base_url(request)}/verify?token={token}")
+    if not sent:
+        db.clear_verify_token(user_id)     # nothing went out, so the one-minute cooldown must not apply
+    return sent
 
 
 AVATARS = [f"g{i}" for i in range(1, 13)]   # preset avatars (gradients), drawn by the page
@@ -206,17 +217,26 @@ def register(creds: Credentials, request: Request, background: BackgroundTasks):
         if user is None:
             raise HTTPException(status_code=409, detail="An account with this email already exists. Sign in or reset your password.")
         return auth_response(user)
-    mail_ready()
+    if not fail_open():
+        mail_ready()
     existing = db.get_user_by_email(email)
     if existing and existing["is_verified"]:
         raise HTTPException(status_code=409, detail="An account with this email already exists. Sign in or reset your password.")
-    if existing:   # registered earlier but never confirmed: send a new link, keep the original password
-        issue_verification(existing["id"], email, request, background)
+    if existing:   # registered earlier but never confirmed: keep the original password
+        user_id = existing["id"]
     else:
         user = db.create_user(email, password)
         if user is None:
             raise HTTPException(status_code=409, detail="An account with this email already exists. Sign in or reset your password.")
-        issue_verification(user["id"], email, request, background)
+        user_id = user["id"]
+    sent = send_verification(user_id, email, request)
+    if not sent and fail_open():
+        # the mail could not be delivered: confirm the account so the user is not locked out, and sign in
+        # (an old unconfirmed account is only opened for someone who knows its password)
+        if not existing or db.check_credentials(email, password)[0] == "ok":
+            print(f"[auth] confirmation mail to {email} failed, the account was confirmed without it (EMAIL_FAIL_OPEN)")
+            db.mark_verified(user_id)
+            return auth_response(db.get_user(user_id))
     return {"status": "verification_sent", "email": email}
 
 
@@ -228,13 +248,17 @@ def verify_email_link(token: str = ""):
 
 
 @app.post("/api/auth/resend-verification")
-def resend_verification(body: EmailRequest, request: Request, background: BackgroundTasks):
-    mail_ready()
+def resend_verification(body: EmailRequest, request: Request):
+    if not fail_open():
+        mail_ready()
     email = body.email.strip().lower()
     user = db.get_user_by_email(email) if EMAIL_RE.match(email) else None
+    verified = False
     if user and not user["is_verified"]:
-        issue_verification(user["id"], email, request, background)
-    return {"status": "ok"}   # same answer whether or not the account exists
+        if not send_verification(user["id"], email, request) and fail_open():
+            db.mark_verified(user["id"])          # mail cannot be delivered right now: do not keep the account locked
+            verified = True
+    return {"status": "ok", "verified": verified}   # same answer whether or not the account exists
 
 
 @app.post("/api/auth/forgot-password")
@@ -517,12 +541,10 @@ def lemon_config() -> dict:
 
 
 def public_base_url(request: Request) -> str:
-    configured = os.getenv("PUBLIC_URL", "").strip().rstrip("/")
-    if configured:
-        return configured
-    scheme = request.headers.get("x-forwarded-proto") or request.url.scheme
-    host = request.headers.get("x-forwarded-host") or request.headers.get("host") or request.url.netloc
-    return f"{scheme}://{host}"
+    # Tolerates a value pasted as Markdown, e.g. "https://a.com](https://a.com)": keep only the first URL.
+    raw = os.getenv("PUBLIC_URL", "https://accountingtrainer.app")
+    match = re.match(r"https?://[^\s\]\[()<>\"']+", raw.strip())
+    return match.group(0).rstrip("/") if match else "https://accountingtrainer.app"
 
 
 @app.get("/api/plans")
