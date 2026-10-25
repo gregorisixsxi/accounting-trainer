@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Accounting Trainer: Practice Balance Sheets &amp; Journal Entries</title>
-<meta name="description" content="Free interactive accounting practice: balance sheets, journal entries and terminology quizzes with instant feedback. Built for students learning financial accounting.">
+<title>Accounting Trainer: Practice Balance Sheets &amp; Accounting Terms</title>
+<meta name="description" content="Free interactive accounting practice: midterm-style balance sheets and terminology tests with instant feedback. Built for students learning financial accounting.">
 <meta name="robots" content="index, follow">
 <meta name="theme-color" content="#09090b">
 <link rel="canonical" href="__SITE_URL__/">
@@ -12,19 +12,19 @@
 <!-- Open Graph (Facebook, LinkedIn, Telegram, WhatsApp, Discord...) -->
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Accounting Trainer">
-<meta property="og:title" content="Accounting Trainer: Practice Balance Sheets &amp; Journal Entries">
+<meta property="og:title" content="Accounting Trainer: Practice Balance Sheets &amp; Accounting Terms">
 <meta property="og:description" content="Free interactive accounting practice with fresh tasks and instant feedback.">
 <meta property="og:url" content="__SITE_URL__/">
 <meta property="og:image" content="__SITE_URL__/og.png">
 <meta property="og:image:type" content="image/png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="Accounting Trainer: balance sheets, journal entries and terminology practice">
+<meta property="og:image:alt" content="Accounting Trainer: balance sheets and terminology practice">
 <meta property="og:locale" content="en_US">
 
 <!-- Twitter / X card -->
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Accounting Trainer: Practice Balance Sheets &amp; Journal Entries">
+<meta name="twitter:title" content="Accounting Trainer: Practice Balance Sheets &amp; Accounting Terms">
 <meta name="twitter:description" content="Free interactive accounting practice with fresh tasks and instant feedback.">
 <meta name="twitter:image" content="__SITE_URL__/og.png">
 
@@ -36,7 +36,7 @@
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"WebApplication","name":"Accounting Trainer","url":"__SITE_URL__/",
  "applicationCategory":"EducationalApplication","operatingSystem":"Any","inLanguage":"en",
- "description":"Interactive practice for financial accounting: balance sheets, journal entries and terminology."}
+ "description":"Interactive practice for financial accounting: balance sheets and terminology."}
 </script>
 <script src="https://cdn.tailwindcss.com/3.4.16"></script>
 <style>
@@ -128,6 +128,8 @@
   .sheet-label { overflow-wrap: anywhere; }
   .sheet-sub { font-weight: 600; color: var(--text); border-top: 1px solid var(--border); margin-top: .25rem; padding-top: .6rem; }
   .sheet-total { font-weight: 700; color: var(--text); border-top: 1px solid var(--border-strong); margin-top: .55rem; padding-top: .75rem; }
+  .cell-xxx { text-align: right; color: var(--faint); font-weight: 600; letter-spacing: .1em; padding-right: 2px; font-size: 13px; }
+  .sheet-grouprow { font-weight: 600; color: var(--text); margin-top: .6rem; }
   .cell-given { text-align: right; font-variant-numeric: tabular-nums; color: #e4e4e7; padding-right: 2px; }
 
   /* ============ Notes / badges ============ */
@@ -168,18 +170,18 @@
   .trainer-col { max-width: 760px; margin: 0 auto; }
 
   @media (min-width: 1024px) {
-    .site-nav { top: 0; bottom: 0; right: auto; width: var(--nav-w); flex-direction: column; flex-wrap: nowrap; align-items: stretch; gap: 0;
-      padding: 22px 14px 16px; border-bottom: 0; border-right: 1px solid var(--border); background: rgba(12,12,14,.72); overflow-y: auto;
+    .site-nav { top: 0; bottom: 0; left: auto; right: 0; width: var(--nav-w); flex-direction: column; flex-wrap: nowrap; align-items: stretch; gap: 0;
+      padding: 22px 14px 16px; border-bottom: 0; border-left: 1px solid var(--border); background: rgba(12,12,14,.72); overflow-y: auto;
       transform: none !important; opacity: 1 !important; pointer-events: auto !important; }
     .nav-brand { flex: none; font-size: 22px; padding: 4px 10px 18px; }
     .nav-list { order: 0; flex: 1; flex-direction: column; align-items: stretch; gap: 2px; overflow: visible; width: auto; padding: 0; }
     .nav-label { display: block; padding: 14px 12px 6px; }
     .nav-spacer { display: block; flex: 1; min-height: 12px; }
     .nav-item { height: 40px; }
-    .nav-item.active::before { content: ""; position: absolute; left: -14px; top: 10px; bottom: 10px; width: 3px; border-radius: 3px; background: linear-gradient(var(--accent), var(--accent-2)); }
+    .nav-item.active::before { content: ""; position: absolute; right: -14px; top: 10px; bottom: 10px; width: 3px; border-radius: 3px; background: linear-gradient(var(--accent), var(--accent-2)); }
     .site-nav .nav-account { order: 0; max-width: none; width: 100%; height: 48px; border-radius: 14px; padding: 0 12px 0 8px; margin-top: 10px; }
     .site-nav .nav-account .acc-name { flex: 1; text-align: left; }
-    .trainer-main { margin-left: var(--nav-w); padding: 56px 44px 96px; }
+    .trainer-main { margin-right: var(--nav-w); padding: 56px 44px 96px; }
   }
 
   /* ============ Welcome ============ */
@@ -268,16 +270,11 @@
         Fresh tasks every time, with instant feedback.
       </p>
 
-      <div class="mt-12 grid md:grid-cols-3 gap-3.5 text-left">
+      <div class="mt-12 grid md:grid-cols-2 gap-3.5 text-left max-w-2xl mx-auto">
         <button data-start="balance_sheet" class="feature">
           <span class="tile"><span class="ico" data-icon="table"></span></span>
           <span class="block mt-4 text-[16px] font-semibold">Balance Sheet</span>
           <span class="block mt-1 text-sm text-zinc-400">Fill in a balance sheet from raw figures.</span>
-        </button>
-        <button data-start="transactions" class="feature">
-          <span class="tile"><span class="ico" data-icon="receipt"></span></span>
-          <span class="block mt-4 text-[16px] font-semibold">Journal Entries</span>
-          <span class="block mt-1 text-sm text-zinc-400">Pick the right debit and credit.</span>
         </button>
         <button data-start="terminology" class="feature">
           <span class="tile"><span class="ico" data-icon="book"></span></span>
@@ -301,7 +298,6 @@
     <nav class="nav-list">
       <span class="nav-label eyebrow">Practice</span>
       <button data-topic="balance_sheet" class="nav-item mode-btn"><span class="ico" data-icon="table"></span>Balance Sheet</button>
-      <button data-topic="transactions" class="nav-item mode-btn"><span class="ico" data-icon="receipt"></span>Journal Entries</button>
       <button data-topic="terminology" class="nav-item mode-btn"><span class="ico" data-icon="book"></span>Terminology</button>
 
       <span class="nav-label eyebrow">Library</span>
@@ -491,7 +487,6 @@
       <div id="archiveChips" class="mt-4 flex flex-wrap gap-2">
         <button type="button" class="chip active" data-filter="">All</button>
         <button type="button" class="chip" data-filter="balance_sheet">Balance Sheet</button>
-        <button type="button" class="chip" data-filter="transactions">Journal Entries</button>
         <button type="button" class="chip" data-filter="terminology">Terminology</button>
       </div>
     </div>
@@ -658,7 +653,7 @@ function render() {
 
 // --- comparison helpers ---
 function parseAmount(s) {
-  let t = String(s).replace(/[\s ]/g, "").replace(/[A-Za-z$€£]/g, "");
+  let t = String(s).replace(/[\s ]/g, "").replace(/[A-Za-z$€£]/g, "").replace(/^\+/, "");
   if (/^-?\d{1,3}(\.\d{3})+$/.test(t)) t = t.replace(/\./g, "");   // 1.250.000
   t = t.replace(/,/g, "");                                          // 1,250
   return /^-?\d+(\.\d+)?$/.test(t) ? parseFloat(t) : null;
@@ -666,18 +661,35 @@ function parseAmount(s) {
 const fmt = (n) => Number(n).toLocaleString("en-US");
 
 // ================= balance sheet: dynamic table =================
+function itemsCard() {
+  // "compile" tasks: the list of items the student sorts into the balance sheet lines
+  const card = el("div", "card p-5 sm:p-6 mb-4");
+  const head = el("div", "flex items-baseline justify-between gap-3");
+  head.append(el("h3", "text-[15px] font-semibold", "Balance sheet value items"), el("span", "text-xs text-zinc-500", task.unit ? "Amounts in " + task.unit : ""));
+  const list = el("div", "mt-3 divide-y divide-white/[.06]");
+  task.items.forEach((it) => {
+    const row = el("div", "flex items-start justify-between gap-4 py-2 text-[14px]");
+    row.append(el("span", "text-zinc-300", it.name), el("span", "num text-zinc-100 shrink-0", fmt(it.amount)));
+    list.append(row);
+  });
+  card.append(head, list);
+  return card;
+}
+
 function renderSheet() {
   const box = $("sheetBox");
   box.replaceChildren();
   sheetCells = [];
   const ncol = task.columns.length;
+  if (task.items && task.items.length) box.append(itemsCard());
   const card = el("div", "card p-5 sm:p-6");
   card.style.setProperty("--n", ncol);
   const head = el("div", "flex items-baseline justify-between gap-3");
-  head.append(el("h3", "text-[15px] font-semibold", "Balance Sheet"), el("span", "text-xs text-zinc-500", task.unit ? "Amounts in " + task.unit : ""));
+  head.append(el("h3", "text-[15px] font-semibold", "Balance sheet"), el("span", "text-xs text-zinc-500", task.items && task.items.length ? "" : (task.unit ? "Amounts in " + task.unit : "")));
+  const rules = el("p", "mt-1 text-xs text-zinc-500", "Enter plain numbers without spaces or punctuation, e.g. 1234. Use a minus sign for a negative value (-100) and 0 for zero.");
   const grid = el("div", "mt-4 " + (task.layout === "two_sided" ? "grid md:grid-cols-2 gap-x-10 gap-y-8" : "space-y-8"));
   task.sides.forEach((side) => grid.append(sideEl(side, ncol)));
-  card.append(head, grid);
+  card.append(head, rules, grid);
   // Enter moves to the next empty cell, like in a spreadsheet
   card.addEventListener("keydown", (e) => {
     if (e.key !== "Enter" || !e.target.matches("input")) return;
@@ -696,9 +708,18 @@ function sideEl(side, ncol) {
   if (ncol > 1) task.columns.forEach((c) => head.append(el("span", "sheet-col", c)));
   wrap.append(head);
   side.groups.forEach((g) => {
-    if (g.title) wrap.append(el("p", "sheet-group", g.title));
+    const sub = g.subtotal;
+    const hiddenSub = sub && sub.cells.every((c) => c.hidden);
+    if (hiddenSub) {                                   // exam style: "A. Non-current assets ........ XXX"
+      const row = el("div", "sheet-row sheet-grouprow");
+      row.append(el("span", "sheet-label", g.title || sub.label));
+      sub.cells.forEach(() => row.append(el("span", "cell-xxx", "XXX")));
+      wrap.append(row);
+    } else if (g.title) {
+      wrap.append(el("p", "sheet-group", g.title));
+    }
     g.rows.forEach((r) => wrap.append(rowEl(r.label, r.cells, "item")));
-    if (g.subtotal) wrap.append(rowEl(g.subtotal.label, g.subtotal.cells, "sub"));
+    if (sub && !hiddenSub) wrap.append(rowEl(sub.label, sub.cells, "sub"));
   });
   wrap.append(rowEl(side.total.label, side.total.cells, "total"));
   return wrap;
@@ -712,6 +733,7 @@ function rowEl(label, cells, kind) {
 }
 
 function cellEl(cell, label, i) {
+  if (cell.hidden) return el("span", "cell-xxx", "XXX");                      // placeholder: neither shown nor asked
   if (!cell.blank) return el("span", "cell-given num", fmt(cell.value));       // shown to the student
   const colName = task.columns.length > 1 ? task.columns[i] : "";
   const wrap = el("div");
@@ -757,7 +779,11 @@ function renderTest() {
     const card = el("div", "card p-5");
     const top = el("div", "flex items-center justify-between gap-3");
     top.append(el("span", "eyebrow", `Question ${i + 1} of ${task.questions.length}`));
-    if (KIND_NOTE[q.kind]) top.append(el("span", "badge", KIND_NOTE[q.kind]));
+    const tags = el("span", "flex items-center gap-2");
+    if (KIND_NOTE[q.kind]) tags.append(el("span", "badge", KIND_NOTE[q.kind]));
+    const pts = q.points || 1;
+    tags.append(el("span", "badge", pts + (pts > 1 ? " points" : " point")));
+    top.append(tags);
     card.append(top, el("p", "mt-2 text-[15px] leading-relaxed text-zinc-100", q.prompt));
     const item = { q, card, inputs: [], labels: [], note: el("p", "hidden note mt-3") };
     if (q.kind === "numeric") {
@@ -823,14 +849,16 @@ function gradeItem(it) {
 }
 
 function checkTest() {
-  let ok = 0, answered = false;
+  let ok = 0, total = 0, answered = false;
   const review = testItems.map((it, i) => {
     const g = gradeItem(it);
-    if (g.correct) ok++;
+    const pts = it.q.points || 1;
+    total += pts;
+    if (g.correct) ok += pts;
     if (g.answered) answered = true;
     return { label: `Q${i + 1}. ${it.q.prompt}`.slice(0, 300), yours: g.yours, expected: g.expected, correct: g.correct, note: it.q.explanation || "" };
   });
-  return { ok, total: testItems.length, review, explanation: "", answered };
+  return { ok, total, review, explanation: "", answered };
 }
 
 // ---------- result card + archive saving ----------
@@ -1289,7 +1317,7 @@ async function handleUpgradeReturn() {
 
 // --- archive of solved tasks ---
 const archiveModal = $("archiveModal"), archiveBody = $("archiveBody");
-const TOPIC_LABEL = { balance_sheet: "Balance Sheet", transactions: "Journal Entries", terminology: "Terminology" };
+const TOPIC_LABEL = { balance_sheet: "Balance Sheet", terminology: "Terminology", transactions: "Journal Entries" };   // "transactions": entries saved before the mode was removed
 const TOPIC_ICON = { balance_sheet: "table", transactions: "receipt", terminology: "book" };
 const archive = { topic: "", items: [], total: 0, hasMore: false, loading: false, details: new Map(), open: new Set(), error: false };
 

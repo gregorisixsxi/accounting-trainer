@@ -24,14 +24,19 @@ load_dotenv(ENV_PATH, override=True)
 # For a quick local test you can paste the key here (NEVER commit a file containing a key!).
 HARDCODED_API_KEY = ""
 
-MAX_TOKENS = 8000          # the two-column "comparative" sheets need ~6000; only used tokens are billed
-MAX_TOKENS_RETRY = 10000
+MAX_TOKENS = 5000          # a task is ~2000 output tokens; only used tokens are billed
+MAX_TOKENS_RETRY = 8000
+
+# The balancing arithmetic is done by exam.py (plug row / plug item) and calculation questions are verified there too,
+# so the model does not need hidden reasoning: with it a sheet took 6000+ tokens and 30-90 s instead of ~2000 tokens and 7 s.
+# Set ANTHROPIC_THINKING=on to let the model think anyway.
+THINKING_ARGS = {} if os.getenv("ANTHROPIC_THINKING", "").lower() in ("1", "true", "on", "yes") else {"thinking": {"type": "disabled"}}
 MAX_ATTEMPTS = 3  # retry if the response is cut off, is invalid JSON, fails validation, or is not English
 
 MODEL = os.getenv("ANTHROPIC_MODEL", "claude-haiku-5-5")
 
-# Real exam material makes the style much closer: paste 2-5 real midterm tasks (balance sheet tables,
-# test questions) into midterm_examples.txt next to this file and they are shown to the model as examples.
+# More real exam material makes the style closer: paste 2-5 real midterm tasks into midterm_examples.txt
+# next to this file and they are shown to the model as additional examples (keep that file out of public repositories).
 EXAMPLES_PATH = BASE_DIR / "midterm_examples.txt"
 
 
@@ -58,16 +63,15 @@ ENGLISH_RULE = (
 
 MIDTERM_CONTEXT = (
     "You write tasks for the MIDTERM exam of a first-year 'Introduction to Accounting' university course "
-    "(business and economics programme, IFRS / US-GAAP style English terminology). The tasks must look like real "
-    "exam tasks: precise wording, realistic companies, round numbers, one unambiguous correct answer, plausible "
-    "distractors, no trick wording. Typical midterm topics: the accounting equation; structure and classification of "
-    "the balance sheet (fixed assets: intangible assets, tangible assets, long-term financial investments; current "
-    "assets: inventories, trade receivables, securities, cash and bank; prepaid expenses and accrued income; equity: "
-    "share capital, capital reserve, retained earnings, profit for the year; provisions; long-term and short-term "
-    "liabilities; accrued expenses and deferred income); the effect of business transactions on the balance sheet; "
-    "income statement basics (nature-of-expense method, cost of goods sold, revenue and expense recognition, the "
-    "matching principle); depreciation; accruals and deferrals; allowance for doubtful accounts; cash and cash "
-    "equivalents; bank reconciliation; internal control and the fraud triangle; debit and credit rules and journal entries. "
+    "(business and economics programme; European-style balance sheet with lettered groups and numbered lines, "
+    "English terminology). The tasks must look like real exam tasks: precise wording, realistic companies, "
+    "round numbers, one unambiguous correct answer, plausible distractors, no trick wording. The balance sheet is "
+    "TWO-SIDED: Assets on the left, Equity and liabilities on the right. Typical midterm topics: the accounting equation; "
+    "classification of items into the balance sheet lines; the effect of business events on assets, liabilities, equity and "
+    "profit; income statement basics (nature-of-expense method: net sales, capitalised own output, other income, material type "
+    "expenses, personnel type expenses, depreciation, other expenses, operating profit, financial income and expenses, profit "
+    "before tax; the function of expense method with direct and indirect cost of sales); inventories; depreciation; accruals "
+    "and deferrals; allowance for doubtful accounts; cash and cash equivalents; bank reconciliation; internal control and the fraud triangle. "
 )
 
 OUTPUT_RULES = (
@@ -88,115 +92,112 @@ INDUSTRIES = [
 
 # ---------------------------------------------------------------- balance sheet tasks
 BALANCE_SHEET_FORMAT = (
-    "JSON FORMAT (a balance sheet table, drawn by the website exactly as you describe it):\n"
+    "JSON FORMAT (a TWO-SIDED balance sheet, drawn by the website exactly as you describe it):\n"
     "{\n"
     '  "task_title": "short exam-style title",\n'
     '  "company_name": "English company name",\n'
     '  "unit": "USD",\n'
-    '  "layout": "two_sided" or "report",\n'
     '  "columns": ["Amount"],\n'
     '  "description": "the task statement for the student",\n'
-    '  "accounts": [{"name": "Patents", "amount": 30000, "row": "Intangible assets"}],\n'
+    '  "accounts": [{"name": "Patent purchased by the company", "amount": 30000, "row": "I. Intangible assets"}],   (compile variant only)\n'
     '  "sides": [\n'
     '    {"title": "Assets", "groups": [\n'
-    '        {"title": "A. Fixed assets",\n'
-    '         "rows": [{"label": "Intangible assets", "values": [30000], "blank": false},\n'
-    '                  {"label": "Tangible assets", "values": [280000], "blank": false}],\n'
-    '         "subtotal": {"label": "Total fixed assets", "blank": true}},\n'
-    '        {"title": "B. Current assets", "rows": [...], "subtotal": {"label": "Total current assets", "blank": true}}],\n'
-    '     "total": {"label": "Total assets", "blank": true}},\n'
-    '    {"title": "Equity and liabilities", "groups": [{"title": "C. Equity", ...}, {"title": "D. Liabilities", ...}],\n'
-    '     "total": {"label": "Total equity and liabilities", "blank": true}}\n'
+    '        {"title": "A. Non-current assets",\n'
+    '         "rows": [{"label": "I. Intangible assets", "values": [30000], "blank": true},\n'
+    '                  {"label": "II. Tangible assets", "values": [280000], "blank": true}],\n'
+    '         "subtotal": {"label": "Total non-current assets", "mode": "hidden"}},\n'
+    '        {"title": "B. Current assets", "rows": [...], "subtotal": {"label": "Total current assets", "mode": "hidden"}}],\n'
+    '     "total": {"label": "TOTAL ASSETS", "mode": "hidden"}},\n'
+    '    {"title": "Equity and liabilities", "groups": [{"title": "D. Stockholders\' equity", ...}, {"title": "F. Liabilities", ...}],\n'
+    '     "total": {"label": "TOTAL EQUITY AND LIABILITIES", "mode": "hidden"}}\n'
     "  ],\n"
     '  "hint": "one short hint that does not reveal an answer",\n'
-    '  "explanation": "2-4 sentences showing how every blank cell is calculated, with the numbers"\n'
+    '  "explanation": "3-5 sentences showing how every input cell is calculated, with the numbers"\n'
     "}\n"
     "RULES:\n"
-    "- Exactly two sides: Assets, and Equity and liabilities. Each has groups (with a lettered title), each group has rows.\n"
+    "- Exactly two sides: 'Assets' and 'Equity and liabilities'. Each has lettered groups, each group has numbered rows.\n"
+    "- Use the exam's captions. Assets: A. Non-current assets (I. Intangible assets; II. Tangible assets; III. Financial investments), "
+    "B. Current assets (I. Inventories; II. Accounts receivable; III. Securities; IV. Liquid assets), C. Prepaid expenses and accrued income "
+    "(a single line, put the whole caption in the row label and leave the group title empty). Equity and liabilities: D. Stockholders' equity "
+    "(I. Contributed capital; II. Capital reserve; III. Retained earnings; IV. Profit after tax for the year), E. Provisions (single line), "
+    "F. Liabilities (I. Long-term liabilities; II. Current liabilities), G. Accrued expenses and deferred income (single line). "
+    "Use only the groups and lines that fit the company and VARY the set between tasks, but always show A and B, D and F.\n"
     "- Every row has ONE value per column. 'blank': true means the student must type that value; false means it is shown. "
-    "For multi-column sheets 'blank' may be a list with one true/false per column, e.g. [false, true].\n"
-    "- Do NOT give values for subtotals and totals: the website computes them. You only choose their labels and whether they are blank.\n"
-    "- The sheet MUST balance in every column: the sum of all Assets rows = the sum of all Equity and liabilities rows. Check your arithmetic.\n"
-    "- Use realistic captions and VARY the set of rows between tasks (use only the groups that fit the company; do not always use every caption). "
-    "Assets captions: Intangible assets; Tangible assets (property, plant and equipment); Long-term financial investments; Inventories; "
-    "Trade receivables; Other receivables; Securities; Cash and bank; Prepaid expenses and accrued income. "
-    "Equity and liabilities captions: Share capital; Capital reserve; Retained earnings; Profit for the year; Provisions; "
-    "Long-term liabilities (bank loans, bonds); Short-term liabilities (trade payables, short-term loans, tax payable); Accrued expenses and deferred income.\n"
-    "- 8 to 16 rows in total, 1 to 24 blank cells. Amounts are whole numbers, usually multiples of 1,000 (or 100).\n"
-    "- Be compact: no extra fields, 'description' at most 4 sentences, 'explanation' at most 5 sentences.\n"
-    "- 'layout' is 'two_sided' (assets left, equity and liabilities right) for one column, 'report' for several columns.\n"
-    "- Include the 'accounts' list ONLY for the COMPILE variant."
+    "For two-column sheets 'blank' may be a list with one true/false per column.\n"
+    "- Do NOT give values for subtotals and totals: the website computes them. You only choose their labels and their 'mode': "
+    "'input' (the student types it), 'given' (it is shown) or 'hidden' (a placeholder 'XXX' that is neither shown nor asked).\n"
+    "- BALANCING IS DONE BY THE WEBSITE, NOT BY YOU: do not try to make both sides equal. Mark exactly ONE row of the sheet with \"plug\": true and give it NO 'values' "
+    "(use a retained earnings line of the equity group, or for the compile variant the plug item described below); the website calculates it so that "
+    "Assets = Equity and liabilities in every column. Choose the other amounts as plausible round numbers, and make the Equity and liabilities side without the plug "
+    "clearly SMALLER than the Assets side (the plug is then a positive retained earnings figure).\n"
+    "- The table must be DETAILED and exam-sized: 10 to 16 rows in total, and at least 8 cells the student has to type "
+    "(rows, subtotals and totals together; at most 24). Amounts are whole numbers, usually multiples of 5 or 10 (or 1,000).\n"
+    "- Be compact: no extra fields, 'description' at most 4 sentences, 'explanation' at most 6 sentences."
 )
 
 BALANCE_SHEET_VARIANTS = {
     "compile": (
-        "VARIANT COMPILE (prepare the balance sheet from ledger balances). Every LINE ROW has blank=true and every subtotal and total has blank=true. "
-        "Provide 'accounts': 10-16 ledger accounts (like 'Patents', 'Machinery', 'Merchandise', 'Accounts receivable from customers', 'Bank account', "
-        "'Petty cash', 'Subscribed capital', 'Bank loan (5 years)', 'Accounts payable') each mapped through 'row' to EXACTLY ONE row label of the table "
-        "(copy the label character for character). Several accounts may belong to one row. The accounts mapped to a row must add up exactly to that row's value. "
-        "The student must classify each account, add them up per row and compute subtotals and totals. In the description just say what to prepare (no numbers)."
+        "VARIANT COMPILE (the real midterm task: compile the balance sheet from a list of items). "
+        "Do NOT give any row 'values' and no plug row: the row values are calculated from your items. Every group subtotal and both totals have mode 'hidden'. "
+        "Provide 'accounts': 12 to 16 items written descriptively, the way an exam describes them, for example "
+        "'Patent purchased by the company', 'Delivery vans used for transportation', 'Share capital paid in by the owners', "
+        "'Treasury bills bought as a short-term investment', 'Amounts owed by customers for goods sold', 'Cash held in the till', "
+        "'Profits retained from earlier years', 'Tax payable to the authorities within one year', 'Bank loan taken for 8 years', "
+        "'Profit after tax of the current year', 'Salaries owed to employees' (invent different ones; never reuse these exact sentences). "
+        "Each item is mapped through 'row' to EXACTLY ONE row label of the table (copy the label character for character). "
+        "Several items must belong to the same row for some rows (3 or 4 rows should combine 2 or 3 items), some rows may be 0 "
+        "(a row with no items has value 0). Exactly ONE item is the plug: {\"name\": \"Profits retained from earlier years\", \"row\": \"<retained earnings row>\", \"plug\": true} "
+        "without an 'amount'; the website calculates its amount so that the sheet balances. Every other item has an 'amount'. "
+        "Use 8 to 12 rows. The description just tells the student to compile the balance sheet of the company; it must not contain numbers."
     ),
-    "missing_item": (
-        "VARIANT MISSING ITEM. All line rows are shown (blank=false) except 1 or 2 rows with blank=true; all subtotals and totals are shown (blank=false). "
-        "The student finds the missing line(s) from the shown subtotals/totals and the accounting equation. The description names the company and explains what to find."
-    ),
-    "equation": (
-        "VARIANT ACCOUNTING EQUATION. Show only part of the sheet: mark 3 to 6 cells blank (for example total assets, one equity or liability row and a subtotal) "
-        "so that each blank can be derived from the shown cells using Assets = Equity + Liabilities and the subtotal sums. "
-        "The description briefly tells the story of the company (e.g. owners' investment, borrowing)."
+    "totals": (
+        "VARIANT TOTALS (the table is fully shown, the student calculates the sums). All rows have blank=false (12 to 16 rows spread over "
+        "A, B, D and F), one of them is the plug row. Every group subtotal and both totals have mode 'input' (that gives 6 to 10 inputs). "
+        "The description names the company and says that every subtotal and total has to be calculated."
     ),
     "comparative": (
-        "VARIANT COMPARATIVE (two balance sheet dates). Use two columns such as [\"Dec 31, Year 1\", \"Dec 31, Year 2\"] and layout 'report'. "
-        "Both columns must balance. Mark 3 to 6 cells blank, in DIFFERENT rows and columns, each derivable from the shown cells and the equation. "
-        "The description may add a fact consistent with the table (for example that retained earnings grew by the year's profit)."
-    ),
-    "after_transactions": (
-        "VARIANT EFFECT OF TRANSACTIONS. Use two columns [\"Before\", \"After\"] and layout 'report'. The description lists 2 or 3 simple transactions with amounts "
-        "(for example: bought equipment for 20,000 paid from the bank; took a bank loan of 50,000; paid 10,000 to a supplier). The Before column is fully shown. "
-        "The After column reflects the transactions; set blank to [false, true] on the rows and subtotals/totals whose After value changes or must be recomputed, "
-        "and [false, false] where nothing changes. Both columns must balance."
+        "VARIANT COMPARATIVE (two balance sheet dates). Use two columns such as [\"Dec 31, Year 1\", \"Dec 31, Year 2\"]. "
+        "Every row has two values (one per date) except the plug row, which has none. Show all rows (blank=false) and give every group subtotal and total "
+        "mode 'input' so that the student calculates them for both dates (at least 8 inputs). Keep the sheet at 10 to 12 rows. "
+        "The description says the student calculates all subtotals and totals for both dates."
     ),
 }
+BALANCE_SHEET_VARIANT_WEIGHTS = {"compile": 6, "totals": 2, "comparative": 2}
 
-BALANCE_SHEET_SYSTEM = (
-    ENGLISH_RULE + MIDTERM_CONTEXT + OUTPUT_RULES + "\n\n" + BALANCE_SHEET_FORMAT
-)
+BALANCE_SHEET_SYSTEM = ENGLISH_RULE + MIDTERM_CONTEXT + OUTPUT_RULES + "\n\n" + BALANCE_SHEET_FORMAT
 
-# ---------------------------------------------------------------- tests (terminology, journal entries)
+# ---------------------------------------------------------------- tests (terminology)
 TEST_FORMAT = (
-    "JSON FORMAT (a multiple-choice style test):\n"
+    "JSON FORMAT (a multiple-choice midterm test):\n"
     "{\n"
     '  "task_title": "Terminology: Midterm Practice Test",\n'
     '  "company_name": "Multiple choice · 8 questions",\n'
-    '  "description": "one sentence of instructions",\n'
+    '  "description": "Choose the best answer for each question.",\n'
     '  "questions": [\n'
-    '    {"kind": "mcq", "prompt": "...", "options": ["...", "...", "...", "..."], "correct": 2, "explanation": "one sentence"},\n'
-    '    {"kind": "multi", "prompt": "Select ALL that apply: ...", "options": ["...", "...", "...", "...", "..."], "correct": [0, 3], "explanation": "..."},\n'
-    '    {"kind": "tf", "prompt": "True or false: ...", "correct": true, "explanation": "..."},\n'
-    '    {"kind": "numeric", "prompt": "... Calculate ...", "unit": "USD", "correct": 12500, "tolerance": 0, "explanation": "show the calculation"}\n'
+    '    {"kind": "mcq", "points": 2, "prompt": "We know the following balance sheet items: Goods $3,000; Raw materials $6,000; Cash $3,000; Work in progress $4,000. What is the value of the Inventories?", '
+    '"options": ["$13,000", "$16,000", "$9,000", "$7,000"], "correct": 0, "calc": "3000+6000+4000", "explanation": "Inventories = goods + raw materials + work in progress = 13,000; cash is not an inventory item."},\n'
+    '    {"kind": "mcq", "points": 1, "prompt": "Which expense category includes ...?", "options": ["...", "...", "...", "..."], "correct": 2, "explanation": "one sentence"}\n'
     "  ]\n"
     "}\n"
     "RULES:\n"
-    "- 'correct' for mcq is the index (starting at 0) of the single right option; for multi a list of 2 or more indexes (never all options); for tf true or false; for numeric the number.\n"
-    "- mcq has 4 options, multi has 5. Options must be plausible, similar in length and style; the right option must NOT be systematically the longest or in a fixed position. "
-    "Do not use 'all of the above' or 'none of the above'.\n"
-    "- Mix exam-like phrasings: 'Which of the following...', 'What is the effect of ... on ...?', 'Which statement is NOT correct?', scenario questions with small numbers.\n"
-    "- Numeric questions must have ONE exact answer from a short calculation (e.g. equity from the accounting equation, depreciation, cost of goods sold, net income, bank reconciliation balance).\n"
-    "- Every question tests a different concept. Keep each prompt under 280 characters."
+    "- Exactly 8 questions, ALL of kind 'mcq' with exactly 4 options and ONE right answer ('correct' is the index starting at 0). "
+    "'points' is 1 (concept questions) or 2 (calculation questions); 3 or 4 of the 8 are calculation questions.\n"
+    "- Every calculation question MUST include 'calc': a plain arithmetic expression using only numbers and + - * / ( ) "
+    "(for example \"60000-5000-10000-1000+2000\" or \"1000-1000*0.1\") whose result is the number in the correct option. "
+    "The wrong options are typical mistakes (a forgotten item, a wrong sign, an item that does not belong). Show the calculation in the explanation.\n"
+    "- Calculation ideas: the value of the inventories from a list of balance sheet items; operating profit or profit before tax from income statement items "
+    "(nature of expense method); the effect of returned goods or a discount on the value of materials; the balance after a few business events; "
+    "equity from assets and liabilities.\n"
+    "- Concept questions use exam phrasings: 'Which of the following ...?', 'Select the incorrect statement!', 'How does the event affect ...?', "
+    "'Which financial statement must be prepared first?', 'Assets are generally classified as ...'. Options are plausible, of similar length and style; "
+    "the right option is not systematically the longest and not in a fixed position. Do not use 'all of the above' or 'none of the above'.\n"
+    "- Every question tests a different concept. Keep each prompt under 300 characters."
 )
 
 TEST_SYSTEM = ENGLISH_RULE + MIDTERM_CONTEXT + OUTPUT_RULES + "\n\n" + TEST_FORMAT
 
 TEST_TOPICS = {
-    "terminology": (
-        "Create ONE test of 8 questions on accounting terminology and concepts: 5 mcq, 1 multi, 1 tf and 1 numeric. "
-        "Title it 'Terminology: Midterm Practice Test'."
-    ),
-    "transactions": (
-        "Create ONE test of 8 questions on journal entries and on the effects of business transactions on assets, liabilities and equity: "
-        "5 mcq (the options are journal entries written as 'Debit: Account | Credit: Account'), 1 multi, 1 tf and 1 numeric. "
-        "Title it 'Journal Entries: Midterm Practice Test'."
-    ),
+    "terminology": "Create ONE test of 8 multiple-choice questions on accounting terminology, classification and small calculations.",
 }
 
 TOPIC_PROMPTS = {"balance_sheet": "balance sheet", **TEST_TOPICS}   # topics this generator can produce
@@ -256,7 +257,7 @@ def build_prompts(topic: str, avoid: list[str] | None = None, variant: str | Non
     """Returns (system prompt, user prompt, balance-sheet variant)."""
     examples = _load_examples()
     if topic == "balance_sheet":
-        variant = variant or random.choice(list(BALANCE_SHEET_VARIANTS))
+        variant = variant or random.choices(list(BALANCE_SHEET_VARIANT_WEIGHTS), list(BALANCE_SHEET_VARIANT_WEIGHTS.values()))[0]
         user = "Create ONE new balance sheet task.\n" + BALANCE_SHEET_VARIANTS[variant]
         if avoid is not None:
             user += f" Set the company in this industry: {random.choice(INDUSTRIES)}."
@@ -267,7 +268,10 @@ def build_prompts(topic: str, avoid: list[str] | None = None, variant: str | Non
 def _normalize(topic: str, raw: dict, variant: str | None) -> dict:
     if topic == "balance_sheet":
         return exam.normalize_balance_sheet(raw, variant)
-    return exam.normalize_test(raw, min_questions=5)
+    task = exam.normalize_test(raw, min_questions=6)
+    if any(q["kind"] != "mcq" for q in task["questions"]):
+        raise exam.FormatError("the test must contain only multiple-choice questions")
+    return task
 
 
 def generate_task_from_claude(topic: str, avoid: list[str] | None = None) -> dict:
@@ -287,6 +291,7 @@ def generate_task_from_claude(topic: str, avoid: list[str] | None = None) -> dic
             max_tokens=MAX_TOKENS if attempt == 0 else MAX_TOKENS_RETRY,
             system=system,
             messages=[{"role": "user", "content": user}],
+            **THINKING_ARGS,
         )
         raw_text = "".join(b.text for b in response.content if b.type == "text")
 

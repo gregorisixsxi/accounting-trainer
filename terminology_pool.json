@@ -164,6 +164,110 @@
         "Revenue, Expenses, Profit"
       ],
       "correct_answer": "Opportunity, Rationalization, Pressure"
+    },
+    {
+      "id": "term_16",
+      "question": "We know the following balance sheet items of a company: Goods $2,000; Raw materials $5,000; Cash $4,000; Work in progress $3,000. What is the value of the Inventories?",
+      "options": [
+        "$10,000",
+        "$14,000",
+        "$7,000",
+        "$8,000"
+      ],
+      "correct_answer": "$10,000",
+      "explanation": "Inventories include goods, raw materials and work in progress: 2,000 + 5,000 + 3,000 = 10,000. Cash is a liquid asset, not an inventory item.",
+      "points": 2
+    },
+    {
+      "id": "term_17",
+      "question": "A company sells its products for $80,000. It used materials worth $6,000, paid salaries and wages of $12,000, recorded depreciation of $2,000, other income of $3,000 and interest income of $1,000. What is the operating profit (nature of expense method)?",
+      "options": [
+        "$63,000",
+        "$64,000",
+        "$60,000",
+        "$62,000"
+      ],
+      "correct_answer": "$63,000",
+      "explanation": "80,000 − 6,000 − 12,000 − 2,000 + 3,000 = 63,000. Interest income is financial income and is not part of the operating profit.",
+      "points": 2
+    },
+    {
+      "id": "term_18",
+      "question": "A company bought raw materials worth $2,000 with a 10-day payment term. Because of quality complaints, 25% of the materials were returned to the supplier. What is the balance sheet value of the raw materials after these events?",
+      "options": [
+        "$1,500",
+        "$500",
+        "$2,000",
+        "$2,500"
+      ],
+      "correct_answer": "$1,500",
+      "explanation": "The returned part reduces the raw materials: 2,000 − 25% × 2,000 = 1,500.",
+      "points": 2
+    },
+    {
+      "id": "term_19",
+      "question": "How are assets generally classified in the balance sheet?",
+      "options": [
+        "Non-current assets and current assets",
+        "Producing assets and consumable assets",
+        "Long-term assets and consumable assets",
+        "Current assets and producing assets"
+      ],
+      "correct_answer": "Non-current assets and current assets",
+      "explanation": "The balance sheet separates assets that stay in the business for more than a year (non-current) from those used up or converted within a year (current).",
+      "points": 1
+    },
+    {
+      "id": "term_20",
+      "question": "Which expense category includes the cost of delivering sold products to customers and sales commissions?",
+      "options": [
+        "Distribution costs",
+        "Administrative expenses",
+        "Financial expenses",
+        "Tax expenses"
+      ],
+      "correct_answer": "Distribution costs",
+      "explanation": "Costs of selling and delivering the products are distribution (selling) costs.",
+      "points": 1
+    },
+    {
+      "id": "term_21",
+      "question": "A shortage of goods is found during the inventory count. How does this event affect the financial statements?",
+      "options": [
+        "Assets decrease and an expense is recognised, so profit decreases",
+        "Assets and liabilities decrease by the same amount",
+        "One asset increases and another asset decreases by the same amount",
+        "Liabilities increase and profit is not affected"
+      ],
+      "correct_answer": "Assets decrease and an expense is recognised, so profit decreases",
+      "explanation": "The missing goods leave the balance sheet and the loss is an expense in the income statement, so both statements change.",
+      "points": 1
+    },
+    {
+      "id": "term_22",
+      "question": "A company purchased goods on credit (to be paid later). Select the INCORRECT statement.",
+      "options": [
+        "Total assets decrease as a result of the event.",
+        "Assets and liabilities increase by the same amount.",
+        "Trade payables increase.",
+        "The event does not affect profit or loss."
+      ],
+      "correct_answer": "Total assets decrease as a result of the event.",
+      "explanation": "Inventory (an asset) and trade payables (a liability) both increase by the purchase value, so total assets increase. The event has no effect on profit or loss.",
+      "points": 1
+    },
+    {
+      "id": "term_23",
+      "question": "Under the nature of expense method, which expression gives the operating profit or loss?",
+      "options": [
+        "Net sales + capitalised own output + other income − material type expenses − personnel type expenses − depreciation − other expenses",
+        "Financial income − financial expenses",
+        "Net sales − direct cost of sales − indirect cost of sales + other income − other expenses",
+        "Net sales − material type expenses − depreciation"
+      ],
+      "correct_answer": "Net sales + capitalised own output + other income − material type expenses − personnel type expenses − depreciation − other expenses",
+      "explanation": "The nature of expense method groups costs by type (materials, personnel, depreciation). The version with direct and indirect cost of sales is the function of expense method.",
+      "points": 1
     }
   ]
 }

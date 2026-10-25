@@ -274,7 +274,7 @@ class ReviewItem(BaseModel):
 
 class ArchiveEntry(BaseModel):
     attempt_id: str = Field(min_length=8, max_length=64, pattern=r"^[A-Za-z0-9_-]+$")
-    topic: Literal["balance_sheet", "terminology", "transactions"]
+    topic: Literal["balance_sheet", "terminology"]
     source: Literal["free", "pro"] = "free"
     title: str = Field(default="", max_length=200)
     company: str = Field(default="", max_length=200)
@@ -547,7 +547,7 @@ def health_check():
 
 
 # ---------------- task generation ----------------
-FREE_TOPICS = ("balance_sheet", "terminology", "transactions")   # what the UI offers; other topics are not public
+FREE_TOPICS = ("balance_sheet", "terminology")   # what the UI offers; other topics are not public
 
 
 @app.get("/api/generate/{topic}")
@@ -570,7 +570,7 @@ def generate_task(topic: str, exclude: str = ""):
         raise HTTPException(status_code=500, detail="Could not generate a task. Please try again.")
 
 
-PRO_TOPICS = ("balance_sheet", "terminology", "transactions")
+PRO_TOPICS = ("balance_sheet", "terminology")
 AVOID_LIMIT = 40  # how many recent tasks are shown to the model
 PRO_ATTEMPTS = 2
 
