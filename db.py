@@ -149,6 +149,9 @@ def _migrate(c: sqlite3.Connection) -> None:
     if first_verification_migration:
         # accounts that exist before e-mail verification was introduced stay usable
         c.execute("UPDATE users SET is_verified = 1")
+    # calibration was shortened to CALIBRATION_TASKS: keep the progress already made (idempotent)
+    shortened = 20 - rating.CALIBRATION_TASKS
+    c.execute("UPDATE users SET calibration_left = MAX(0, calibration_left - ?) WHERE calibration_left > ?", (shortened, rating.CALIBRATION_TASKS))
     c.execute("CREATE INDEX IF NOT EXISTS idx_users_lemon_sub ON users(lemon_subscription_id)")
     c.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_nickname ON users(nickname COLLATE NOCASE)")
     c.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_twitter ON users(twitter_id)")
@@ -711,3 +714,13 @@ def find_or_create_twitter_user(twitter_id: str, handle: str, avatar_url: str | 
                 continue
             return _public(c.execute("SELECT * FROM users WHERE id = ?", (cur.lastrowid,)).fetchone()), True
     raise RuntimeError("could not create the X account")
+
+
+def mark_verified(user_id: int) -> None:
+    with connect() as c:
+        c.execute("UPDATE users SET is_verified = 1, verify_token = NULL, verify_token_expires = NULL WHERE id = ?", (user_id,))
+
+
+def clear_verify_token(user_id: int) -> None:
+    with connect() as c:
+        c.execute("UPDATE users SET verify_token = NULL, verify_token_expires = NULL WHERE id = ?", (user_id,))

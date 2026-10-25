@@ -170,6 +170,7 @@
   .trainer-col { max-width: 760px; margin: 0 auto; }
 
   .nav-handle { display: none; }
+  .top-logo { display: none; }
 
   @media (min-width: 1024px) {
     /* the menu waits behind the right edge and slides over the content on hover (or click on the handle) */
@@ -194,7 +195,11 @@
     .site-nav .nav-account { order: 0; max-width: none; width: 100%; height: 48px; border-radius: 14px; padding: 0 12px 0 8px; margin-top: 10px; }
     .site-nav .nav-account .acc-name { flex: 1; text-align: left; }
     /* the task area uses the whole width while the menu is closed */
-    .trainer-main { margin-right: 0; padding: 56px clamp(28px, 5vw, 96px) 96px; }
+    /* the brand stays in the top-left corner of every work screen; a click goes back to the main menu */
+    .top-logo { display: block; position: fixed; z-index: 39; top: 18px; left: clamp(28px, 5vw, 96px); font-size: 20px; line-height: 1.2; color: var(--text);
+      background: none; border: 0; padding: 4px 2px; cursor: pointer; transition: opacity .18s; }
+    .top-logo:hover { opacity: .75; }
+    .trainer-main { margin-right: 0; padding: 88px clamp(28px, 5vw, 96px) 96px; }
     .trainer-col { max-width: none; }
   }
 
@@ -416,6 +421,7 @@
 <!-- ============ TRAINER ============ -->
 <div id="trainer" class="hidden">
   <button type="button" id="navHandle" class="nav-handle" aria-label="Open menu" aria-expanded="false" aria-controls="siteNav"><span class="ico" data-icon="chevron"></span></button>
+  <button type="button" class="top-logo serif" data-home aria-label="Back to the main menu">Accounting <span class="italic">Trainer</span></button>
   <aside id="siteNav" class="site-nav" aria-label="Main navigation">
     <button type="button" class="nav-brand serif" data-home aria-label="Home">Accounting <span class="italic">Trainer</span></button>
 
@@ -450,7 +456,7 @@
       <section id="rating" class="hidden fade-in mx-auto" style="max-width: 860px">
         <p class="eyebrow">Competition</p>
         <h2 class="serif mt-2 text-[32px] sm:text-4xl leading-tight">Rating</h2>
-        <p class="mt-2 text-sm text-zinc-400 max-w-xl">The 50 best players by ELO. Finish your 20 calibration tasks to enter the table. Yearly and monthly boards list the players who earned rating in that period.</p>
+        <p class="mt-2 text-sm text-zinc-400 max-w-xl">The 50 best players by ELO. Finish your 5 Balance Sheet calibration tasks to enter the table. Yearly and monthly boards list the players who earned rating in that period.</p>
         <div id="ratingTabs" class="seg mt-6" role="tablist">
           <button type="button" class="seg-btn active" data-period="all" role="tab">All-time</button>
           <button type="button" class="seg-btn" data-period="year" role="tab">Yearly</button>
@@ -606,7 +612,6 @@
             <p id="accEmail" class="mt-0.5 text-xs text-zinc-500 truncate"></p>
             <div class="mt-3 flex flex-wrap gap-2">
               <button type="button" class="social-btn" data-social="X"><span class="ico" data-icon="xsocial"></span>Connect X</button>
-              <button type="button" class="social-btn" data-social="Facebook"><span class="ico" data-icon="facebook"></span>Connect Facebook</button>
             </div>
             <p id="socialNote" class="hidden mt-2 text-xs text-zinc-500"></p>
           </div>
@@ -704,8 +709,7 @@ const ICONS = {
   user: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
   mail: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>',
   edit: '<path d="M4 20h4L19 9a2.1 2.1 0 0 0-3-3L5 17z"/><path d="M14 7l3 3"/>',
-  xsocial: '<path d="M4 4l16 16M20 4L4 20"/>',
-  facebook: '<path d="M14 8h3V4h-3a4 4 0 0 0-4 4v3H7v4h3v6h4v-6h3l1-4h-4V8.5A.5.5 0 0 1 14.5 8z"/>',
+  xsocial: '<path fill="currentColor" stroke="none" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>',
   trophy: '<path d="M8 4h8v5a4 4 0 0 1-8 0z"/><path d="M8 6H5a1 1 0 0 0-1 1 4 4 0 0 0 4 4M16 6h3a1 1 0 0 1 1 1 4 4 0 0 1-4 4M12 13v4M8 21h8M10 17h4"/>',
   lock: '<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
 };
@@ -1068,6 +1072,8 @@ function showRating(info) {
     row.append(el("span", "note note-warn", "Answered too fast to count for your rating."));
   } else if (info.already_counted) {
     row.append(el("span", "text-xs text-zinc-500", "This task already counted for your rating. Re-checks do not change it."));
+  } else if (info.not_calibrating) {
+    row.append(el("span", "text-xs text-zinc-500", "Only Balance Sheet tasks count towards calibration."));
   } else {
     const d = info.delta;
     row.append(el("span", "pill " + (d > 0 ? "pill-ok" : d < 0 ? "pill-bad" : "pill-mid"), (d > 0 ? "+" : "") + d + " ELO"));
@@ -1317,8 +1323,7 @@ function renderLeaderboard(d) {
   if (!d.entries.length) {
     const box = el("div", "py-14 text-center");
     const ic = el("span", "avatar avatar-lg mx-auto"); setIcon(ic, "trophy"); ic.firstChild.style.cssText = "width:24px;height:24px";
-    box.append(ic, el("p", "mt-4 font-medium", "No ranked players yet"), el("p", "mt-1 text-sm text-zinc-500 max-w-xs mx-auto",
-      d.period === "all" ? "Finish the 20 calibration tasks to be the first on the board." : "Nobody has earned rating in this period yet."));
+    box.append(ic, el("p", "mt-4 font-medium", "Soon"));
     list.replaceChildren(box);
     return;
   }
@@ -1428,7 +1433,7 @@ const dateOnly = (iso) => { const d = new Date(iso); return isNaN(d) ? "" : d.to
 
 function renderProfile() {
   if (!session) return;
-  const p = session.profile || { level: 3, elo: 1000, calibrating: true, calibration_left: 20, calibration_total: 20, calibration_done: 0, progress: 0, tasks: 0, accuracy: null, next_level: null, elo_to_next: null };
+  const p = session.profile || { level: 3, elo: 1000, calibrating: true, calibration_left: 5, calibration_total: 5, calibration_done: 0, progress: 0, tasks: 0, accuracy: null, next_level: null, elo_to_next: null };
   const nick = nicknameOf(session);
   $("accName").textContent = nick;
   $("accEmail").textContent = session.username;
@@ -1636,7 +1641,8 @@ authForm.addEventListener("submit", async (e) => {
 
 async function resendConfirmation(statusEl) {
   const r = await authRequest("/api/auth/resend-verification", { email: pendingEmail });
-  const msg = r.ok ? "Confirmation email sent. Check your inbox." : (typeof r.data.detail === "string" ? r.data.detail : "Could not send the email. Please try again.");
+  const msg = r.ok && r.data.verified ? "Your email is confirmed. You can sign in now."
+    : r.ok ? "Confirmation email sent. Check your inbox." : (typeof r.data.detail === "string" ? r.data.detail : "Could not send the email. Please try again.");
   setBox(statusEl, msg, r.ok);
 }
 $("authResend").onclick = () => resendConfirmation(authStatus);

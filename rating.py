@@ -17,7 +17,8 @@ The level thresholds are the FACEIT ones.
 LEVEL_FLOORS = [100, 801, 951, 1101, 1251, 1401, 1551, 1701, 1851, 2001]   # ELO needed for level 1..10
 START_ELO = 1000
 MIN_ELO, MAX_ELO = 100, 3000
-CALIBRATION_TASKS = 20
+CALIBRATION_TASKS = 5
+CALIBRATION_TOPICS = ("balance_sheet",)   # only these task types count towards calibration
 CALIBRATION_MAX_ELO = 1700          # top of level 7
 CALIBRATION_MAX_LEVEL = 7
 K_CALIBRATION, K_RANKED = 100, 24

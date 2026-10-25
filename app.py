@@ -480,6 +480,8 @@ def check_answers(body: CheckRequest, user: dict | None = Depends(optional_user)
         }))
         if not first:
             rating_info = {"already_counted": True}
+        elif (db.get_user(user["id"]) or user)["calibration_left"] > 0 and payload["topic"] not in rating.CALIBRATION_TOPICS:
+            rating_info = {"not_calibrating": True}      # while calibrating, only Balance Sheet tasks count
         elif time.time() - payload["iat"] < MIN_SECONDS_PER_POINT * result["total"]:
             rating_info = {"too_fast": True}
         else:
