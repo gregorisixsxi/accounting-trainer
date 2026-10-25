@@ -142,15 +142,9 @@ class ResetRequest(BaseModel):
 
 
 def verification_required() -> bool:
-    """E-mail confirmation is enforced only when mail can actually be sent (or REQUIRE_EMAIL_VERIFICATION=1).
-    Without an SMTP provider nobody could ever confirm, so sign-up and sign-in work without it.
-    REQUIRE_EMAIL_VERIFICATION=0 switches the requirement off even when SMTP is configured."""
-    flag = os.getenv("REQUIRE_EMAIL_VERIFICATION", "").strip().lower()
-    if flag in ("1", "true", "yes", "on"):
-        return True
-    if flag in ("0", "false", "no", "off"):
-        return False
-    return email_service.is_configured()
+    """E-mail confirmation is always required. Only an explicit REQUIRE_EMAIL_VERIFICATION=0 switches it off
+    (emergency/test use; do not leave it set in production)."""
+    return os.getenv("REQUIRE_EMAIL_VERIFICATION", "").strip().lower() not in ("0", "false", "no", "off")
 
 
 def mail_ready() -> None:

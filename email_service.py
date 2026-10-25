@@ -1,32 +1,32 @@
-"""Transactional e-mail (verification, password reset) over plain SMTP.
+"""Transactional e-mail (verification, password reset) through the Resend HTTP API.
 
-Works with any provider that offers SMTP, e.g.
-  Resend: SMTP_HOST=smtp.resend.com  SMTP_PORT=465  SMTP_USER=resend  SMTP_PASSWORD=<api key>
-  Brevo:  SMTP_HOST=smtp-relay.brevo.com  SMTP_PORT=587  SMTP_USER=<login>  SMTP_PASSWORD=<smtp key>
-Port 465 uses implicit TLS, anything else uses STARTTLS.
+  RESEND_API_KEY  your Resend API key (re_...). Without it nothing is sent and the app keeps running.
+  MAIL_FROM       sender, e.g. 'Accounting Trainer <no-reply@yourdomain.com>'. Defaults to Resend's test sender
+                  'Accounting Trainer <onboarding@resend.dev>', which only delivers to the e-mail address of your
+                  own Resend account until you verify a domain at resend.com/domains.
+  EMAIL_DEV_LOG   1 = print the e-mails (with their links) to the console instead of sending (local development).
 """
 import html
+import json
 import os
-import smtplib
-import ssl
-from email.message import EmailMessage
+import urllib.error
+import urllib.request
 
 APP_NAME = "Accounting Trainer"
+RESEND_URL = "https://api.resend.com/emails"
+DEFAULT_FROM = f"{APP_NAME} <onboarding@resend.dev>"
+TIMEOUT_SECONDS = 15
 
 
 def config() -> dict:
     return {
-        "host": os.getenv("SMTP_HOST", "").strip(),
-        "port": int(os.getenv("SMTP_PORT", "587") or 587),
-        "user": os.getenv("SMTP_USER", "").strip(),
-        "password": os.getenv("SMTP_PASSWORD", ""),
-        "from": os.getenv("MAIL_FROM", "").strip(),
+        "api_key": os.getenv("RESEND_API_KEY", "").strip(),
+        "from": os.getenv("MAIL_FROM", "").strip() or DEFAULT_FROM,
     }
 
 
 def is_configured() -> bool:
-    cfg = config()
-    return bool(cfg["host"] and cfg["from"])
+    return bool(config()["api_key"])
 
 
 def dev_log_enabled() -> bool:
@@ -35,37 +35,35 @@ def dev_log_enabled() -> bool:
 
 
 def send_email(to: str, subject: str, text: str, html_body: str) -> bool:
+    """Sends one message. Returns True on success; never raises, so a mail problem cannot crash a request."""
     cfg = config()
-    if not is_configured():
+    if not cfg["api_key"]:
         if dev_log_enabled():
             print(f"[email:dev] to={to} subject={subject!r}\n{text}\n")
             return True
-        print(f"[email] SMTP is not configured, message to {to} was NOT sent")
+        print(f"[email] RESEND_API_KEY is not set, the message to {to} was NOT sent")
         return False
 
-    msg = EmailMessage()
-    msg["From"] = cfg["from"]
-    msg["To"] = to
-    msg["Subject"] = subject
-    msg.set_content(text)
-    msg.add_alternative(html_body, subtype="html")
+    payload = {"from": cfg["from"], "to": [to], "subject": subject, "html": html_body, "text": text}
+    request = urllib.request.Request(
+        RESEND_URL,
+        data=json.dumps(payload).encode(),
+        method="POST",
+        headers={
+            "Authorization": "Bearer " + cfg["api_key"],
+            "Content-Type": "application/json",
+            "User-Agent": "accounting-trainer/1.0",     # Resend rejects requests without a User-Agent
+        },
+    )
     try:
-        context = ssl.create_default_context()
-        if cfg["port"] == 465:
-            server = smtplib.SMTP_SSL(cfg["host"], cfg["port"], timeout=15, context=context)
-        else:
-            server = smtplib.SMTP(cfg["host"], cfg["port"], timeout=15)
-            server.ehlo()
-            server.starttls(context=context)
-            server.ehlo()
-        with server:
-            if cfg["user"]:
-                server.login(cfg["user"], cfg["password"])
-            server.send_message(msg)
-        return True
-    except Exception as e:  # never let a mail problem crash a request handler
+        with urllib.request.urlopen(request, timeout=TIMEOUT_SECONDS) as response:
+            return 200 <= response.status < 300
+    except urllib.error.HTTPError as e:
+        # e.g. 403 "You can only send testing emails to your own email address" or an unverified domain
+        print(f"[email] Resend rejected the message to {to}: HTTP {e.code} {e.read()[:300]!r}")
+    except Exception as e:
         print(f"[email] sending to {to} failed: {e!r}")
-        return False
+    return False
 
 
 def _layout(title: str, intro: str, link: str, button: str, footer: str) -> str:
