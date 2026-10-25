@@ -199,6 +199,9 @@
     .top-logo { display: block; position: fixed; z-index: 39; top: 18px; left: clamp(28px, 5vw, 96px); font-size: 20px; line-height: 1.2; color: var(--text);
       background: none; border: 0; padding: 4px 2px; cursor: pointer; transition: opacity .18s; }
     .top-logo:hover { opacity: .75; }
+    /* a quiet strip under the logo: the page scrolls beneath it instead of running into the text */
+    #trainer::before { content: ""; position: fixed; z-index: 38; top: 0; left: 0; right: 0; height: 68px; pointer-events: none;
+      background: linear-gradient(rgba(9,9,11,.97) 72%, rgba(9,9,11,0)); }
     .trainer-main { margin-right: 0; padding: 88px clamp(28px, 5vw, 96px) 96px; }
     .trainer-col { max-width: none; }
   }
@@ -1062,7 +1065,7 @@ function showResult(res) {
   requestAnimationFrame(() => (fill.style.width = Math.round(ratio * 100) + "%"));
 }
 
-function showRating(info) {
+function showRatingChange(info) {
   const box = $("ratingBox");
   box.replaceChildren();
   if (!info) { box.classList.add("hidden"); return; }
@@ -1111,7 +1114,7 @@ async function doCheck() {
     if (!r.ok) throw new Error(typeof data.detail === "string" ? data.detail : "Could not check the answers. Please try again.");
     isSheet() ? applySheetResult(data) : applyTestResult(data);
     showResult({ ok: data.score, total: data.total });
-    showRating(data.rating);
+    showRatingChange(data.rating);
     $("archiveNote").textContent = data.archived ? "Saved to your archive ✓" : "";
     if (!data.signed_in) {
       $("archiveNote").replaceChildren("Results are not saved and do not count for a rating. ");
@@ -1310,7 +1313,7 @@ function renderLeaderboard(d) {
   } else if (d.me && d.me.calibrating) {
     card.append(el("span", "text-sm text-zinc-300", `Calibration: ${d.me.calibration_total - d.me.calibration_left} / ${d.me.calibration_total} tasks. Finish it to enter the rating.`));
   } else if (d.me && d.me.rank) {
-    card.append(el("span", "eyebrow", "Your position"), el("span", "serif text-2xl", "#" + d.me.rank));
+    card.append(el("span", "eyebrow", "Your position"), el("span", "serif text-2xl", "#" + d.me.rank), el("span", "text-sm font-medium", nicknameOf(session)));
     card.append(levelPill({ level: d.me.level, calibrating: false }), el("span", "text-sm text-zinc-300 tabular-nums", d.me.elo.toLocaleString("en-US") + " ELO"));
     if (!d.me.in_top) card.append(el("span", "text-xs text-zinc-500", "Outside the top " + d.size));
   } else {
@@ -1332,9 +1335,10 @@ function renderLeaderboard(d) {
 
 function leaderboardRow(e) {
   const row = el("div", "lb-row" + (e.rank <= 3 ? " top-" + e.rank : "") + (e.is_me ? " me" : ""));
+  const shown = e.is_me && session ? nicknameOf(session) : e.nickname;     // your own row always carries your real nickname
   const avatar = el("span", "avatar");
-  applyAvatar(avatar, e.avatar, e.nickname);
-  const name = el("span", "lb-name", e.nickname);
+  applyAvatar(avatar, e.avatar, shown);
+  const name = el("span", "lb-name", shown);
   if (e.is_me) name.append(el("span", "lb-you", "YOU"));
   const score = el("span", "lb-score");
   score.append(el("b", "lb-elo", e.elo.toLocaleString("en-US")), el("span", "lb-tasks", e.tasks + (e.tasks === 1 ? " task" : " tasks")));
