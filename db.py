@@ -130,6 +130,9 @@ USER_MIGRATIONS = (
     ("elo_day_gain", "INTEGER NOT NULL DEFAULT 0"),
     # profile
     ("last_scored_at", "TEXT DEFAULT NULL"),             # UTC ISO-8601 of the last task that counted for the rating
+    ("twitter_id", "TEXT DEFAULT NULL"),                # X (Twitter) account that signed in
+    ("twitter_username", "TEXT DEFAULT NULL"),
+    ("avatar_url", "TEXT DEFAULT NULL"),                # profile picture taken from X (only https://pbs.twimg.com/ addresses)
     ("nickname", "TEXT DEFAULT NULL"),
     ("avatar", "TEXT DEFAULT NULL"),                    # preset id, e.g. "g3"
 )
@@ -148,6 +151,7 @@ def _migrate(c: sqlite3.Connection) -> None:
         c.execute("UPDATE users SET is_verified = 1")
     c.execute("CREATE INDEX IF NOT EXISTS idx_users_lemon_sub ON users(lemon_subscription_id)")
     c.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_nickname ON users(nickname COLLATE NOCASE)")
+    c.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_twitter ON users(twitter_id)")
 
 
 # ---------- time / PRO status ----------
@@ -208,6 +212,8 @@ def _public(row: sqlite3.Row) -> dict:
         "is_verified": bool(row["is_verified"]),
         "nickname": row["nickname"],
         "avatar": row["avatar"],
+        "avatar_url": row["avatar_url"],
+        "twitter_username": row["twitter_username"],
         "level": row["level"],
         "elo": row["elo"],
         "calibration_left": row["calibration_left"],
@@ -575,7 +581,7 @@ def set_profile(user_id: int, nickname: str | None = None, avatar: str | None = 
             if nickname is not None:
                 c.execute("UPDATE users SET nickname = ? WHERE id = ?", (nickname, user_id))
             if avatar is not None:
-                c.execute("UPDATE users SET avatar = ? WHERE id = ?", (avatar, user_id))
+                c.execute("UPDATE users SET avatar = ?, avatar_url = NULL WHERE id = ?", (avatar, user_id))
         except sqlite3.IntegrityError:
             return "taken"
     return "ok"
@@ -649,3 +655,59 @@ def user_rank(user_id: int, period: str = "all") -> int | None:
             params + [me["elo"], me["elo"], me["tasks_total"], me["tasks_total"], user_id],
         ).fetchone()["n"]
     return ahead + 1
+
+
+# ---------- sign in with X (Twitter) ----------
+TWITTER_AVATAR_PREFIX = "https://pbs.twimg.com/"
+
+
+def _clean_avatar_url(url: str | None) -> str | None:
+    if not url or not url.startswith(TWITTER_AVATAR_PREFIX):
+        return None
+    return url.replace("_normal.", "_400x400.")
+
+
+def _unique_nickname(c: sqlite3.Connection, handle: str) -> str:
+    """A free nickname built from the X handle (3-20 characters: letters, digits, dot, dash, underscore)."""
+    import re
+    base = re.sub(r"[^A-Za-z0-9_.-]", "", handle or "").lstrip("_.-") or "player"
+    base = (base + "xxx")[:20] if len(base) < 3 else base[:20]
+    candidate, n = base, 1
+    while c.execute("SELECT 1 FROM users WHERE nickname = ?", (candidate,)).fetchone():
+        n += 1
+        candidate = base[: 20 - len(str(n))] + str(n)
+    return candidate
+
+
+def find_or_create_twitter_user(twitter_id: str, handle: str, avatar_url: str | None) -> tuple[dict, bool]:
+    """The account that belongs to an X id; created on the first sign-in. -> (user, created).
+
+    X does not give an e-mail address, so the login name is a reserved-domain placeholder (x<id>@twitter.invalid)
+    and the password is random and never shown: such an account can only be entered through X. Accounts are matched by the
+    X id only, never by e-mail, so nobody can take over an existing account by signing in with X.
+    New accounts get the default rating (calibration, 1000 ELO) from the column defaults.
+    """
+    twitter_id = str(twitter_id)
+    picture = _clean_avatar_url(avatar_url)
+    for _ in range(2):                       # the second round handles two sign-ins racing to create the same account
+        with connect() as c:
+            row = c.execute("SELECT * FROM users WHERE twitter_id = ?", (twitter_id,)).fetchone()
+            if row:
+                c.execute(
+                    "UPDATE users SET twitter_username = ?, avatar_url = CASE WHEN avatar IS NULL THEN COALESCE(?, avatar_url) ELSE avatar_url END WHERE id = ?",
+                    (handle, picture, row["id"]),
+                )
+                return _public(c.execute("SELECT * FROM users WHERE id = ?", (row["id"],)).fetchone()), False
+            username = f"x{twitter_id}@twitter.invalid"
+            if c.execute("SELECT 1 FROM users WHERE username = ?", (username,)).fetchone():
+                username = f"x{twitter_id}-{secrets.token_hex(3)}@twitter.invalid"     # the placeholder was squatted: pick another
+            try:
+                cur = c.execute(
+                    """INSERT INTO users (username, password_hash, is_verified, twitter_id, twitter_username, nickname, avatar_url)
+                       VALUES (?, ?, 1, ?, ?, ?, ?)""",
+                    (username, hash_password(secrets.token_urlsafe(32)), twitter_id, handle, _unique_nickname(c, handle), picture),
+                )
+            except sqlite3.IntegrityError:
+                continue
+            return _public(c.execute("SELECT * FROM users WHERE id = ?", (cur.lastrowid,)).fetchone()), True
+    raise RuntimeError("could not create the X account")

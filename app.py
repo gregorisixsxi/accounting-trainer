@@ -23,6 +23,7 @@ load_dotenv(Path(__file__).resolve().parent / ".env")
 
 import db
 import email_service
+import twitter_auth
 import grading
 import rating
 import pool
@@ -60,6 +61,7 @@ def client_ip(request: Request) -> str:
 AUTH_RATE_LIMITED_PATHS = {
     "/api/login", "/api/register", "/api/create-checkout-session",
     "/api/auth/register", "/api/auth/forgot-password", "/api/auth/reset-password", "/api/auth/resend-verification",
+    "/auth/twitter/login", "/auth/twitter/callback",
 }
 
 
@@ -181,6 +183,8 @@ def profile_payload(user: dict) -> dict:
         "username": user["username"],
         "nickname": user.get("nickname") or user["username"].split("@")[0],
         "avatar": user.get("avatar"),
+        "avatar_url": user.get("avatar_url"),
+        "x_username": user.get("twitter_username"),
         "is_pro": user["is_pro"],
         "pro_expires_at": user["pro_expires_at"],
         "profile": profile_with_rank(user),
@@ -191,7 +195,7 @@ def profile_payload(user: dict) -> dict:
 @app.post("/api/register")   # old path kept as an alias
 def register(creds: Credentials, request: Request, background: BackgroundTasks):
     username, password = validate_credentials(creds)
-    if not EMAIL_RE.match(username):
+    if not EMAIL_RE.match(username) or username.lower().endswith("@twitter.invalid"):   # that domain is reserved for X accounts
         raise HTTPException(status_code=422, detail="Please use a valid email address to create an account.")
     email = username.lower()
     if not verification_required():
@@ -312,6 +316,66 @@ def get_leaderboard(period: str = "all", user: dict | None = Depends(optional_us
             "calibration_total": rating.CALIBRATION_TASKS, "tasks": fresh["tasks_total"],
         }
     return {"period": period, "entries": entries, "me": me, "size": db.LEADERBOARD_SIZE}
+
+
+# ---------------- sign in with X (Twitter) ----------------
+X_COOKIE = "tw_oauth"          # signed, HttpOnly: carries the state and the PKCE verifier between /login and /callback
+X_COOKIE_PATH = "/auth/twitter"
+X_COOKIE_SECONDS = 600
+
+
+def twitter_redirect_uri(request: Request) -> str:
+    return os.getenv("TWITTER_REDIRECT_URI", "").strip() or public_base_url(request) + "/auth/twitter/callback"
+
+
+@app.get("/api/auth/providers")
+def auth_providers():
+    return {"x": twitter_auth.is_configured()}
+
+
+@app.get("/auth/twitter/login")
+def twitter_login(request: Request):
+    if not twitter_auth.is_configured():
+        return RedirectResponse("/?x_error=not_configured", status_code=303)
+    state = secrets.token_urlsafe(24)
+    verifier, challenge = twitter_auth.new_pkce()
+    redirect_uri = twitter_redirect_uri(request)
+    response = RedirectResponse(twitter_auth.authorize_url(redirect_uri, state, challenge), status_code=303)
+    response.set_cookie(
+        X_COOKIE, grading.pack({"k": "x", "s": state, "v": verifier, "iat": int(time.time())}),
+        max_age=X_COOKIE_SECONDS, httponly=True, samesite="lax", secure=redirect_uri.startswith("https://"), path=X_COOKIE_PATH,
+    )
+    return response
+
+
+@app.get("/auth/twitter/callback")
+def twitter_callback(request: Request, code: str = "", state: str = "", error: str = ""):
+    def finish(location: str) -> RedirectResponse:
+        response = RedirectResponse(location, status_code=303)
+        response.delete_cookie(X_COOKIE, path=X_COOKIE_PATH)
+        response.headers["Cache-Control"] = "no-store"
+        return response
+
+    if error:
+        return finish("/?x_error=" + ("access_denied" if error == "access_denied" else "failed"))
+    # CSRF protection: the state in the address must be the one this very browser received in /login
+    try:
+        saved = grading.open_token(request.cookies.get(X_COOKIE, ""))
+    except grading.TokenError:
+        return finish("/?x_error=state")
+    if saved.get("k") != "x" or time.time() - saved.get("iat", 0) > X_COOKIE_SECONDS or not state or not hmac.compare_digest(saved["s"], state):
+        return finish("/?x_error=state")
+    if not code:
+        return finish("/?x_error=failed")
+    try:
+        me = twitter_auth.fetch_me(twitter_auth.exchange_code(code, saved["v"], twitter_redirect_uri(request)))
+    except twitter_auth.TwitterError:
+        return finish("/?x_error=failed")
+
+    user, created = db.find_or_create_twitter_user(me["id"], me.get("username", ""), me.get("profile_image_url"))
+    token = db.create_session(user["id"])
+    # the session token travels in the URL fragment: it is never sent to a server and never appears in logs or Referer headers
+    return finish(f"/#xauth={token}" + ("&new=1" if created else ""))
 
 
 ADMIN_USERS = {u.strip().lower() for u in os.environ.get("ADMIN_USERS", "").split(",") if u.strip()}
