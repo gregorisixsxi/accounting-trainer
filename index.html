@@ -299,6 +299,59 @@
   .stats-row .stat .v { font-size: 19px; font-weight: 600; font-variant-numeric: tabular-nums; margin-top: 2px; }
   @media (max-width: 560px) { .stats-row { grid-template-columns: repeat(2, minmax(0, 1fr)); } .level-box { margin: 0 auto; } .profile-head { padding-right: 0; } }
 
+  /* ============ Rating / leaderboard ============ */
+  .seg { display: inline-flex; padding: 4px; gap: 4px; border-radius: 14px; background: var(--surface); border: 1px solid var(--border); }
+  .seg-btn { height: 34px; padding: 0 18px; border-radius: 10px; font-size: 13.5px; font-weight: 500; color: var(--muted); background: none; border: 0; cursor: pointer; transition: color .18s, background .18s; }
+  .seg-btn:hover { color: var(--text); }
+  .seg-btn.active { color: var(--text); background: var(--surface-2); box-shadow: inset 0 0 0 1px var(--border-strong); }
+
+  .lb-row { position: relative; overflow: hidden; display: grid; grid-template-columns: 48px 36px minmax(0, 1fr) auto auto; align-items: center; gap: 12px;
+    padding: 10px 14px; border-radius: 14px; background: var(--surface); border: 1px solid var(--border); transition: border-color .2s, transform .2s; }
+  .lb-row:hover { border-color: var(--border-strong); transform: translateY(-1px); }
+  .lb-row.me { border-color: rgba(139,140,248,.55); background: rgba(139,140,248,.07); }
+  .lb-row .avatar { width: 34px; height: 34px; font-size: 14px; }
+  .lb-rank { position: relative; overflow: hidden; height: 30px; min-width: 42px; display: grid; place-items: center; border-radius: 9px; font-size: 13px; font-weight: 700;
+    font-variant-numeric: tabular-nums; color: var(--muted); background: rgba(255,255,255,.05); border: 1px solid var(--border); }
+  .lb-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 15px; font-weight: 600; }
+  .lb-you { margin-left: 8px; font-size: 10px; font-weight: 700; letter-spacing: .12em; color: #c4c5fb; }
+  .lb-score { display: flex; flex-direction: column; align-items: flex-end; min-width: 62px; line-height: 1.2; }
+  .lb-elo { font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .lb-tasks { font-size: 11.5px; color: var(--faint); }
+
+  /* top 3: metallic plaque with a travelling shine, shimmering name, tinted row */
+  .top-1 .lb-rank, .top-2 .lb-rank, .top-3 .lb-rank { border-width: 1px; }
+  .top-1 .lb-rank::after, .top-2 .lb-rank::after, .top-3 .lb-rank::after { content: ""; position: absolute; inset: -40% -60%;
+    background: linear-gradient(105deg, transparent 38%, rgba(255,255,255,.75) 50%, transparent 62%); transform: translateX(-120%); animation: lbshine 3.6s ease-in-out infinite; }
+  .top-2 .lb-rank::after { animation-delay: .5s; }
+  .top-3 .lb-rank::after { animation-delay: 1s; }
+  @keyframes lbshine { 0%, 55% { transform: translateX(-120%); } 100% { transform: translateX(120%); } }
+  @keyframes lbname { from { background-position: 0% 0; } to { background-position: 200% 0; } }
+  .top-1 .lb-name, .top-2 .lb-name, .top-3 .lb-name { background-size: 200% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: lbname 3.4s linear infinite; }
+
+  .top-1 { border-color: rgba(246,185,59,.38); background: linear-gradient(90deg, rgba(246,185,59,.10), var(--surface) 55%); box-shadow: 0 12px 34px -22px rgba(246,185,59,.7); }
+  .top-1 .lb-rank { color: #3b2a00; border-color: #f6d365; background: linear-gradient(135deg, #f9d976, #f0a81c 46%, #fff1a8 54%, #d9961a); box-shadow: 0 0 18px rgba(246,185,59,.45); }
+  .top-1 .lb-name { background-image: linear-gradient(100deg, #b8860b 0%, #ffd700 25%, #fff7c2 50%, #ffd700 75%, #b8860b 100%); filter: drop-shadow(0 0 8px rgba(255,200,40,.35)); }
+
+  .top-2 { border-color: rgba(209,213,219,.32); background: linear-gradient(90deg, rgba(209,213,219,.08), var(--surface) 55%); }
+  .top-2 .lb-rank { color: #1f2937; border-color: #d1d5db; background: linear-gradient(135deg, #e5e7eb, #9ca3af 46%, #f9fafb 54%, #aab1bd); box-shadow: 0 0 14px rgba(209,213,219,.3); }
+  .top-2 .lb-name { background-image: linear-gradient(100deg, #8b95a5 0%, #e5e7eb 25%, #ffffff 50%, #cbd5e1 75%, #8b95a5 100%); filter: drop-shadow(0 0 6px rgba(226,232,240,.25)); }
+
+  .top-3 { border-color: rgba(205,127,50,.38); background: linear-gradient(90deg, rgba(205,127,50,.09), var(--surface) 55%); }
+  .top-3 .lb-rank { color: #2b1503; border-color: #d08a52; background: linear-gradient(135deg, #e3a674, #b9692f 46%, #f4cda6 54%, #a35a26); box-shadow: 0 0 14px rgba(205,127,50,.35); }
+  .top-3 .lb-name { background-image: linear-gradient(100deg, #8a4b1c 0%, #cd7f32 25%, #f6c08e 50%, #cd7f32 75%, #8a4b1c 100%); filter: drop-shadow(0 0 6px rgba(205,127,50,.3)); }
+
+  .lb-me { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding: 14px 16px; border-radius: 14px; background: rgba(139,140,248,.07); border: 1px solid rgba(139,140,248,.28); }
+
+  /* prestige badge in the profile */
+  .rank-badge { display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 10px 0 8px; border-radius: 999px; font-size: 11.5px; font-weight: 700; letter-spacing: .02em; border: 1px solid; }
+  .rank-badge .ico { width: 14px; height: 14px; }
+  .rb-1 { color: #3b2a00; border-color: #f6d365; background: linear-gradient(135deg, #f9d976, #f0a81c 50%, #ffe28a); box-shadow: 0 0 14px rgba(246,185,59,.4); }
+  .rb-2 { color: #1f2937; border-color: #d1d5db; background: linear-gradient(135deg, #e5e7eb, #aab1bd 50%, #f3f4f6); box-shadow: 0 0 12px rgba(209,213,219,.3); }
+  .rb-3 { color: #2b1503; border-color: #d08a52; background: linear-gradient(135deg, #e3a674, #b9692f 50%, #f0c299); box-shadow: 0 0 12px rgba(205,127,50,.32); }
+  .rb-n { color: #d9d4ff; border-color: rgba(167,139,250,.4); background: linear-gradient(135deg, rgba(109,112,242,.3), rgba(155,111,245,.22)); }
+
+  @media (max-width: 560px) { .lb-row { grid-template-columns: 42px 32px minmax(0, 1fr) auto auto; gap: 8px; padding: 9px 10px; } .lb-tasks { display: none; } .lb-score { min-width: 48px; } }
+
   /* ============ Motion ============ */
   /* "backwards", not "both": a finished animation must not leave a transform on the element, because that would turn it into the
      containing block of the fixed menu and handle (they would then scroll away with the page) */
@@ -319,6 +372,7 @@
 <!-- ============ WELCOME ============ -->
 <section id="welcome" class="relative min-h-screen flex flex-col view-in">
   <div class="flex items-center justify-end gap-2 px-4 sm:px-6 pt-4">
+    <button type="button" data-rating class="btn btn-ghost btn-sm"><span class="ico" data-icon="trophy"></span>Rating</button>
     <button type="button" data-auth class="nav-account" style="max-width:260px"></button>
   </div>
 
@@ -362,6 +416,9 @@
       <button data-topic="balance_sheet" class="nav-item mode-btn"><span class="ico" data-icon="table"></span>Balance Sheet</button>
       <button data-topic="terminology" class="nav-item mode-btn"><span class="ico" data-icon="book"></span>Terminology</button>
 
+      <span class="nav-label eyebrow">Compete</span>
+      <button type="button" id="ratingBtn" data-rating class="nav-item"><span class="ico" data-icon="trophy"></span>Rating</button>
+
       <span class="nav-spacer"></span>
       <button id="proBtn" type="button" class="hidden nav-item nav-pro"><span class="ico" data-icon="sparkles"></span><span id="proLabel">PRO task</span></button>
       <button type="button" data-feedback class="nav-item"><span class="ico" data-icon="message"></span>Feedback</button>
@@ -381,6 +438,19 @@
         <p id="errorText" class="note note-bad"></p>
         <button id="retryBtn" type="button" class="btn btn-ghost mt-4">Try again</button>
       </div>
+
+      <section id="rating" class="hidden fade-in mx-auto" style="max-width: 860px">
+        <p class="eyebrow">Competition</p>
+        <h2 class="serif mt-2 text-[32px] sm:text-4xl leading-tight">Rating</h2>
+        <p class="mt-2 text-sm text-zinc-400 max-w-xl">The 50 best players by ELO. Finish your 20 calibration tasks to enter the table. Yearly and monthly boards list the players who earned rating in that period.</p>
+        <div id="ratingTabs" class="seg mt-6" role="tablist">
+          <button type="button" class="seg-btn active" data-period="all" role="tab">All-time</button>
+          <button type="button" class="seg-btn" data-period="year" role="tab">Yearly</button>
+          <button type="button" class="seg-btn" data-period="month" role="tab">Monthly</button>
+        </div>
+        <div id="ratingMe" class="mt-4"></div>
+        <div id="ratingList" class="mt-4 space-y-2"></div>
+      </section>
 
       <section id="task" class="hidden fade-in">
         <p id="company" class="eyebrow"></p>
@@ -519,6 +589,7 @@
               <h3 id="accName" class="profile-name truncate"></h3>
               <button type="button" id="nickEdit" class="icon-btn" aria-label="Edit nickname"><span class="ico" data-icon="edit"></span></button>
               <span id="accBadge" class="badge">Free</span>
+              <span id="rankBadge" class="hidden rank-badge"></span>
             </div>
             <p id="accEmail" class="mt-0.5 text-xs text-zinc-500 truncate"></p>
             <div class="mt-3 flex flex-wrap gap-2">
@@ -623,6 +694,7 @@ const ICONS = {
   edit: '<path d="M4 20h4L19 9a2.1 2.1 0 0 0-3-3L5 17z"/><path d="M14 7l3 3"/>',
   xsocial: '<path d="M4 4l16 16M20 4L4 20"/>',
   facebook: '<path d="M14 8h3V4h-3a4 4 0 0 0-4 4v3H7v4h3v6h4v-6h3l1-4h-4V8.5A.5.5 0 0 1 14.5 8z"/>',
+  trophy: '<path d="M8 4h8v5a4 4 0 0 1-8 0z"/><path d="M8 6H5a1 1 0 0 0-1 1 4 4 0 0 0 4 4M16 6h3a1 1 0 0 1 1 1 4 4 0 0 1-4 4M12 13v4M8 21h8M10 17h4"/>',
   lock: '<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
 };
 const svg = (name) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" width="100%" height="100%">${ICONS[name] || ""}</svg>`;
@@ -668,8 +740,9 @@ window.addEventListener("popstate", (e) => {
   if (target !== currentView) showView(target);
 });
 
-function panel(which) {             // "loading" | "error" | "task"
-  for (const id of ["loading", "error", "task"]) $(id).classList.toggle("hidden", id !== which);
+function panel(which) {             // "loading" | "error" | "task" | "rating"
+  for (const id of ["loading", "error", "task", "rating"]) $(id).classList.toggle("hidden", id !== which);
+  $("ratingBtn").classList.toggle("active", which === "rating");
 }
 
 function setActive(topic) {
@@ -1176,6 +1249,85 @@ function setSession(s) {
 }
 const authHeader = () => (session ? { Authorization: "Bearer " + session.token } : {});
 
+// ---------- rating / leaderboard ----------
+let ratingPeriod = "all", ratingReq = 0;
+
+function showRating() {
+  view("trainer");
+  document.querySelectorAll(".mode-btn").forEach((b) => b.classList.remove("active"));
+  panel("rating");
+  loadLeaderboard(ratingPeriod);
+}
+
+async function loadLeaderboard(period) {
+  ratingPeriod = period;
+  document.querySelectorAll("#ratingTabs .seg-btn").forEach((b) => b.classList.toggle("active", b.dataset.period === period));
+  const mine = ++ratingReq;
+  $("ratingMe").replaceChildren();
+  $("ratingList").replaceChildren(el("p", "py-12 text-center text-sm text-zinc-500", "Loading…"));
+  try {
+    const r = await fetch(`${API}/api/leaderboard?period=${period}&t=${Date.now()}`, { headers: authHeader(), cache: "no-store" });
+    if (!r.ok) throw new Error();
+    const d = await r.json();
+    if (mine === ratingReq) renderLeaderboard(d);
+  } catch {
+    if (mine !== ratingReq) return;
+    const retry = el("button", "btn btn-ghost mt-4", "Try again");
+    retry.type = "button"; retry.onclick = () => loadLeaderboard(period);
+    const box = el("div", "py-10 text-center");
+    box.append(el("p", "note note-bad inline-block", "Could not load the rating."), el("br"), retry);
+    $("ratingList").replaceChildren(box);
+  }
+}
+
+function renderLeaderboard(d) {
+  // your position
+  const me = $("ratingMe");
+  me.replaceChildren();
+  const card = el("div", "lb-me");
+  const periodWord = { all: "", year: " this year", month: " this month" }[d.period];
+  if (!session) {
+    card.append(el("span", "text-sm text-zinc-300", "Sign in and finish your calibration to appear in the rating."));
+    const b = el("button", "btn btn-primary btn-sm", "Sign in"); b.type = "button"; b.onclick = openAuth; card.append(b);
+  } else if (d.me && d.me.calibrating) {
+    card.append(el("span", "text-sm text-zinc-300", `Calibration: ${d.me.calibration_total - d.me.calibration_left} / ${d.me.calibration_total} tasks. Finish it to enter the rating.`));
+  } else if (d.me && d.me.rank) {
+    card.append(el("span", "eyebrow", "Your position"), el("span", "serif text-2xl", "#" + d.me.rank));
+    card.append(levelPill({ level: d.me.level, calibrating: false }), el("span", "text-sm text-zinc-300 tabular-nums", d.me.elo.toLocaleString("en-US") + " ELO"));
+    if (!d.me.in_top) card.append(el("span", "text-xs text-zinc-500", "Outside the top " + d.size));
+  } else {
+    card.append(el("span", "text-sm text-zinc-300", `No counted tasks${periodWord} yet. Solve a task to enter this board.`));
+  }
+  me.append(card);
+
+  // the table
+  const list = $("ratingList");
+  if (!d.entries.length) {
+    const box = el("div", "py-14 text-center");
+    const ic = el("span", "avatar avatar-lg mx-auto"); setIcon(ic, "trophy"); ic.firstChild.style.cssText = "width:24px;height:24px";
+    box.append(ic, el("p", "mt-4 font-medium", "No ranked players yet"), el("p", "mt-1 text-sm text-zinc-500 max-w-xs mx-auto",
+      d.period === "all" ? "Finish the 20 calibration tasks to be the first on the board." : "Nobody has earned rating in this period yet."));
+    list.replaceChildren(box);
+    return;
+  }
+  list.replaceChildren(...d.entries.map(leaderboardRow));
+}
+
+function leaderboardRow(e) {
+  const row = el("div", "lb-row" + (e.rank <= 3 ? " top-" + e.rank : "") + (e.is_me ? " me" : ""));
+  const avatar = el("span", "avatar");
+  applyAvatar(avatar, e.avatar, e.nickname);
+  const name = el("span", "lb-name", e.nickname);
+  if (e.is_me) name.append(el("span", "lb-you", "YOU"));
+  const score = el("span", "lb-score");
+  score.append(el("b", "lb-elo", e.elo.toLocaleString("en-US")), el("span", "lb-tasks", e.tasks + (e.tasks === 1 ? " task" : " tasks")));
+  row.append(el("span", "lb-rank", "#" + e.rank), avatar, name, levelPill({ level: e.level, calibrating: false }), score);
+  return row;
+}
+
+document.querySelectorAll("[data-rating]").forEach((b) => (b.onclick = showRating));
+document.querySelectorAll("#ratingTabs .seg-btn").forEach((b) => (b.onclick = () => loadLeaderboard(b.dataset.period)));
+
 // ---------- level gauge (speedometer icon) ----------
 const LEVEL_COLORS = ["#9ca3af", "#22c55e", "#22c55e", "#eab308", "#eab308", "#f97316", "#f97316", "#f97316", "#ef4444", "#ef4444"];
 const levelColor = (lv) => LEVEL_COLORS[Math.max(1, Math.min(10, lv)) - 1];
@@ -1270,6 +1422,17 @@ function renderProfile() {
     ? (session.pro_expires_at ? "PRO until " + dateOnly(session.pro_expires_at) : "PRO active")
     : "Free plan";
   $("accUpgrade").classList.toggle("hidden", session.is_pro);
+
+  // prestige badge: shown for the global top 50 (all-time)
+  const rb = $("rankBadge"), gr = p.global_rank;
+  if (gr && gr <= 50) {
+    const bucket = [5, 10, 25, 50].find((n) => gr <= n);
+    rb.className = "rank-badge rb-" + (gr <= 3 ? gr : "n");
+    rb.innerHTML = svg("trophy") + `<span>Global Rank #${gr}${gr > 3 ? " · Top " + bucket + " All-Time" : ""}</span>`;
+    rb.querySelector("svg").style.cssText = "width:14px;height:14px";
+  } else {
+    rb.classList.add("hidden");
+  }
 
   // level badge: the speedometer
   const color = p.calibrating ? "#a1a1aa" : levelColor(p.level);

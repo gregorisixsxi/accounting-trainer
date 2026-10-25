@@ -176,6 +176,12 @@ def optional_user(authorization: str | None = Header(default=None)) -> dict | No
     return db.user_by_token(token) if token else None
 
 
+def profile_with_rank(user: dict) -> dict:
+    """The rating profile plus the position in the all-time board (None until the player is ranked)."""
+    fresh = db.get_user(user["id"]) or user
+    return {**rating.profile_view(fresh), "global_rank": db.user_rank(user["id"], "all")}
+
+
 def profile_payload(user: dict) -> dict:
     return {
         "username": user["username"],
@@ -183,7 +189,7 @@ def profile_payload(user: dict) -> dict:
         "avatar": user.get("avatar"),
         "is_pro": user["is_pro"],
         "pro_expires_at": user["pro_expires_at"],
-        "profile": rating.profile_view(user),
+        "profile": profile_with_rank(user),
     }
 
 
@@ -294,6 +300,48 @@ class ProfileUpdate(BaseModel):
     avatar: str | None = None
 
 
+@app.get("/api/leaderboard")
+def get_leaderboard(period: str = "all", user: dict | None = Depends(optional_user)):
+    """Top 50 by ELO. Only nicknames, avatars, levels, ELO and task counts are public."""
+    if period not in db.PERIODS:
+        raise HTTPException(status_code=422, detail="period must be all, year or month.")
+    rows = db.leaderboard(period)
+    entries = [{**{k: v for k, v in r.items() if k != "user_id"}, "is_me": bool(user and r["user_id"] == user["id"])} for r in rows]
+    me = None
+    if user:
+        fresh = db.get_user(user["id"]) or user
+        rank = db.user_rank(user["id"], period)
+        me = {
+            "rank": rank, "in_top": bool(rank and rank <= db.LEADERBOARD_SIZE),
+            "elo": fresh["elo"], "level": rating.profile_view(fresh)["level"],
+            "calibrating": fresh["calibration_left"] > 0, "calibration_left": fresh["calibration_left"],
+            "calibration_total": rating.CALIBRATION_TASKS, "tasks": fresh["tasks_total"],
+        }
+    return {"period": period, "entries": entries, "me": me, "size": db.LEADERBOARD_SIZE}
+
+
+ADMIN_USERS = {u.strip().lower() for u in os.environ.get("ADMIN_USERS", "").split(",") if u.strip()}
+
+
+class RatingOverride(BaseModel):
+    level: int | None = Field(default=None, ge=1, le=10)
+    calibrating: bool = False
+
+
+@app.post("/api/admin/set-rating")
+def admin_set_rating(body: RatingOverride, user: dict = Depends(current_user)):
+    """For testing the look of the levels: only usernames listed in ADMIN_USERS may call it, and only for their own account."""
+    if user["username"].lower() not in ADMIN_USERS:
+        raise HTTPException(status_code=403, detail="Not allowed.")
+    if body.calibrating:
+        db.set_rating(user["id"], rating.START_ELO, rating.CALIBRATION_TASKS)
+    elif body.level:
+        lo = rating.LEVEL_FLOORS[body.level - 1]
+        hi = rating.LEVEL_FLOORS[body.level] - 1 if body.level < 10 else lo + 300
+        db.set_rating(user["id"], (lo + hi) // 2, 0)
+    return profile_payload(db.get_user(user["id"]))
+
+
 @app.patch("/api/profile")
 def update_profile(body: ProfileUpdate, user: dict = Depends(current_user)):
     nickname = body.nickname.strip() if body.nickname is not None else None
@@ -354,7 +402,7 @@ def check_answers(body: CheckRequest, user: dict | None = Depends(optional_user)
             rating_info = {"too_fast": True}
         else:
             rating_info = db.record_result(user["id"], result["score"], result["total"], payload["penalty"])
-        rating_info = {**rating_info, "profile": rating.profile_view(db.get_user(user["id"]))}
+        rating_info = {**rating_info, "profile": profile_with_rank(user)}
     result.pop("review", None)
     result.pop("answered", None)
     return {**result, "archived": archived, "rating": rating_info, "signed_in": bool(user)}

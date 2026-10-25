@@ -129,6 +129,7 @@ USER_MIGRATIONS = (
     ("elo_day", "TEXT DEFAULT NULL"),                   # UTC day of the daily gain counter
     ("elo_day_gain", "INTEGER NOT NULL DEFAULT 0"),
     # profile
+    ("last_scored_at", "TEXT DEFAULT NULL"),             # UTC ISO-8601 of the last task that counted for the rating
     ("nickname", "TEXT DEFAULT NULL"),
     ("avatar", "TEXT DEFAULT NULL"),                    # preset id, e.g. "g3"
 )
@@ -558,10 +559,11 @@ def record_result(user_id: int, score: int, total: int, penalty: float) -> dict:
         new_state, info = rating.apply_result(dict(row), score, total, penalty, today)
         c.execute(
             """UPDATE users SET elo = ?, level = ?, calibration_left = ?, elo_day = ?, elo_day_gain = ?,
-                      tasks_total = tasks_total + 1, points_correct = points_correct + ?, points_total = points_total + ?
+                      tasks_total = tasks_total + 1, points_correct = points_correct + ?, points_total = points_total + ?,
+                      last_scored_at = ?
                WHERE id = ?""",
             (new_state["elo"], new_state["level"], new_state["calibration_left"], new_state["elo_day"], new_state["elo_day_gain"],
-             score, total, user_id),
+             score, total, iso(now_utc()), user_id),
         )
         return info
 
@@ -577,3 +579,73 @@ def set_profile(user_id: int, nickname: str | None = None, avatar: str | None = 
         except sqlite3.IntegrityError:
             return "taken"
     return "ok"
+
+
+def set_rating(user_id: int, elo: int, calibration_left: int) -> None:
+    """Admin/testing helper: sets the rating directly (the level follows from the ELO)."""
+    level = rating.level_for(elo)
+    if calibration_left > 0:
+        level = min(level, rating.CALIBRATION_MAX_LEVEL)
+    with connect() as c:
+        c.execute("UPDATE users SET elo = ?, level = ?, calibration_left = ? WHERE id = ?", (elo, level, calibration_left, user_id))
+
+
+# ---------- leaderboard ----------
+LEADERBOARD_SIZE = 50
+PERIODS = ("all", "year", "month")
+
+
+def period_start(period: str) -> str | None:
+    """UTC start of the calendar year / month, or None for the all-time board."""
+    now = now_utc()
+    if period == "year":
+        return iso(now.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0))
+    if period == "month":
+        return iso(now.replace(day=1, hour=0, minute=0, second=0, microsecond=0))
+    return None
+
+
+def _ranked_filter(period: str) -> tuple[str, list]:
+    """Players with a rating: calibration finished and at least one counted task. Year/month boards only
+    list players who earned rating in that period."""
+    where, params = "calibration_left = 0 AND tasks_total > 0", []
+    start = period_start(period)
+    if start:
+        where += " AND last_scored_at >= ?"
+        params.append(start)
+    return where, params
+
+
+def public_name(row) -> str:
+    """The name shown to everybody. Never derived from the e-mail address."""
+    return row["nickname"] or f"Player{row['id']}"
+
+
+def leaderboard(period: str = "all", limit: int = LEADERBOARD_SIZE) -> list[dict]:
+    where, params = _ranked_filter(period)
+    with connect() as c:
+        rows = c.execute(
+            f"SELECT id, nickname, avatar, elo, level, tasks_total FROM users WHERE {where} "
+            "ORDER BY elo DESC, tasks_total DESC, id ASC LIMIT ?",
+            params + [limit],
+        ).fetchall()
+    return [
+        {"user_id": r["id"], "rank": i, "nickname": public_name(r), "avatar": r["avatar"],
+         "level": r["level"], "elo": r["elo"], "tasks": r["tasks_total"]}
+        for i, r in enumerate(rows, start=1)
+    ]
+
+
+def user_rank(user_id: int, period: str = "all") -> int | None:
+    """Position in the board (1 = best), or None if the player is not ranked there. Same ordering as leaderboard()."""
+    where, params = _ranked_filter(period)
+    with connect() as c:
+        me = c.execute(f"SELECT elo, tasks_total FROM users WHERE id = ? AND {where}", [user_id] + params).fetchone()
+        if me is None:
+            return None
+        ahead = c.execute(
+            f"SELECT COUNT(*) AS n FROM users WHERE {where} AND "
+            "(elo > ? OR (elo = ? AND (tasks_total > ? OR (tasks_total = ? AND id < ?))))",
+            params + [me["elo"], me["elo"], me["tasks_total"], me["tasks_total"], user_id],
+        ).fetchone()["n"]
+    return ahead + 1
