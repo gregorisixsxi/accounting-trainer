@@ -23,6 +23,8 @@ load_dotenv(Path(__file__).resolve().parent / ".env")
 
 import db
 import email_service
+import grading
+import rating
 import pool
 from generator import TOPIC_PROMPTS, generate_task_from_claude
 
@@ -35,7 +37,7 @@ db.init()
 RATE_LIMITS = {
     "generate": (10, 60),  # 10 requests per minute
     "auth": (10, 60),
-    "archive": (60, 60),
+    "check": (60, 60),
 }
 REQUEST_COUNTS = defaultdict(list)
 
@@ -68,8 +70,8 @@ def bucket_for(path: str) -> str | None:
         return None if topic in pool.POOL_TOPICS and path != "/api/generate/pro" else "generate"
     if path in AUTH_RATE_LIMITED_PATHS:
         return "auth"
-    if path == "/api/archive":
-        return "archive"
+    if path == "/api/check":
+        return "check"
     return None
 
 
@@ -114,12 +116,7 @@ def validate_credentials(c: Credentials) -> tuple[str, str]:
 
 
 def auth_response(user: dict) -> dict:
-    return {
-        "token": db.create_session(user["id"]),
-        "username": user["username"],
-        "is_pro": user["is_pro"],
-        "pro_expires_at": user["pro_expires_at"],
-    }
+    return {"token": db.create_session(user["id"]), **profile_payload(user)}
 
 
 def current_user(authorization: str | None = Header(default=None)) -> dict:
@@ -156,6 +153,26 @@ def issue_verification(user_id: int, email: str, request: Request, background: B
     token = secrets.token_urlsafe(32)
     db.set_verify_token(user_id, token)
     background.add_task(email_service.send_verification_email, email, f"{public_base_url(request)}/verify?token={token}")
+
+
+AVATARS = [f"g{i}" for i in range(1, 13)]   # preset avatars (gradients), drawn by the page
+NICKNAME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]{2,19}$")
+
+
+def optional_user(authorization: str | None = Header(default=None)) -> dict | None:
+    token = authorization[7:].strip() if authorization and authorization.lower().startswith("bearer ") else ""
+    return db.user_by_token(token) if token else None
+
+
+def profile_payload(user: dict) -> dict:
+    return {
+        "username": user["username"],
+        "nickname": user.get("nickname") or user["username"].split("@")[0],
+        "avatar": user.get("avatar"),
+        "is_pro": user["is_pro"],
+        "pro_expires_at": user["pro_expires_at"],
+        "profile": rating.profile_view(user),
+    }
 
 
 @app.post("/api/auth/register")
@@ -249,7 +266,24 @@ def login(creds: Credentials):
 
 @app.get("/api/me")
 def me(user: dict = Depends(current_user)):
-    return {"username": user["username"], "is_pro": user["is_pro"], "pro_expires_at": user["pro_expires_at"]}
+    return profile_payload(user)
+
+
+class ProfileUpdate(BaseModel):
+    nickname: str | None = None
+    avatar: str | None = None
+
+
+@app.patch("/api/profile")
+def update_profile(body: ProfileUpdate, user: dict = Depends(current_user)):
+    nickname = body.nickname.strip() if body.nickname is not None else None
+    if nickname is not None and not NICKNAME_RE.match(nickname):
+        raise HTTPException(status_code=422, detail="Nickname: 3-20 characters, letters, digits, dot, dash or underscore.")
+    if body.avatar is not None and body.avatar not in AVATARS:
+        raise HTTPException(status_code=422, detail="Unknown avatar.")
+    if db.set_profile(user["id"], nickname, body.avatar) == "taken":
+        raise HTTPException(status_code=409, detail="This nickname is already taken.")
+    return profile_payload(db.get_user(user["id"]))
 
 
 @app.get("/api/history")
@@ -263,39 +297,47 @@ def history_reset(user: dict = Depends(current_user)):
     return {"count": 0}
 
 
-# ---------------- archive of solved tasks ----------------
-class ReviewItem(BaseModel):
-    label: str = Field(max_length=300)
-    yours: str = Field(default="", max_length=500)
-    expected: str = Field(default="", max_length=500)
-    correct: bool
-    note: str = Field(default="", max_length=600)
+# ---------------- checking answers (server-side grading, rating, archive) ----------------
+class CheckRequest(BaseModel):
+    token: str = Field(max_length=20000)
+    answers: dict
 
 
-class ArchiveEntry(BaseModel):
-    attempt_id: str = Field(min_length=8, max_length=64, pattern=r"^[A-Za-z0-9_-]+$")
-    topic: Literal["balance_sheet", "terminology"]
-    source: Literal["free", "pro"] = "free"
-    title: str = Field(default="", max_length=200)
-    company: str = Field(default="", max_length=200)
-    condition: str = Field(default="", max_length=6000)
-    explanation: str = Field(default="", max_length=2000)
-    review: list[ReviewItem] = Field(max_length=30)
-    score: int = Field(ge=0, le=30)
-    total: int = Field(ge=1, le=30)
-
-    @model_validator(mode="after")
-    def score_within_total(self):
-        if self.score > self.total:
-            raise ValueError("score cannot be higher than total")
-        return self
+MIN_SECONDS_PER_POINT = grading.MIN_SECONDS_PER_POINT
 
 
-@app.post("/api/archive")
-def archive_save(entry: ArchiveEntry, user: dict = Depends(current_user)):
-    """Called after the student presses Check Answer. Free (pool) and PRO (AI) tasks are both archived."""
-    item_id = db.save_archive(user["id"], entry.model_dump())
-    return {"id": item_id, "saved": True}
+@app.post("/api/check")
+def check_answers(body: CheckRequest, user: dict | None = Depends(optional_user)):
+    """Marks the answers against the sealed task. For a signed-in student it also saves the archive entry and
+    moves the rating (once per served task, and not for answers that came in suspiciously fast)."""
+    try:
+        payload = grading.open_token(body.token)
+        result = grading.grade(payload, body.answers)
+    except grading.TokenError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    if not result["answered"]:
+        raise HTTPException(status_code=422, detail="Enter at least one answer before checking.")   # nothing is revealed
+
+    first = db.claim_task(payload["jti"], user["id"] if user else None)
+    rating_info, archived = None, False
+    if user:
+        archived = bool(db.save_archive(user["id"], {
+            "attempt_id": payload["jti"], "topic": payload["topic"], "source": payload["source"],
+            "title": payload["title"][:200], "company": payload["company"][:200], "condition": payload["condition"],
+            "explanation": result["explanation"][:2000], "review": result["review"][:30],
+            "score": result["score"], "total": result["total"],
+        }))
+        if not first:
+            rating_info = {"already_counted": True}
+        elif time.time() - payload["iat"] < MIN_SECONDS_PER_POINT * result["total"]:
+            rating_info = {"too_fast": True}
+        else:
+            rating_info = db.record_result(user["id"], result["score"], result["total"], payload["penalty"])
+        rating_info = {**rating_info, "profile": rating.profile_view(db.get_user(user["id"]))}
+    result.pop("review", None)
+    result.pop("answered", None)
+    return {**result, "archived": archived, "rating": rating_info, "signed_in": bool(user)}
 
 
 @app.get("/api/archive")
@@ -556,12 +598,12 @@ def generate_task(topic: str, exclude: str = ""):
     recent = {x for x in exclude.split(",") if x}
     task = pool.get_task(topic, recent)
     if task is not None:
-        return task
+        return grading.seal(task, topic, "free")
     if topic not in FREE_TOPICS:
         raise HTTPException(status_code=404, detail=f"Unknown topic '{topic}'. Available: {', '.join(FREE_TOPICS)}")
     # only reached if a pool file is missing: keep the site working, still limited by the per-IP rate limit
     try:
-        return generate_task_from_claude(topic)
+        return grading.seal(generate_task_from_claude(topic), topic, "free")
     except json.JSONDecodeError as e:
         print(f"[generate] invalid JSON from model: {e}")
         raise HTTPException(status_code=502, detail="The task generator returned an invalid answer. Please try again.")
@@ -635,7 +677,7 @@ def generate_pro(body: ProRequest, user: dict = Depends(current_user)):
         raise HTTPException(status_code=500, detail="Could not generate a task. Please try again.")
 
     db.add_to_history(user["id"], {"topic": body.topic, "summary": summary, "key": key, "ts": int(time.time())})
-    return task
+    return grading.seal(task, body.topic, "pro")
 
 
 if __name__ == "__main__":

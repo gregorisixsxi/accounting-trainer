@@ -6,8 +6,10 @@ import os
 import secrets
 import sqlite3
 import time
+
+import rating
 from contextlib import contextmanager
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -16,6 +18,7 @@ BASE_DIR = Path(__file__).resolve().parent
 DB_PATH = os.environ.get("DB_PATH") or str(BASE_DIR / "data.db")
 
 HISTORY_LIMIT = 300  # how many recent tasks to keep per user
+ARCHIVE_LIMIT = 300  # solved tasks kept in the archive per user (oldest are dropped)
 
 SESSION_DAYS = int(os.environ.get("SESSION_DAYS", "30"))          # session token lifetime
 LOGIN_MAX_FAILS = int(os.environ.get("LOGIN_MAX_FAILS", "5"))     # failed logins allowed per login name ...
@@ -61,6 +64,33 @@ def init() -> None:
         )
         c.execute("CREATE INDEX IF NOT EXISTS idx_login_attempts ON login_attempts(login_key, ts)")
         c.execute(
+            """CREATE TABLE IF NOT EXISTS archive (
+                   id             INTEGER PRIMARY KEY AUTOINCREMENT,
+                   user_id        INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                   attempt_id     TEXT NOT NULL,            -- one per task shown in the browser; re-checking updates the row
+                   topic          TEXT NOT NULL,            -- balance_sheet | terminology | transactions
+                   source         TEXT NOT NULL DEFAULT 'free',   -- free (pool) | pro (AI generated)
+                   title          TEXT NOT NULL DEFAULT '',
+                   company        TEXT NOT NULL DEFAULT '',
+                   condition_text TEXT NOT NULL DEFAULT '', -- the task statement
+                   review         TEXT NOT NULL DEFAULT '[]',     -- JSON: per-item answer, expected answer, verdict, note
+                   explanation    TEXT NOT NULL DEFAULT '',
+                   score          INTEGER NOT NULL DEFAULT 0,
+                   total          INTEGER NOT NULL DEFAULT 1,
+                   created_at     TEXT NOT NULL,            -- UTC ISO-8601, first check
+                   updated_at     TEXT NOT NULL             -- UTC ISO-8601, last check
+               )"""
+        )
+        c.execute("CREATE UNIQUE INDEX IF NOT EXISTS uniq_archive_attempt ON archive(user_id, attempt_id)")
+        c.execute(
+            """CREATE TABLE IF NOT EXISTS checked_tasks (
+                   jti        TEXT PRIMARY KEY,         -- id of a served task: its first check wins and reveals the answers
+                   user_id    INTEGER,                  -- NULL when the first check was anonymous (then the task can never be rated)
+                   created_at TEXT NOT NULL
+               )"""
+        )
+        c.execute("CREATE INDEX IF NOT EXISTS idx_archive_user ON archive(user_id, id DESC)")
+        c.execute(
             """CREATE TABLE IF NOT EXISTS pro_usage (
                    user_id INTEGER NOT NULL,
                    day     TEXT NOT NULL,
@@ -84,15 +114,39 @@ USER_MIGRATIONS = (
     ("pro_expires_at", "TEXT DEFAULT NULL"),         # UTC ISO-8601; NULL = no expiry
     ("lemon_customer_id", "TEXT DEFAULT NULL"),
     ("lemon_subscription_id", "TEXT DEFAULT NULL"),
+    ("is_verified", "INTEGER NOT NULL DEFAULT 0"),    # e-mail confirmed
+    ("verify_token", "TEXT DEFAULT NULL"),            # SHA-256 of the e-mail confirmation token
+    ("verify_token_expires", "TEXT DEFAULT NULL"),    # UTC ISO-8601
+    ("reset_token", "TEXT DEFAULT NULL"),             # SHA-256 of the password reset token
+    ("reset_token_expires", "TEXT DEFAULT NULL"),
+    # rating (FACEIT-style levels); see rating.py
+    ("level", f"INTEGER NOT NULL DEFAULT {rating.level_for(rating.START_ELO)}"),
+    ("elo", f"INTEGER NOT NULL DEFAULT {rating.START_ELO}"),
+    ("calibration_left", f"INTEGER NOT NULL DEFAULT {rating.CALIBRATION_TASKS}"),
+    ("tasks_total", "INTEGER NOT NULL DEFAULT 0"),      # scored tasks
+    ("points_correct", "INTEGER NOT NULL DEFAULT 0"),
+    ("points_total", "INTEGER NOT NULL DEFAULT 0"),
+    ("elo_day", "TEXT DEFAULT NULL"),                   # UTC day of the daily gain counter
+    ("elo_day_gain", "INTEGER NOT NULL DEFAULT 0"),
+    # profile
+    ("nickname", "TEXT DEFAULT NULL"),
+    ("avatar", "TEXT DEFAULT NULL"),                    # preset id, e.g. "g3"
 )
+VERIFY_TTL_SECONDS = 24 * 3600
+RESET_TTL_SECONDS = 3600
 
 
 def _migrate(c: sqlite3.Connection) -> None:
     existing = {row["name"] for row in c.execute("PRAGMA table_info(users)")}
+    first_verification_migration = "is_verified" not in existing
     for name, ddl in USER_MIGRATIONS:
         if name not in existing:
             c.execute(f"ALTER TABLE users ADD COLUMN {name} {ddl}")
+    if first_verification_migration:
+        # accounts that exist before e-mail verification was introduced stay usable
+        c.execute("UPDATE users SET is_verified = 1")
     c.execute("CREATE INDEX IF NOT EXISTS idx_users_lemon_sub ON users(lemon_subscription_id)")
+    c.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_nickname ON users(nickname COLLATE NOCASE)")
 
 
 # ---------- time / PRO status ----------
@@ -150,6 +204,15 @@ def _public(row: sqlite3.Row) -> dict:
         "username": row["username"],
         "is_pro": active,
         "pro_expires_at": row["pro_expires_at"] if paid else None,
+        "is_verified": bool(row["is_verified"]),
+        "nickname": row["nickname"],
+        "avatar": row["avatar"],
+        "level": row["level"],
+        "elo": row["elo"],
+        "calibration_left": row["calibration_left"],
+        "tasks_total": row["tasks_total"],
+        "points_correct": row["points_correct"],
+        "points_total": row["points_total"],
     }
 
 
@@ -329,3 +392,188 @@ def refund_pro_quota(user_id: int) -> None:
     with connect() as c:
         c.execute("UPDATE pro_usage SET count = MAX(count - 1, 0) WHERE user_id = ? AND day = ?", (user_id, _today()))
         c.execute("DELETE FROM pro_usage WHERE day < date('now', '-7 days')")
+
+
+# ---------- e-mail verification and password reset ----------
+def _token_hash(token: str) -> str:
+    return hashlib.sha256(token.encode()).hexdigest()
+
+
+def get_user_by_email(email: str) -> dict | None:
+    with connect() as c:
+        row = c.execute("SELECT * FROM users WHERE username = ?", (email,)).fetchone()
+    return _public(row) if row else None
+
+
+def _set_token(user_id: int, kind: str, token: str, ttl_seconds: int) -> None:
+    from datetime import timedelta
+    expires = iso(now_utc() + timedelta(seconds=ttl_seconds))
+    column, expires_column = (f"{kind}_token", f"{kind}_token_expires")   # kind is "verify" or "reset" (never user input)
+    with connect() as c:
+        c.execute(f"UPDATE users SET {column} = ?, {expires_column} = ? WHERE id = ?", (_token_hash(token), expires, user_id))
+
+
+def set_verify_token(user_id: int, token: str) -> None:
+    _set_token(user_id, "verify", token, VERIFY_TTL_SECONDS)
+
+
+def set_reset_token(user_id: int, token: str) -> None:
+    _set_token(user_id, "reset", token, RESET_TTL_SECONDS)
+
+
+def token_age_seconds(user_id: int, kind: str) -> float | None:
+    """How long ago the user's current verify/reset token was issued (None if there is none). Used as a resend cooldown."""
+    from datetime import timedelta
+    ttl = VERIFY_TTL_SECONDS if kind == "verify" else RESET_TTL_SECONDS
+    with connect() as c:
+        row = c.execute(f"SELECT {kind}_token_expires AS e FROM users WHERE id = ? AND {kind}_token IS NOT NULL", (user_id,)).fetchone()
+    expires = parse_dt(row["e"]) if row else None
+    if not expires:
+        return None
+    return (now_utc() - (expires - timedelta(seconds=ttl))).total_seconds()
+
+
+def _user_id_for_token(c: sqlite3.Connection, kind: str, token: str) -> int | None:
+    row = c.execute(
+        f"SELECT id, {kind}_token_expires AS e FROM users WHERE {kind}_token = ?", (_token_hash(token),)
+    ).fetchone()
+    if not row:
+        return None
+    expires = parse_dt(row["e"])
+    return row["id"] if expires and expires > now_utc() else None
+
+
+def verify_email(token: str) -> int | None:
+    """Confirms the e-mail for a valid, unexpired token. Returns the user id or None."""
+    with connect() as c:
+        uid = _user_id_for_token(c, "verify", token)
+        if uid is None:
+            return None
+        c.execute("UPDATE users SET is_verified = 1, verify_token = NULL, verify_token_expires = NULL WHERE id = ?", (uid,))
+        return uid
+
+
+def reset_password(token: str, new_password: str) -> int | None:
+    """Sets a new password for a valid reset token, invalidates the token and all sessions. Returns the user id or None."""
+    with connect() as c:
+        uid = _user_id_for_token(c, "reset", token)
+        if uid is None:
+            return None
+        username = c.execute("SELECT username FROM users WHERE id = ?", (uid,)).fetchone()["username"]
+        c.execute(
+            """UPDATE users SET password_hash = ?, is_verified = 1,
+                      reset_token = NULL, reset_token_expires = NULL
+               WHERE id = ?""",
+            (hash_password(new_password), uid),
+        )
+        c.execute("DELETE FROM sessions WHERE user_id = ?", (uid,))                   # log out everywhere
+        c.execute("DELETE FROM login_attempts WHERE login_key = ?", (username.lower(),))  # lift any lockout
+        return uid
+
+
+# ---------- archive of solved tasks ----------
+def save_archive(user_id: int, entry: dict) -> int:
+    """Stores a checked task. Checking the same task again (same attempt_id) updates the existing row."""
+    now = iso(now_utc())
+    with connect() as c:
+        c.execute("BEGIN IMMEDIATE")
+        c.execute(
+            """INSERT INTO archive (user_id, attempt_id, topic, source, title, company, condition_text,
+                                    review, explanation, score, total, created_at, updated_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+               ON CONFLICT(user_id, attempt_id) DO UPDATE SET
+                   review = excluded.review, explanation = excluded.explanation,
+                   score = excluded.score, total = excluded.total, updated_at = excluded.updated_at""",
+            (
+                user_id, entry["attempt_id"], entry["topic"], entry["source"], entry["title"], entry["company"],
+                entry["condition"], json.dumps(entry["review"], ensure_ascii=False), entry["explanation"],
+                entry["score"], entry["total"], now, now,
+            ),
+        )
+        row_id = c.execute(
+            "SELECT id FROM archive WHERE user_id = ? AND attempt_id = ?", (user_id, entry["attempt_id"])
+        ).fetchone()["id"]
+        c.execute(
+            "DELETE FROM archive WHERE user_id = ? AND id NOT IN (SELECT id FROM archive WHERE user_id = ? ORDER BY id DESC LIMIT ?)",
+            (user_id, user_id, ARCHIVE_LIMIT),
+        )
+        return row_id
+
+
+def _archive_light(row: sqlite3.Row) -> dict:
+    return {
+        "id": row["id"], "topic": row["topic"], "source": row["source"], "title": row["title"], "company": row["company"],
+        "score": row["score"], "total": row["total"], "created_at": row["created_at"], "updated_at": row["updated_at"],
+    }
+
+
+def list_archive(user_id: int, topic: str | None = None, limit: int = 20, offset: int = 0) -> tuple[list[dict], int]:
+    where, params = "user_id = ?", [user_id]
+    if topic:
+        where += " AND topic = ?"
+        params.append(topic)
+    with connect() as c:
+        total = c.execute(f"SELECT COUNT(*) AS n FROM archive WHERE {where}", params).fetchone()["n"]
+        rows = c.execute(
+            f"SELECT * FROM archive WHERE {where} ORDER BY updated_at DESC, id DESC LIMIT ? OFFSET ?", params + [limit, offset]
+        ).fetchall()
+    return [_archive_light(r) for r in rows], total
+
+
+def get_archive_item(user_id: int, item_id: int) -> dict | None:
+    with connect() as c:
+        row = c.execute("SELECT * FROM archive WHERE id = ? AND user_id = ?", (item_id, user_id)).fetchone()
+    if not row:
+        return None
+    item = _archive_light(row)
+    item.update(condition=row["condition_text"], review=json.loads(row["review"]), explanation=row["explanation"])
+    return item
+
+
+def delete_archive_item(user_id: int, item_id: int) -> bool:
+    with connect() as c:
+        return c.execute("DELETE FROM archive WHERE id = ? AND user_id = ?", (item_id, user_id)).rowcount > 0
+
+
+# ---------- rating ----------
+def claim_task(jti: str, user_id: int | None) -> bool:
+    """True for the first check of a served task. Later checks (also by someone else) still grade, but can no longer
+    change a rating, because the first check has already revealed the answers."""
+    now = iso(now_utc())
+    with connect() as c:
+        c.execute("DELETE FROM checked_tasks WHERE created_at < ?", (iso(now_utc() - timedelta(days=2)),))
+        try:
+            c.execute("INSERT INTO checked_tasks (jti, user_id, created_at) VALUES (?, ?, ?)", (jti, user_id, now))
+        except sqlite3.IntegrityError:
+            return False
+    return True
+
+
+def record_result(user_id: int, score: int, total: int, penalty: float) -> dict:
+    """Moves the rating after the first check of a task. Returns the rating change for the browser."""
+    today = now_utc().strftime("%Y-%m-%d")
+    with connect() as c:
+        c.execute("BEGIN IMMEDIATE")
+        row = c.execute("SELECT elo, calibration_left, elo_day, elo_day_gain FROM users WHERE id = ?", (user_id,)).fetchone()
+        new_state, info = rating.apply_result(dict(row), score, total, penalty, today)
+        c.execute(
+            """UPDATE users SET elo = ?, level = ?, calibration_left = ?, elo_day = ?, elo_day_gain = ?,
+                      tasks_total = tasks_total + 1, points_correct = points_correct + ?, points_total = points_total + ?
+               WHERE id = ?""",
+            (new_state["elo"], new_state["level"], new_state["calibration_left"], new_state["elo_day"], new_state["elo_day_gain"],
+             score, total, user_id),
+        )
+        return info
+
+
+def set_profile(user_id: int, nickname: str | None = None, avatar: str | None = None) -> str:
+    """-> 'ok' | 'taken' (the nickname belongs to someone else)."""
+    with connect() as c:
+        try:
+            if nickname is not None:
+                c.execute("UPDATE users SET nickname = ? WHERE id = ?", (nickname, user_id))
+            if avatar is not None:
+                c.execute("UPDATE users SET avatar = ? WHERE id = ?", (avatar, user_id))
+        except sqlite3.IntegrityError:
+            return "taken"
+    return "ok"

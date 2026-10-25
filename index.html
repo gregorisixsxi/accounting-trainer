@@ -254,6 +254,43 @@
   .rv.ok  { border-color: rgba(52,211,153,.22); }
   .rv.bad { border-color: rgba(251,113,133,.25); }
 
+  /* ============ Profile, level gauge ============ */
+  .modal-card.profile { max-width: 780px; }
+  .profile-head { display: flex; gap: 20px; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; padding-right: 30px; }
+  .profile-id { display: flex; gap: 16px; align-items: flex-start; min-width: 0; flex: 1 1 320px; }
+  .profile-name { font-family: "Times New Roman", Times, serif; font-size: 26px; line-height: 1.15; letter-spacing: -.01em; max-width: 100%; }
+  .avatar-xl { width: 76px; height: 76px; font-size: 30px; }
+  .avatar-btn { position: relative; background: none; border: 0; padding: 0; cursor: pointer; border-radius: 999px; flex: none; }
+  .avatar-btn .avatar { transition: transform .2s ease, box-shadow .2s ease; }
+  .avatar-btn:hover .avatar { transform: scale(1.04); box-shadow: 0 0 0 4px rgba(139,140,248,.25); }
+  .avatar-edit { position: absolute; right: -2px; bottom: -2px; width: 26px; height: 26px; display: grid; place-items: center; border-radius: 999px;
+    background: #17171c; border: 1px solid var(--border-strong); color: var(--muted); }
+  .avatar-edit .ico { width: 13px; height: 13px; }
+  .avatar-custom { color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.35); border: 1px solid rgba(255,255,255,.18); }
+  .avatar-grid { display: grid; grid-template-columns: repeat(6, 40px); gap: 12px; }
+  .avatar-pick { width: 40px; height: 40px; border-radius: 999px; border: 2px solid transparent; cursor: pointer; color: #fff; font-weight: 600; font-size: 15px;
+    transition: transform .18s ease, border-color .18s ease; }
+  .avatar-pick:hover { transform: scale(1.1); }
+  .avatar-pick.selected { border-color: #fff; }
+  .icon-btn { width: 26px; height: 26px; display: grid; place-items: center; border-radius: 8px; border: 0; background: none; color: var(--faint); cursor: pointer; transition: all .18s; }
+  .icon-btn:hover { color: var(--text); background: var(--surface-2); }
+  .icon-btn .ico { width: 14px; height: 14px; }
+  .social-btn { display: inline-flex; align-items: center; gap: 8px; height: 34px; padding: 0 14px 0 12px; border-radius: 999px; font-size: 13px; font-weight: 500; color: #c9c9d1; cursor: pointer;
+    background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.015)); border: 1px solid var(--border-strong); transition: all .2s ease; }
+  .social-btn:hover { color: #fff; border-color: rgba(139,140,248,.55); background: rgba(139,140,248,.10); transform: translateY(-1px); }
+  .social-btn .ico { width: 15px; height: 15px; }
+  .level-box { display: flex; flex-direction: column; align-items: center; flex: none; margin-left: auto; }
+  .level-label { font-size: 12px; font-weight: 700; letter-spacing: .2em; margin-top: -6px; }
+  .gauge { display: block; overflow: visible; }
+  .gauge.glow { filter: drop-shadow(0 0 7px rgba(239,68,68,.65)) drop-shadow(0 0 20px rgba(239,68,68,.3)); }
+  .gauge .needle-wrap { transform-box: view-box; transform-origin: 50px 54px; }
+  .gauge.calib .needle-wrap { animation: gsweep 2.2s ease-in-out infinite alternate; }
+  @keyframes gsweep { from { transform: rotate(-38deg); } to { transform: rotate(38deg); } }
+  .chip-gauge { width: 24px; height: 24px; flex: none; display: inline-block; }
+  .stats-row { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+  .stats-row .stat .v { font-size: 19px; font-weight: 600; font-variant-numeric: tabular-nums; margin-top: 2px; }
+  @media (max-width: 560px) { .stats-row { grid-template-columns: repeat(2, minmax(0, 1fr)); } .level-box { margin: 0 auto; } .profile-head { padding-right: 0; } }
+
   /* ============ Motion ============ */
   .fade-in { animation: fade .5s cubic-bezier(.2,.8,.2,1) both; }
   @keyframes fade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
@@ -270,7 +307,6 @@
 <!-- ============ WELCOME ============ -->
 <section id="welcome" class="relative min-h-screen flex flex-col fade-in">
   <div class="flex items-center justify-end gap-2 px-4 sm:px-6 pt-4">
-    <button type="button" data-archive id="welcomeArchive" class="btn btn-ghost btn-sm hidden"><span class="ico" data-icon="archive"></span>Archive</button>
     <button type="button" data-auth class="nav-account" style="max-width:260px"></button>
   </div>
 
@@ -314,9 +350,6 @@
       <button data-topic="balance_sheet" class="nav-item mode-btn"><span class="ico" data-icon="table"></span>Balance Sheet</button>
       <button data-topic="terminology" class="nav-item mode-btn"><span class="ico" data-icon="book"></span>Terminology</button>
 
-      <span class="nav-label eyebrow">Library</span>
-      <button type="button" data-archive class="nav-item"><span class="ico" data-icon="archive"></span>Archive</button>
-
       <span class="nav-spacer"></span>
       <button id="proBtn" type="button" class="hidden nav-item nav-pro"><span class="ico" data-icon="sparkles"></span><span id="proLabel">PRO task</span></button>
       <button type="button" data-feedback class="nav-item"><span class="ico" data-icon="message"></span>Feedback</button>
@@ -358,6 +391,8 @@
           <button id="newBtn" type="button" class="btn btn-quiet btn-lg ml-auto"><span class="ico" data-icon="refresh"></span>New task</button>
         </div>
 
+        <p id="checkMsg" class="hidden note note-bad mt-4"></p>
+
         <div id="scoreCard" class="hidden card mt-6 p-5">
           <div class="flex items-center justify-between gap-4">
             <div>
@@ -367,6 +402,7 @@
             <p id="scoreVerdict" class="text-sm text-zinc-400 text-right max-w-[14rem]"></p>
           </div>
           <div class="score-bar mt-4"><i id="scoreFill" style="width:0%"></i></div>
+          <div id="ratingBox" class="hidden mt-4"></div>
           <p id="archiveNote" class="mt-3 text-xs text-zinc-500"></p>
         </div>
       </section>
@@ -407,7 +443,7 @@
 <!-- ============ AUTH / ACCOUNT MODAL ============ -->
 <div id="authModal" class="hidden modal" role="dialog" aria-modal="true" aria-labelledby="authTitle">
   <div id="authBackdrop" class="modal-backdrop"></div>
-  <div class="modal-card">
+  <div id="authCard" class="modal-card">
     <button type="button" id="authClose" aria-label="Close" class="modal-x"><span class="ico" data-icon="x"></span></button>
 
     <form id="authForm" class="space-y-3" autocomplete="on">
@@ -460,21 +496,49 @@
     </form>
 
     <div id="authAccount" class="hidden">
-      <div class="flex items-center gap-3.5 pr-8">
-        <span id="accAvatar" class="avatar avatar-lg"></span>
-        <div class="min-w-0">
-          <p id="accName" class="font-medium truncate"></p>
-          <p class="mt-0.5"><span id="accBadge" class="badge">Free</span></p>
+      <div class="profile-head">
+        <div class="profile-id">
+          <button type="button" id="avatarBtn" class="avatar-btn" aria-label="Change avatar" aria-expanded="false">
+            <span id="accAvatar" class="avatar avatar-xl"></span>
+            <span class="avatar-edit"><span class="ico" data-icon="edit"></span></span>
+          </button>
+          <div class="min-w-0">
+            <div class="flex items-center gap-2 flex-wrap">
+              <h3 id="accName" class="profile-name truncate"></h3>
+              <button type="button" id="nickEdit" class="icon-btn" aria-label="Edit nickname"><span class="ico" data-icon="edit"></span></button>
+              <span id="accBadge" class="badge">Free</span>
+            </div>
+            <p id="accEmail" class="mt-0.5 text-xs text-zinc-500 truncate"></p>
+            <div class="mt-3 flex flex-wrap gap-2">
+              <button type="button" class="social-btn" data-social="X"><span class="ico" data-icon="xsocial"></span>Connect X</button>
+              <button type="button" class="social-btn" data-social="Facebook"><span class="ico" data-icon="facebook"></span>Connect Facebook</button>
+            </div>
+            <p id="socialNote" class="hidden mt-2 text-xs text-zinc-500"></p>
+          </div>
         </div>
+        <div id="levelBox" class="level-box"></div>
       </div>
 
-      <div class="mt-5 flex gap-2.5">
+      <form id="nickForm" class="hidden mt-4" autocomplete="off">
+        <div class="flex gap-2">
+          <input type="text" name="nickname" maxlength="20" class="field" placeholder="Nickname (3-20 characters)">
+          <button type="submit" id="nickSave" class="btn btn-primary">Save</button>
+          <button type="button" id="nickCancel" class="btn btn-ghost">Cancel</button>
+        </div>
+        <p id="nickStatus" class="hidden note mt-2"></p>
+      </form>
+      <div id="avatarPicker" class="hidden avatar-grid mt-4"></div>
+
+      <div id="levelProgress" class="mt-5"></div>
+
+      <div class="stats-row mt-4">
+        <div class="stat"><p class="eyebrow">ELO</p><p id="statElo" class="v">-</p></div>
+        <div class="stat"><p class="eyebrow">Tasks solved</p><p id="statTasks" class="v">0</p></div>
+        <div class="stat"><p class="eyebrow">Accuracy</p><p id="statAcc" class="v">-</p></div>
         <div class="stat"><p class="eyebrow">Plan</p><p id="accPlan" class="mt-1 text-sm"></p></div>
-        <div class="stat"><p class="eyebrow">Archive</p><p id="accArchive" class="mt-1 text-sm">…</p></div>
       </div>
 
       <button type="button" id="accUpgrade" class="hidden btn btn-accent w-full mt-3"><span class="ico" data-icon="sparkles"></span>Upgrade to PRO</button>
-      <button type="button" id="accOpenArchive" class="btn btn-ghost w-full mt-2"><span class="ico" data-icon="archive"></span>Open archive</button>
 
       <div id="histBox" class="hidden mt-3 rounded-xl border border-white/[.07] bg-black/25 p-3.5">
         <p id="histText" class="text-sm text-zinc-300"></p>
@@ -482,29 +546,22 @@
         <button type="button" id="histReset" class="btn btn-ghost btn-sm mt-3">Clear solved history</button>
       </div>
 
-      <div class="mt-6 flex justify-between gap-2.5">
+      <div class="mt-8">
+        <h4 class="serif text-2xl">Archive</h4>
+        <p id="archiveSub" class="text-sm text-zinc-500">Your solved tasks, answers and corrections.</p>
+        <div id="archiveChips" class="mt-3 flex flex-wrap gap-2">
+          <button type="button" class="chip active" data-filter="">All</button>
+          <button type="button" class="chip" data-filter="balance_sheet">Balance Sheet</button>
+          <button type="button" class="chip" data-filter="terminology">Terminology</button>
+        </div>
+        <div id="archiveBody" class="mt-3 space-y-2.5"></div>
+      </div>
+
+      <div class="mt-7 flex justify-between gap-2.5">
         <button type="button" id="logoutBtn" class="btn btn-quiet">Log out</button>
         <button type="button" id="authDone" class="btn btn-primary">Done</button>
       </div>
     </div>
-  </div>
-</div>
-
-<!-- ============ ARCHIVE MODAL ============ -->
-<div id="archiveModal" class="hidden modal" role="dialog" aria-modal="true" aria-labelledby="archiveTitle">
-  <div id="archiveBackdrop" class="modal-backdrop"></div>
-  <div class="modal-card wide" style="height: min(760px, calc(100vh - 32px));">
-    <button type="button" id="archiveClose" aria-label="Close" class="modal-x"><span class="ico" data-icon="x"></span></button>
-    <div class="px-6 pt-6 pb-4 border-b border-white/[.07]">
-      <h3 id="archiveTitle" class="modal-title">Archive</h3>
-      <p id="archiveSub" class="mt-1 text-sm text-zinc-400">Your solved tasks, answers and corrections.</p>
-      <div id="archiveChips" class="mt-4 flex flex-wrap gap-2">
-        <button type="button" class="chip active" data-filter="">All</button>
-        <button type="button" class="chip" data-filter="balance_sheet">Balance Sheet</button>
-        <button type="button" class="chip" data-filter="terminology">Terminology</button>
-      </div>
-    </div>
-    <div id="archiveBody" class="flex-1 overflow-y-auto px-6 py-4 space-y-2.5"></div>
   </div>
 </div>
 
@@ -533,7 +590,7 @@
 const API = location.protocol.startsWith("http") ? "" : "http://127.0.0.1:8000";
 const $ = (id) => document.getElementById(id);
 let recentIds = [];
-let currentTopic = null, currentPro = false, task = null, hintStep = 0, attemptId = "";
+let currentTopic = null, currentPro = false, task = null, hintStep = 0;
 
 // ---------- icons (inline SVG, injected into [data-icon]) ----------
 const ICONS = {
@@ -551,6 +608,9 @@ const ICONS = {
   trash: '<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>',
   user: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
   mail: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>',
+  edit: '<path d="M4 20h4L19 9a2.1 2.1 0 0 0-3-3L5 17z"/><path d="M14 7l3 3"/>',
+  xsocial: '<path d="M4 4l16 16M20 4L4 20"/>',
+  facebook: '<path d="M14 8h3V4h-3a4 4 0 0 0-4 4v3H7v4h3v6h4v-6h3l1-4h-4V8.5A.5.5 0 0 1 14.5 8z"/>',
   lock: '<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
 };
 const svg = (name) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" width="100%" height="100%">${ICONS[name] || ""}</svg>`;
@@ -644,12 +704,10 @@ async function load(topic, pro = false) {
 
 const isSheet = () => task && task.type === "balance_sheet";
 const isTest = () => task && task.type === "test";
-const newAttemptId = () => (window.crypto && crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2, 12));
 let sheetCells = [], testItems = [];
 
 function render() {
   hintStep = 0;
-  attemptId = newAttemptId();          // one archive record per task shown; re-checking updates it
   $("company").textContent = task.company_name || "";
   $("title").textContent = task.task_title || "Task";
   $("description").textContent = task.description || "";
@@ -755,31 +813,24 @@ function cellEl(cell, label, i) {
   input.type = "text"; input.inputMode = "decimal"; input.autocomplete = "off"; input.placeholder = "?";
   input.setAttribute("aria-label", label + (colName ? " (" + colName + ")" : ""));
   wrap.append(input);
-  sheetCells.push({ input, wrap, expected: cell.value, label: label + (colName ? " · " + colName : "") });
+  sheetCells.push({ input, wrap, id: cell.id });
   return wrap;
 }
 
-// Each check returns { ok, total, review: [{label, yours, expected, correct, note}], explanation, answered }
-function checkSheet() {
-  let ok = 0, answered = false;
-  const review = [];
+// The answers are marked on the server (/api/check); these functions only show its verdict.
+function applySheetResult(res) {
   sheetCells.forEach((c) => {
-    const got = parseAmount(c.input.value);
-    const good = got !== null && Math.abs(got - c.expected) <= 0.5;
-    if (good) ok++;
-    if (c.input.value.trim()) answered = true;
-    c.input.className = "field field-sm num " + (good ? "ok" : "bad");
+    const r = (res.cells || {})[c.id];
+    if (!r) return;
+    c.input.className = "field field-sm num " + (r.correct ? "ok" : "bad");
     const old = c.wrap.querySelector(".expected");
     if (old) old.remove();
-    if (!good) c.wrap.append(el("div", "expected", "Correct: " + fmt(c.expected)));
-    review.push({ label: c.label, yours: c.input.value.trim(), expected: fmt(c.expected), correct: good, note: "" });
+    if (!r.correct) c.wrap.append(el("div", "expected", "Correct: " + fmt(r.expected)));
   });
-  const explanation = task.explanation || "";
-  if (explanation) {
-    $("explain").textContent = explanation;
+  if (res.explanation) {
+    $("explain").textContent = res.explanation;
     $("explain").classList.remove("hidden");
   }
-  return { ok, total: sheetCells.length, review, explanation, answered };
 }
 
 // ================= tests: single answer, select all, true/false, numeric =================
@@ -829,55 +880,52 @@ function renderTest() {
   });
 }
 
-function gradeItem(it) {
-  const q = it.q;
-  let correct = false, yours = "", expected = "", answered = false;
-  if (q.kind === "numeric") {
-    const raw = it.inputs[0].value.trim(), got = parseAmount(raw);
-    answered = raw !== "";
-    const tol = Math.max(q.tolerance || 0, Math.abs(q.correct) < 10 ? 0.005 : 0.5);
-    correct = got !== null && Math.abs(got - q.correct) <= tol;
-    yours = raw;
-    expected = fmt(q.correct) + (q.unit ? " " + q.unit : "");
-    it.inputs[0].className = "field num " + (correct ? "ok" : "bad");
-  } else {
-    const options = q.kind === "tf" ? ["True", "False"] : q.options;
-    const right = q.kind === "multi" ? q.correct : [q.kind === "tf" ? (q.correct ? 0 : 1) : q.correct];
-    const chosen = it.inputs.map((inp, k) => (inp.checked ? k : -1)).filter((k) => k >= 0);
-    answered = chosen.length > 0;
-    correct = chosen.length === right.length && right.every((k) => chosen.includes(k));
-    yours = chosen.map((k) => options[k]).join("; ");
-    expected = right.map((k) => options[k]).join("; ");
-    it.labels.forEach((lab, k) => {
-      lab.className = "mc-opt " + (right.includes(k) ? "mc-right" : chosen.includes(k) ? "mc-wrong" : "mc-dim");
-    });
-  }
-  it.note.className = "note mt-3 " + (correct ? "note-ok" : "note-bad");
-  it.note.textContent = (correct ? "Correct. " : answered ? "Not quite. " : "No answer given. ") + (q.explanation || "");
-  if (q.kind === "numeric") {
-    const old = it.card.querySelector(".expected");
-    if (old) old.remove();
-    if (!correct) it.inputs[0].parentElement.after(el("div", "expected", "Correct: " + expected));
-  }
-  return { correct, yours, expected, answered };
+function applyTestResult(res) {
+  testItems.forEach((it) => {
+    const q = it.q, r = (res.questions || {})[q.id];
+    if (!r) return;
+    if (q.kind === "numeric") {
+      it.inputs[0].className = "field num " + (r.correct ? "ok" : "bad");
+      const old = it.card.querySelector(".expected");
+      if (old) old.remove();
+      if (!r.correct) it.inputs[0].parentElement.after(el("div", "expected", "Correct: " + fmt(r.expected) + (q.unit ? " " + q.unit : "")));
+    } else {
+      const right = q.kind === "tf" ? [r.expected ? 0 : 1] : r.expected;
+      const chosen = it.inputs.map((inp, k) => (inp.checked ? k : -1)).filter((k) => k >= 0);
+      it.labels.forEach((lab, k) => {
+        lab.className = "mc-opt " + (right.includes(k) ? "mc-right" : chosen.includes(k) ? "mc-wrong" : "mc-dim");
+      });
+    }
+    it.note.className = "note mt-3 " + (r.correct ? "note-ok" : "note-bad");
+    it.note.textContent = (r.correct ? "Correct. " : "Not quite. ") + (r.explanation || "");
+  });
 }
 
-function checkTest() {
-  let ok = 0, total = 0, answered = false;
-  const review = testItems.map((it, i) => {
-    const g = gradeItem(it);
-    const pts = it.q.points || 1;
-    total += pts;
-    if (g.correct) ok += pts;
-    if (g.answered) answered = true;
-    return { label: `Q${i + 1}. ${it.q.prompt}`.slice(0, 300), yours: g.yours, expected: g.expected, correct: g.correct, note: it.q.explanation || "" };
-  });
-  return { ok, total, review, explanation: "", answered };
+// What the student typed or chose, in the shape /api/check expects.
+function collectAnswers() {
+  const answers = {};
+  let any = false;
+  if (isSheet()) {
+    sheetCells.forEach((c) => { answers[c.id] = c.input.value; if (c.input.value.trim()) any = true; });
+  } else {
+    testItems.forEach((it) => {
+      const q = it.q;
+      let v;
+      if (q.kind === "numeric") {
+        v = it.inputs[0].value;
+        if (v.trim()) any = true;
+      } else {
+        const chosen = it.inputs.map((inp, k) => (inp.checked ? k : -1)).filter((k) => k >= 0);
+        v = q.kind === "multi" ? chosen : chosen.length ? (q.kind === "tf" ? (chosen[0] === 0 ? "true" : "false") : chosen[0]) : null;
+        if (chosen.length) any = true;
+      }
+      answers[q.id] = v;
+    });
+  }
+  return { answers, any };
 }
 
 // ---------- result card + archive saving ----------
-const clip = (s, n) => String(s ?? "").slice(0, n);
-
 function showResult(res) {
   const ratio = res.total ? res.ok / res.total : 0;
   $("score").innerHTML = `${res.ok}<span class="text-zinc-600"> / ${res.total}</span>`;
@@ -892,46 +940,70 @@ function showResult(res) {
   requestAnimationFrame(() => (fill.style.width = Math.round(ratio * 100) + "%"));
 }
 
-async function saveToArchive(res) {
-  const note = $("archiveNote");
-  if (!res.answered) { note.textContent = ""; return; }            // nothing was answered: nothing to archive
-  if (!session) {
-    note.replaceChildren("Results are not saved. ");
-    const b = el("button", "underline underline-offset-2 hover:text-zinc-300 transition", "Sign in to keep an archive");
-    b.type = "button"; b.onclick = openAuth;
-    note.append(b);
-    return;
+function showRating(info) {
+  const box = $("ratingBox");
+  box.replaceChildren();
+  if (!info) { box.classList.add("hidden"); return; }
+  box.classList.remove("hidden");
+  const row = el("div", "flex flex-wrap items-center gap-2.5");
+  if (info.too_fast) {
+    row.append(el("span", "note note-warn", "Answered too fast to count for your rating."));
+  } else if (info.already_counted) {
+    row.append(el("span", "text-xs text-zinc-500", "This task already counted for your rating. Re-checks do not change it."));
+  } else {
+    const d = info.delta;
+    row.append(el("span", "pill " + (d > 0 ? "pill-ok" : d < 0 ? "pill-bad" : "pill-mid"), (d > 0 ? "+" : "") + d + " ELO"));
+    if (info.calibration_completed) row.append(el("span", "note note-ok", "Calibration complete! You start as Level " + info.level_after + "."));
+    else if (info.calibrating) row.append(el("span", "text-xs text-zinc-400", `Calibration ${info.calibration_total - info.calibration_left} / ${info.calibration_total}`));
+    else if (info.level_after !== info.level_before) row.append(el("span", "note " + (info.level_after > info.level_before ? "note-ok" : "note-bad"),
+      (info.level_after > info.level_before ? "Level up! You are Level " : "Level down: Level ") + info.level_after));
+    if (info.daily_cap_reached) row.append(el("span", "text-xs text-zinc-500", "Daily rating gain limit reached."));
   }
-  try {
-    const r = await fetch(API + "/api/archive", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", ...authHeader() },
-      body: JSON.stringify({
-        attempt_id: attemptId,
-        topic: currentTopic,
-        source: currentPro ? "pro" : "free",
-        title: clip(task.task_title, 200),
-        company: clip(task.company_name, 200),
-        condition: clip(task.description, 6000),
-        explanation: clip(res.explanation, 2000),
-        review: res.review.slice(0, 30).map((x) => ({ label: clip(x.label, 300), yours: clip(x.yours, 500), expected: clip(x.expected, 500), correct: !!x.correct, note: clip(x.note, 600) })),
-        score: res.ok,
-        total: res.total,
-      }),
-    });
-    if (r.status === 401) { setSession(null); renderAuth(); note.textContent = "Your session expired. Sign in to save results."; return; }
-    note.textContent = r.ok ? "Saved to your archive ✓" : "Could not save this result to your archive.";
-  } catch {
-    note.textContent = "Could not save this result (connection problem).";
+  const p = info.profile;
+  if (p) {
+    const g = el("span", "ml-auto");
+    g.innerHTML = gaugeSvg(p.level, { calibrating: p.calibrating, size: 44, number: false });
+    row.append(g);
   }
+  box.append(row);
 }
 
-$("checkBtn").onclick = () => {
+async function doCheck() {
   if (!task) return;
-  const res = isSheet() ? checkSheet() : checkTest();
-  showResult(res);
-  saveToArchive(res);
-};
+  const msg = $("checkMsg");
+  msg.classList.add("hidden");
+  const { answers, any } = collectAnswers();
+  if (!any) { msg.textContent = "Enter at least one answer before checking."; msg.classList.remove("hidden"); return; }
+  const btn = $("checkBtn");
+  btn.disabled = true; btn.textContent = "Checking…";
+  try {
+    const r = await fetch(API + "/api/check", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...authHeader() },
+      body: JSON.stringify({ token: task.token, answers }),
+    });
+    let data = {};
+    try { data = await r.json(); } catch {}
+    if (!r.ok) throw new Error(typeof data.detail === "string" ? data.detail : "Could not check the answers. Please try again.");
+    isSheet() ? applySheetResult(data) : applyTestResult(data);
+    showResult({ ok: data.score, total: data.total });
+    showRating(data.rating);
+    $("archiveNote").textContent = data.archived ? "Saved to your archive ✓" : "";
+    if (!data.signed_in) {
+      $("archiveNote").replaceChildren("Results are not saved and do not count for a rating. ");
+      const b = el("button", "underline underline-offset-2 hover:text-zinc-300 transition", "Sign in to earn a level");
+      b.type = "button"; b.onclick = openAuth;
+      $("archiveNote").append(b);
+    }
+    if (data.rating && data.rating.profile && session) { setSession({ ...session, profile: data.rating.profile }); renderAuth(); }
+  } catch (e) {
+    msg.textContent = e.message && e.message !== "Failed to fetch" ? e.message : "Can't reach the server. Check your connection and try again.";
+    msg.classList.remove("hidden");
+  } finally {
+    btn.disabled = false; btn.textContent = "Check answer";
+  }
+}
+$("checkBtn").onclick = doCheck;
 
 $("hintBtn").onclick = () => {
   if (!task) return;
@@ -1066,14 +1138,60 @@ function setSession(s) {
 }
 const authHeader = () => (session ? { Authorization: "Bearer " + session.token } : {});
 
+// ---------- level gauge (speedometer icon) ----------
+const LEVEL_COLORS = ["#9ca3af", "#22c55e", "#22c55e", "#eab308", "#eab308", "#f97316", "#f97316", "#f97316", "#ef4444", "#ef4444"];
+const levelColor = (lv) => LEVEL_COLORS[Math.max(1, Math.min(10, lv)) - 1];
+function polar(cx, cy, r, deg) { const a = (deg * Math.PI) / 180; return [cx + r * Math.cos(a), cy + r * Math.sin(a)]; }
+function arcPath(cx, cy, r, a0, a1) {
+  const [x0, y0] = polar(cx, cy, r, a0), [x1, y1] = polar(cx, cy, r, a1);
+  return `M${x0.toFixed(2)} ${y0.toFixed(2)} A${r} ${r} 0 0 1 ${x1.toFixed(2)} ${y1.toFixed(2)}`;
+}
+// A 270° dial with 10 segments (one per level), tick marks, a needle and the level number. Segments up to the level glow in the level colour.
+function gaugeSvg(level, { calibrating = false, size = 96, number = true } = {}) {
+  const color = calibrating ? "#a1a1aa" : levelColor(level);
+  const cx = 50, cy = 54, r = 38;
+  let segs = "", ticks = "";
+  for (let i = 0; i < 10; i++) {
+    const a0 = 135 + 27 * i + 1.7, on = !calibrating && i < level;
+    segs += `<path d="${arcPath(cx, cy, r, a0, a0 + 23.6)}" fill="none" stroke="${on ? color : "rgba(255,255,255,.14)"}" stroke-width="${on ? 8 : 6.5}" stroke-linecap="round"/>`;
+  }
+  for (let i = 0; i <= 10; i++) {
+    const [x0, y0] = polar(cx, cy, r - 8, 135 + 27 * i), [x1, y1] = polar(cx, cy, r - 12, 135 + 27 * i);
+    ticks += `<line x1="${x0.toFixed(1)}" y1="${y0.toFixed(1)}" x2="${x1.toFixed(1)}" y2="${y1.toFixed(1)}" stroke="rgba(255,255,255,.28)" stroke-width="1.2" stroke-linecap="round"/>`;
+  }
+  const angle = calibrating ? 270 : 135 + 27 * (level - 1) + 13.5;      // points at the current segment (straight up while calibrating)
+  const needle = `<g transform="rotate(${angle} ${cx} ${cy})"><g class="needle-wrap"><path d="M${cx - 4} ${cy - 2.6} L${cx + r - 14} ${cy} L${cx - 4} ${cy + 2.6} Z" fill="${color}"/></g></g>` +
+    `<circle cx="${cx}" cy="${cy}" r="6" fill="#0f0f13" stroke="${color}" stroke-width="2.5"/>`;
+  const text = number ? `<text x="50" y="94" text-anchor="middle" font-size="22" font-weight="700" fill="${color}" font-family="ui-sans-serif,system-ui,sans-serif">${calibrating ? "?" : level}</text>` : "";
+  return `<svg class="gauge${calibrating ? " calib" : ""}${!calibrating && level >= 9 ? " glow" : ""}" viewBox="0 0 100 100" width="${size}" height="${size}" role="img" aria-label="${calibrating ? "Calibrating" : "Level " + level}">${segs}${ticks}${needle}${text}</svg>`;
+}
+
+// ---------- avatars (presets) ----------
+const AVATAR_GRADIENTS = {
+  g1: ["#6d70f2", "#9b6ff5"], g2: ["#06b6d4", "#3b82f6"], g3: ["#10b981", "#06b6d4"], g4: ["#f59e0b", "#ef4444"],
+  g5: ["#ec4899", "#8b5cf6"], g6: ["#22c55e", "#a3e635"], g7: ["#f97316", "#facc15"], g8: ["#64748b", "#334155"],
+  g9: ["#ef4444", "#be185d"], g10: ["#14b8a6", "#6366f1"], g11: ["#a78bfa", "#f472b6"], g12: ["#0ea5e9", "#22c55e"],
+};
+function applyAvatar(node, id, name) {
+  const g = AVATAR_GRADIENTS[id] || AVATAR_GRADIENTS.g1;
+  node.style.background = `linear-gradient(135deg, ${g[0]}, ${g[1]})`;
+  node.textContent = ((name || "?")[0] || "?").toUpperCase();
+  node.classList.add("avatar-custom");
+}
+const nicknameOf = (s) => (s && (s.nickname || s.username.split("@")[0])) || "";
+
 function renderAuth() {
   document.querySelectorAll("[data-auth]").forEach((b) => {
     const avatar = el("span", "avatar");
-    if (session) avatar.textContent = (session.username[0] || "?").toUpperCase(); else setIcon(avatar, "user");
-    b.replaceChildren(avatar, el("span", "acc-name", session ? session.username : "Sign in"));
+    if (session) applyAvatar(avatar, session.avatar, nicknameOf(session)); else setIcon(avatar, "user");
+    b.replaceChildren(avatar, el("span", "acc-name", session ? nicknameOf(session) : "Sign in"));
+    if (session && session.profile) {
+      const g = el("span", "chip-gauge");
+      g.innerHTML = gaugeSvg(session.profile.level, { calibrating: session.profile.calibrating, number: false });
+      b.append(g);
+    }
     if (session && session.is_pro) b.append(el("span", "badge badge-pro", "PRO"));
   });
-  $("welcomeArchive").classList.toggle("hidden", !session);
   // the PRO entry is only for signed-in users; free accounts see it locked
   const pb = $("proBtn");
   pb.classList.toggle("hidden", !session);
@@ -1088,43 +1206,130 @@ const authMessage = (text, ok) => setBox(authStatus, text, ok);
 const AUTH_PANELS = ["authForm", "authSent", "authForgot", "authReset", "authAccount"];
 function showPanel(name) {
   AUTH_PANELS.forEach((id) => $(id).classList.toggle("hidden", id !== name));
+  $("authCard").classList.toggle("profile", name === "authAccount");
   authModal.classList.remove("hidden");
 }
 const EMAIL_RX = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 let pendingEmail = "", resetToken = "";
 const dateOnly = (iso) => { const d = new Date(iso); return isNaN(d) ? "" : d.toISOString().slice(0, 10); };   // UTC date, YYYY-MM-DD
 
+function renderProfile() {
+  if (!session) return;
+  const p = session.profile || { level: 3, elo: 1000, calibrating: true, calibration_left: 20, calibration_total: 20, calibration_done: 0, progress: 0, tasks: 0, accuracy: null, next_level: null, elo_to_next: null };
+  const nick = nicknameOf(session);
+  $("accName").textContent = nick;
+  $("accEmail").textContent = session.username;
+  applyAvatar($("accAvatar"), session.avatar, nick);
+  const badge = $("accBadge");
+  badge.textContent = session.is_pro ? "PRO" : "Free";
+  badge.className = "badge" + (session.is_pro ? " badge-pro" : "");
+  $("accPlan").textContent = session.is_pro
+    ? (session.pro_expires_at ? "PRO until " + dateOnly(session.pro_expires_at) : "PRO active")
+    : "Free plan";
+  $("accUpgrade").classList.toggle("hidden", session.is_pro);
+
+  // level badge: the speedometer
+  const color = p.calibrating ? "#a1a1aa" : levelColor(p.level);
+  $("levelBox").innerHTML = gaugeSvg(p.level, { calibrating: p.calibrating, size: 128 }) +
+    `<div class="level-label" style="color:${color}">${p.calibrating ? "CALIBRATING" : "LEVEL " + p.level}</div>`;
+
+  // progress: calibration countdown or the way to the next level
+  const left = p.calibrating
+    ? `Calibration: ${p.calibration_done} / ${p.calibration_total} tasks`
+    : p.next_level ? `Level ${p.level} → ${p.next_level}` : "Maximum level reached";
+  const right = p.calibrating
+    ? `${p.calibration_left} to go · the best possible start is Level 7`
+    : p.next_level ? `${p.elo_to_next} ELO to Level ${p.next_level}` : "Level 10";
+  $("levelProgress").innerHTML =
+    `<div class="flex items-center justify-between gap-3 text-xs text-zinc-400"><span>${left}</span><span class="text-right">${right}</span></div>` +
+    `<div class="score-bar mt-2"><i style="width:${p.progress}%;background:${p.calibrating ? "linear-gradient(90deg,#71717a,#a1a1aa)" : color}"></i></div>`;
+
+  $("statElo").textContent = p.calibrating ? "?" : p.elo.toLocaleString("en-US");
+  $("statTasks").textContent = p.tasks;
+  $("statAcc").textContent = p.accuracy === null ? "-" : p.accuracy + "%";
+  $("histBox").classList.toggle("hidden", !session.is_pro);
+}
+
+// keeps the stored session in sync with what the server says (level, nickname, plan ...)
+function applyProfileData(d) {
+  if (!session) return;
+  setSession({ ...session, username: d.username, nickname: d.nickname, avatar: d.avatar, is_pro: d.is_pro, pro_expires_at: d.pro_expires_at, profile: d.profile });
+  renderAuth();
+  if (!authModal.classList.contains("hidden") && !$("authAccount").classList.contains("hidden")) renderProfile();
+}
+async function refreshProfile() {
+  try {
+    const r = await fetch(API + "/api/me", { headers: authHeader() });
+    if (r.ok) applyProfileData(await r.json());
+    else if (r.status === 401) { setSession(null); renderAuth(); closeAuth(); }
+  } catch {}
+}
+async function saveProfile(body) {
+  const r = await fetch(API + "/api/profile", { method: "PATCH", headers: { "Content-Type": "application/json", ...authHeader() }, body: JSON.stringify(body) });
+  let d = {};
+  try { d = await r.json(); } catch {}
+  if (!r.ok) throw new Error(typeof d.detail === "string" ? d.detail : "Could not save. Please try again.");
+  applyProfileData(d);
+}
+
 function openAuth() {
-  closeArchive();
   authStatus.classList.add("hidden");
   $("authResend").classList.add("hidden");
   showPanel(session ? "authAccount" : "authForm");
   if (session) {
-    $("accName").textContent = session.username;
-    $("accAvatar").textContent = (session.username[0] || "?").toUpperCase();
-    const badge = $("accBadge");
-    badge.textContent = session.is_pro ? "PRO" : "Free";
-    badge.className = "badge" + (session.is_pro ? " badge-pro" : "");
-    $("accPlan").textContent = session.is_pro
-      ? (session.pro_expires_at ? "PRO active until " + dateOnly(session.pro_expires_at) : "PRO active")
-      : "Free plan";
-    $("accUpgrade").classList.toggle("hidden", session.is_pro);
-    refreshArchiveCount();
+    $("avatarPicker").classList.add("hidden");
+    $("nickForm").classList.add("hidden");
+    renderProfile();
+    refreshProfile();
+    if (session.is_pro) refreshHistory();
+    archive.topic = "";
+    loadArchive(true);
   }
-  $("histBox").classList.toggle("hidden", !(session && session.is_pro));
-  if (session && session.is_pro) refreshHistory();
   authModal.classList.remove("hidden");
   if (!session) authForm.elements.username.focus();
 }
-async function refreshArchiveCount() {
-  $("accArchive").textContent = "…";
+
+// --- avatar picker, nickname, social stubs ---
+$("avatarBtn").onclick = () => {
+  const picker = $("avatarPicker");
+  if (picker.childElementCount === 0) {
+    Object.keys(AVATAR_GRADIENTS).forEach((id) => {
+      const b = el("button", "avatar-pick"); b.type = "button"; b.dataset.id = id; b.setAttribute("aria-label", "Avatar " + id.slice(1));
+      applyAvatar(b, id, nicknameOf(session));
+      b.onclick = async () => { try { await saveProfile({ avatar: id }); picker.classList.add("hidden"); $("avatarBtn").setAttribute("aria-expanded", "false"); } catch {} };
+      picker.append(b);
+    });
+  }
+  picker.querySelectorAll(".avatar-pick").forEach((b) => { applyAvatar(b, b.dataset.id, nicknameOf(session)); b.classList.toggle("selected", b.dataset.id === (session.avatar || "g1")); });
+  const open = picker.classList.toggle("hidden") === false;
+  $("avatarBtn").setAttribute("aria-expanded", String(open));
+};
+$("nickEdit").onclick = () => {
+  const form = $("nickForm");
+  form.classList.toggle("hidden");
+  $("nickStatus").classList.add("hidden");
+  if (!form.classList.contains("hidden")) { form.elements.nickname.value = nicknameOf(session); form.elements.nickname.focus(); form.elements.nickname.select(); }
+};
+$("nickCancel").onclick = () => $("nickForm").classList.add("hidden");
+$("nickForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const btn = $("nickSave");
+  btn.disabled = true;
   try {
-    const r = await fetch(API + "/api/archive?limit=1", { headers: authHeader() });
-    if (!r.ok) throw new Error();
-    const n = (await r.json()).total;
-    $("accArchive").textContent = n === 1 ? "1 task" : n + " tasks";
-  } catch { $("accArchive").textContent = "—"; }
-}
+    await saveProfile({ nickname: $("nickForm").elements.nickname.value.trim() });
+    $("nickForm").classList.add("hidden");
+  } catch (err) {
+    setBox($("nickStatus"), err.message, false);
+  } finally {
+    btn.disabled = false;
+  }
+});
+document.querySelectorAll("[data-social]").forEach((b) => (b.onclick = () => {
+  const note = $("socialNote");
+  note.textContent = `Linking ${b.dataset.social} is coming soon.`;
+  note.classList.remove("hidden");
+}));
+
 async function refreshHistory() {
   $("histText").textContent = "Solved PRO tasks remembered: …";
   try {
@@ -1181,7 +1386,8 @@ authForm.addEventListener("submit", async (e) => {
       const d = r.data.detail;
       throw new Error(typeof d === "string" ? d : "Please check your email and password.");
     }
-    setSession({ token: r.data.token, username: r.data.username, is_pro: r.data.is_pro, pro_expires_at: r.data.pro_expires_at });
+    setSession({ token: r.data.token, username: r.data.username, nickname: r.data.nickname, avatar: r.data.avatar, is_pro: r.data.is_pro,
+                 pro_expires_at: r.data.pro_expires_at, profile: r.data.profile });
     authForm.reset();
     renderAuth();
     closeAuth();
@@ -1298,7 +1504,6 @@ function setSubscribeLabel() {
 }
 async function openUpgrade() {
   closeAuth();
-  closeArchive();
   upStatus.classList.add("hidden");
   $("upSubscribe").classList.remove("hidden");
   $("upSubscribe").disabled = false;
@@ -1367,7 +1572,7 @@ async function handleUpgradeReturn() {
 }
 
 // --- archive of solved tasks ---
-const archiveModal = $("archiveModal"), archiveBody = $("archiveBody");
+const archiveBody = $("archiveBody");
 const TOPIC_LABEL = { balance_sheet: "Balance Sheet", terminology: "Terminology", transactions: "Journal Entries" };   // "transactions": entries saved before the mode was removed
 const TOPIC_ICON = { balance_sheet: "table", transactions: "receipt", terminology: "book" };
 const archive = { topic: "", items: [], total: 0, hasMore: false, loading: false, details: new Map(), open: new Set(), error: false };
@@ -1377,14 +1582,6 @@ const fmtDate = (iso) => {
   return isNaN(d) ? "" : d.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
 };
 const pillClass = (score, total) => { const r = total ? score / total : 0; return r >= 0.8 ? "pill-ok" : r >= 0.5 ? "pill-mid" : "pill-bad"; };
-
-function openArchive() {
-  closeAuth();
-  closeUpgrade();
-  archiveModal.classList.remove("hidden");
-  loadArchive(true);
-}
-function closeArchive() { archiveModal.classList.add("hidden"); }
 
 async function loadArchive(reset) {
   if (!session) { renderArchive(); return; }
@@ -1426,7 +1623,7 @@ function renderArchive() {
     : "Your solved tasks, answers and corrections.";
   document.querySelectorAll("#archiveChips .chip").forEach((c) => c.classList.toggle("active", c.dataset.filter === archive.topic));
   if (!session) {
-    archiveBody.replaceChildren(emptyState("Sign in to see your archive", "Every task you check is saved here with your answers, the correct ones and the explanation.", "Sign in", () => { closeArchive(); openAuth(); }));
+    archiveBody.replaceChildren(emptyState("Sign in to see your archive", "Every task you check is saved here with your answers, the correct ones and the explanation.", "Sign in", () => openAuth()));
     return;
   }
   if (archive.error) {
@@ -1436,7 +1633,7 @@ function renderArchive() {
     return;
   }
   if (!archive.items.length) {
-    archiveBody.replaceChildren(emptyState("Nothing here yet", archive.topic ? "No solved tasks in this category yet." : "Solve a task and press “Check answer”: it will appear here.", "Start practicing", () => { closeArchive(); if (!currentTopic) view("welcome"); }));
+    archiveBody.replaceChildren(emptyState("Nothing here yet", archive.topic ? "No solved tasks in this category yet." : "Solve a task and press “Check answer”: it will appear here.", "Start practicing", () => { closeAuth(); if (!currentTopic) view("welcome"); }));
     return;
   }
   const nodes = archive.items.map(archiveItemEl);
@@ -1530,10 +1727,6 @@ function archiveDetailEls(d, wrap) {
   return out;
 }
 
-document.querySelectorAll("[data-archive]").forEach((b) => (b.onclick = openArchive));
-$("accOpenArchive").onclick = openArchive;
-$("archiveClose").onclick = $("archiveBackdrop").onclick = closeArchive;
-document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeArchive(); });
 document.querySelectorAll("#archiveChips .chip").forEach((c) => (c.onclick = () => { archive.topic = c.dataset.filter; loadArchive(true); }));
 
 // Validate the stored token and refresh the PRO flag (it can change on the server).
@@ -1543,7 +1736,7 @@ if (session) {
   fetch(API + "/api/me", { headers: authHeader() })
     .then(async (r) => {
       if (r.status === 401) { setSession(null); }
-      else if (r.ok) { const d = await r.json(); setSession({ ...session, username: d.username, is_pro: d.is_pro, pro_expires_at: d.pro_expires_at }); }
+      else if (r.ok) { const d = await r.json(); setSession({ ...session, username: d.username, nickname: d.nickname, avatar: d.avatar, is_pro: d.is_pro, pro_expires_at: d.pro_expires_at, profile: d.profile }); }
     })
     .catch(() => {})   // offline / server asleep: keep the stored session
     .finally(() => { renderAuth(); handleUpgradeReturn(); });
