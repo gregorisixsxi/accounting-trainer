@@ -3,6 +3,7 @@ import hmac
 import json
 import os
 import re
+import secrets
 import time
 import urllib.error
 import urllib.request
@@ -11,15 +12,17 @@ from datetime import timedelta
 from pathlib import Path
 
 from dotenv import load_dotenv
-from fastapi import Depends, FastAPI, Header, HTTPException, Request
+from fastapi import BackgroundTasks, Depends, FastAPI, Header, HTTPException, Request
 from fastapi.concurrency import run_in_threadpool
-from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, PlainTextResponse, Response
-from pydantic import BaseModel
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, PlainTextResponse, RedirectResponse, Response
+from pydantic import BaseModel, Field, model_validator
+from typing import Literal
 
 # Load .env before db/generator read their settings (real environment variables still win).
 load_dotenv(Path(__file__).resolve().parent / ".env")
 
 import db
+import email_service
 import pool
 from generator import TOPIC_PROMPTS, generate_task_from_claude
 
@@ -32,6 +35,7 @@ db.init()
 RATE_LIMITS = {
     "generate": (10, 60),  # 10 requests per minute
     "auth": (10, 60),
+    "archive": (60, 60),
 }
 REQUEST_COUNTS = defaultdict(list)
 
@@ -51,13 +55,21 @@ def client_ip(request: Request) -> str:
     return request.client.host if request.client else "unknown"
 
 
+AUTH_RATE_LIMITED_PATHS = {
+    "/api/login", "/api/register", "/api/create-checkout-session",
+    "/api/auth/register", "/api/auth/forgot-password", "/api/auth/reset-password", "/api/auth/resend-verification",
+}
+
+
 def bucket_for(path: str) -> str | None:
     if path.startswith("/api/generate"):
         topic = path.rsplit("/", 1)[-1]
         # pool tasks cost nothing, so the limit only applies to Claude API calls
         return None if topic in pool.POOL_TOPICS and path != "/api/generate/pro" else "generate"
-    if path in ("/api/login", "/api/register", "/api/create-checkout-session"):
+    if path in AUTH_RATE_LIMITED_PATHS:
         return "auth"
+    if path == "/api/archive":
+        return "archive"
     return None
 
 
@@ -120,13 +132,93 @@ def current_user(authorization: str | None = Header(default=None)) -> dict:
     return user
 
 
-@app.post("/api/register")
-def register(creds: Credentials):
+RESEND_COOLDOWN_SECONDS = 60   # one e-mail of each kind per minute per account
+
+
+class EmailRequest(BaseModel):
+    email: str
+
+
+class ResetRequest(BaseModel):
+    token: str
+    password: str
+
+
+def mail_ready() -> None:
+    if not (email_service.is_configured() or email_service.dev_log_enabled()):
+        raise HTTPException(status_code=503, detail="Email service is not available right now. Please try again later.")
+
+
+def issue_verification(user_id: int, email: str, request: Request, background: BackgroundTasks) -> None:
+    age = db.token_age_seconds(user_id, "verify")
+    if age is not None and age < RESEND_COOLDOWN_SECONDS:
+        return   # a fresh mail was just sent
+    token = secrets.token_urlsafe(32)
+    db.set_verify_token(user_id, token)
+    background.add_task(email_service.send_verification_email, email, f"{public_base_url(request)}/verify?token={token}")
+
+
+@app.post("/api/auth/register")
+@app.post("/api/register")   # old path kept as an alias
+def register(creds: Credentials, request: Request, background: BackgroundTasks):
     username, password = validate_credentials(creds)
-    user = db.create_user(username, password)
-    if user is None:
-        raise HTTPException(status_code=409, detail="This username is already taken.")
-    return auth_response(user)
+    if not EMAIL_RE.match(username):
+        raise HTTPException(status_code=422, detail="Please use a valid email address to create an account.")
+    mail_ready()
+    email = username.lower()
+    existing = db.get_user_by_email(email)
+    if existing and existing["is_verified"]:
+        raise HTTPException(status_code=409, detail="An account with this email already exists. Sign in or reset your password.")
+    if existing:   # registered earlier but never confirmed: send a new link, keep the original password
+        issue_verification(existing["id"], email, request, background)
+    else:
+        user = db.create_user(email, password)
+        if user is None:
+            raise HTTPException(status_code=409, detail="An account with this email already exists. Sign in or reset your password.")
+        issue_verification(user["id"], email, request, background)
+    return {"status": "verification_sent", "email": email}
+
+
+@app.get("/api/auth/verify")
+@app.get("/verify")   # the address used in the e-mail
+def verify_email_link(token: str = ""):
+    ok = bool(token) and db.verify_email(token) is not None
+    return RedirectResponse("/?verified=1" if ok else "/?verify_error=1", status_code=303)
+
+
+@app.post("/api/auth/resend-verification")
+def resend_verification(body: EmailRequest, request: Request, background: BackgroundTasks):
+    mail_ready()
+    email = body.email.strip().lower()
+    user = db.get_user_by_email(email) if EMAIL_RE.match(email) else None
+    if user and not user["is_verified"]:
+        issue_verification(user["id"], email, request, background)
+    return {"status": "ok"}   # same answer whether or not the account exists
+
+
+@app.post("/api/auth/forgot-password")
+def forgot_password(body: EmailRequest, request: Request, background: BackgroundTasks):
+    mail_ready()
+    email = body.email.strip().lower()
+    user = db.get_user_by_email(email) if EMAIL_RE.match(email) else None
+    if user:
+        age = db.token_age_seconds(user["id"], "reset")
+        if age is None or age >= RESEND_COOLDOWN_SECONDS:
+            token = secrets.token_urlsafe(32)
+            db.set_reset_token(user["id"], token)
+            background.add_task(
+                email_service.send_password_reset_email, email, f"{public_base_url(request)}/reset-password?token={token}"
+            )
+    return {"status": "ok", "message": "If an account exists for that email, we sent a password reset link."}
+
+
+@app.post("/api/auth/reset-password")
+def reset_password(body: ResetRequest):
+    if not (6 <= len(body.password) <= 128):
+        raise HTTPException(status_code=422, detail="Password must be 6-128 characters.")
+    if db.reset_password(body.token, body.password) is None:
+        raise HTTPException(status_code=400, detail="This reset link is invalid or has expired. Please request a new one.")
+    return {"status": "ok"}
 
 
 @app.post("/api/login")
@@ -150,6 +242,8 @@ def login(creds: Credentials):
             detail += f" {left} attempt{'s' if left != 1 else ''} left."
         raise HTTPException(status_code=401, detail=detail)
     db.clear_login_failures(key)
+    if not user["is_verified"]:
+        raise HTTPException(status_code=403, detail="Please check your inbox to verify your email first.")
     return auth_response(user)
 
 
@@ -167,6 +261,66 @@ def history_info(user: dict = Depends(current_user)):
 def history_reset(user: dict = Depends(current_user)):
     db.clear_history(user["id"])
     return {"count": 0}
+
+
+# ---------------- archive of solved tasks ----------------
+class ReviewItem(BaseModel):
+    label: str = Field(max_length=300)
+    yours: str = Field(default="", max_length=500)
+    expected: str = Field(default="", max_length=500)
+    correct: bool
+    note: str = Field(default="", max_length=600)
+
+
+class ArchiveEntry(BaseModel):
+    attempt_id: str = Field(min_length=8, max_length=64, pattern=r"^[A-Za-z0-9_-]+$")
+    topic: Literal["balance_sheet", "terminology", "transactions"]
+    source: Literal["free", "pro"] = "free"
+    title: str = Field(default="", max_length=200)
+    company: str = Field(default="", max_length=200)
+    condition: str = Field(default="", max_length=6000)
+    explanation: str = Field(default="", max_length=2000)
+    review: list[ReviewItem] = Field(max_length=30)
+    score: int = Field(ge=0, le=30)
+    total: int = Field(ge=1, le=30)
+
+    @model_validator(mode="after")
+    def score_within_total(self):
+        if self.score > self.total:
+            raise ValueError("score cannot be higher than total")
+        return self
+
+
+@app.post("/api/archive")
+def archive_save(entry: ArchiveEntry, user: dict = Depends(current_user)):
+    """Called after the student presses Check Answer. Free (pool) and PRO (AI) tasks are both archived."""
+    item_id = db.save_archive(user["id"], entry.model_dump())
+    return {"id": item_id, "saved": True}
+
+
+@app.get("/api/archive")
+def archive_list(topic: str = "", limit: int = 20, offset: int = 0, user: dict = Depends(current_user)):
+    if topic and topic not in FREE_TOPICS:
+        raise HTTPException(status_code=422, detail="Unknown topic.")
+    limit = max(1, min(limit, 50))
+    offset = max(0, offset)
+    items, total = db.list_archive(user["id"], topic or None, limit, offset)
+    return {"items": items, "total": total, "has_more": offset + len(items) < total}
+
+
+@app.get("/api/archive/{item_id}")
+def archive_item(item_id: int, user: dict = Depends(current_user)):
+    item = db.get_archive_item(user["id"], item_id)
+    if item is None:
+        raise HTTPException(status_code=404, detail="Archive entry not found.")
+    return item
+
+
+@app.delete("/api/archive/{item_id}")
+def archive_delete(item_id: int, user: dict = Depends(current_user)):
+    if not db.delete_archive_item(user["id"], item_id):
+        raise HTTPException(status_code=404, detail="Archive entry not found.")
+    return {"deleted": True}
 
 
 @app.post("/api/logout")
@@ -336,6 +490,7 @@ STATIC_DIR = BASE_DIR / "static"
 
 
 @app.get("/")
+@app.get("/reset-password")
 def read_root(request: Request):
     # __SITE_URL__ in the meta tags becomes the real absolute address (social crawlers need absolute URLs).
     # no-cache: after a deploy users get the fresh page instead of a cached one.
@@ -415,7 +570,7 @@ def generate_task(topic: str, exclude: str = ""):
         raise HTTPException(status_code=500, detail="Could not generate a task. Please try again.")
 
 
-PRO_TOPICS = ("balance_sheet", "terminology")
+PRO_TOPICS = ("balance_sheet", "terminology", "transactions")
 AVOID_LIMIT = 40  # how many recent tasks are shown to the model
 PRO_ATTEMPTS = 2
 
@@ -430,13 +585,14 @@ def _norm(s: str) -> str:
 
 def task_summary(topic: str, task: dict) -> tuple[str, str]:
     """(description for the "do not repeat" prompt, key for exact duplicate comparison)."""
-    if topic == "balance_sheet":
+    if task.get("type") == "balance_sheet":
         company = str(task.get("company_name", "")).strip()
-        total = (task.get("balance_sheet_key") or {}).get("total_assets", "")
-        return f"{company} (total assets {total})", _norm(company)
-    questions = [r.get("question", "") if isinstance(r, dict) else str(r) for r in task.get("requirements", [])]
-    text = "; ".join(q for q in questions if q)[:300]
-    return text or str(task.get("task_title", "")), _norm(questions[0] if questions else str(task.get("task_title", "")))
+        total = task["sides"][0]["total"]["cells"][0]["value"]
+        variant = task.get("variant", "")
+        return f"{company} ({variant or 'balance sheet'}, total assets {total:,})", f"{_norm(company)}|{total}"
+    prompts = [q.get("prompt", "") for q in task.get("questions", [])]
+    text = "; ".join(p[:90] for p in prompts)[:400]
+    return text or str(task.get("task_title", "")), _norm(prompts[0] if prompts else str(task.get("task_title", "")))
 
 
 @app.post("/api/generate/pro")

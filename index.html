@@ -40,284 +40,521 @@
 </script>
 <script src="https://cdn.tailwindcss.com/3.4.16"></script>
 <style>
-  :root { color-scheme: dark; }
-  html, body { background: #09090b; }
-  body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Inter, sans-serif; color: #f4f4f5;
-         min-height: 100vh; display: flex; flex-direction: column; overflow-y: auto; }
-  .serif { font-family: "Times New Roman", Times, "Liberation Serif", serif; }
-
-  .glow { position: fixed; inset: 0; z-index: -1; pointer-events: none;
-    background:
-      radial-gradient(600px 400px at 15% 10%, rgba(99,102,241,.22), transparent 70%),
-      radial-gradient(500px 400px at 85% 20%, rgba(236,72,153,.14), transparent 70%),
-      radial-gradient(700px 500px at 50% 100%, rgba(20,184,166,.14), transparent 70%); }
-
-  .glass { position: relative; background: rgba(255,255,255,.05);
-    -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
-    border: 1px solid rgba(255,255,255,.10); border-radius: 20px;
-    box-shadow: 0 8px 32px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.06); }
-  .glass::before { content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px; pointer-events: none;
-    background: linear-gradient(135deg, rgba(255,255,255,.28), rgba(255,255,255,0) 40%, rgba(255,255,255,.10));
-    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-    -webkit-mask-composite: xor; mask-composite: exclude; }
-  .glass-btn { transition: transform .2s ease, background .2s ease, box-shadow .2s ease; cursor: pointer; }
-  .glass-btn:hover:not(:disabled) { background: rgba(255,255,255,.10); transform: translateY(-2px);
-    box-shadow: 0 12px 40px rgba(0,0,0,.5), 0 0 0 1px rgba(255,255,255,.08); }
-  .glass-btn:active:not(:disabled) { transform: translateY(0) scale(.99); }
-  .glass-btn:disabled { opacity: .5; cursor: default; }
-  .pill-active { background: rgba(255,255,255,.92) !important; color: #09090b !important; }
-
-  .field { width: 100%; background: rgba(0,0,0,.40); border: 1px solid rgba(255,255,255,.10);
-    border-radius: 12px; padding: .6rem .85rem; font-size: .9rem; color: #f4f4f5; outline: none; transition: border-color .2s, box-shadow .2s; }
-  .field::placeholder { color: #71717a; }
-  .field:focus { border-color: rgba(129,140,248,.7); box-shadow: 0 0 0 3px rgba(99,102,241,.25); }
-  .field.ok  { border-color: rgba(52,211,153,.7); background: rgba(16,185,129,.12); box-shadow: 0 0 0 3px rgba(16,185,129,.15); }
-  .field.bad { border-color: rgba(251,113,133,.7); background: rgba(244,63,94,.12); box-shadow: 0 0 0 3px rgba(244,63,94,.15); }
-  .num { text-align: right; font-variant-numeric: tabular-nums; }
-
-  .bs-row { display: grid; grid-template-columns: 1fr 9.5rem; gap: .75rem; align-items: center; padding: .55rem 0; }
-  .bs-total { border-top: 1px solid rgba(255,255,255,.18); margin-top: .35rem; padding-top: .9rem; font-weight: 600; }
-  .expected { font-size: .7rem; color: #fda4af; text-align: right; margin-top: 2px; }
-
-  .fade-in { animation: fade .55s ease both; }
-  @keyframes fade { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
-  .spinner { width: 30px; height: 30px; border: 3px solid rgba(255,255,255,.15); border-top-color: #fff;
-    border-radius: 9999px; animation: spin .8s linear infinite; }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .fb-fade { animation: fbfade .25s ease both; }
-  .fb-pop { animation: fbpop .3s cubic-bezier(.2,.8,.2,1) both; }
-  @keyframes fbfade { from { opacity: 0; } to { opacity: 1; } }
-  @keyframes fbpop { from { opacity: 0; transform: translateY(14px) scale(.97); } to { opacity: 1; transform: none; } }
-  /* Fixed top bar: solid-ish blurred backdrop, slides away on scroll down, returns on scroll up */
-  .site-header { position: fixed; top: 0; left: 0; right: 0; z-index: 40;
-    background: rgba(18, 18, 18, 0.85);
-    -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
-    border-bottom: 1px solid rgba(255,255,255,.10);
-    transition: transform 0.3s ease, opacity 0.3s ease; will-change: transform; }
-  .site-header.hdr-hidden { transform: translateY(-100%); opacity: 0; pointer-events: none; }
-  @media (prefers-reduced-motion: reduce) { .site-header { transition: none; } }
+  /* ============ Design tokens ============ */
+  :root {
+    color-scheme: dark;
+    --bg: #09090b;
+    --surface: rgba(255,255,255,.028);
+    --surface-2: rgba(255,255,255,.05);
+    --surface-solid: #101013;
+    --border: rgba(255,255,255,.075);
+    --border-strong: rgba(255,255,255,.14);
+    --text: #f4f4f5;
+    --muted: #a1a1aa;
+    --faint: #71717a;
+    --accent: #8b8cf8;
+    --accent-2: #a78bfa;
+    --ok: #34d399;
+    --bad: #fb7185;
+    --warn: #fbbf24;
+    --nav-w: 252px;
+    --radius: 16px;
+  }
+  * { -webkit-tap-highlight-color: transparent; }
+  html { background: var(--bg); scroll-behavior: smooth; }
+  body {
+    background: var(--bg); color: var(--text); min-height: 100vh; overflow-y: auto;
+    font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, "Segoe UI", system-ui, sans-serif;
+    font-size: 15px; line-height: 1.55; letter-spacing: -.005em;
+    -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
+  }
+  .serif { font-family: "Times New Roman", Times, "Liberation Serif", serif; letter-spacing: -.01em; }
   .hidden { display: none !important; }
+  :focus-visible { outline: 2px solid rgba(139,140,248,.75); outline-offset: 2px; border-radius: 10px; }
+  ::selection { background: rgba(139,140,248,.35); }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,.10); border-radius: 10px; border: 3px solid transparent; background-clip: content-box; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,.18); background-clip: content-box; border: 3px solid transparent; }
+
+  /* ambient background: two very soft light pools, nothing busy */
+  .ambient { position: fixed; inset: 0; z-index: -1; pointer-events: none;
+    background:
+      radial-gradient(900px 520px at 50% -12%, rgba(139,140,248,.11), transparent 70%),
+      radial-gradient(700px 480px at 100% 105%, rgba(167,139,250,.07), transparent 70%); }
+
+  .ico { width: 18px; height: 18px; flex: none; }
+  .eyebrow { font-size: 11px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--faint); }
+
+  /* ============ Surfaces ============ */
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.035), 0 12px 32px -18px rgba(0,0,0,.7); }
+
+  /* ============ Buttons ============ */
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; height: 40px; padding: 0 18px;
+    font-size: 14px; font-weight: 500; border-radius: 12px; border: 1px solid transparent; cursor: pointer; white-space: nowrap;
+    transition: transform .18s ease, background .18s ease, border-color .18s ease, box-shadow .18s ease, color .18s ease, opacity .18s ease; }
+  .btn:active:not(:disabled) { transform: scale(.985); }
+  .btn:disabled { opacity: .5; cursor: default; }
+  .btn-primary { background: #f4f4f5; color: #09090b; box-shadow: 0 1px 0 rgba(255,255,255,.5) inset, 0 8px 20px -10px rgba(255,255,255,.35); }
+  .btn-primary:hover:not(:disabled) { background: #fff; transform: translateY(-1px); box-shadow: 0 1px 0 #fff inset, 0 12px 26px -10px rgba(255,255,255,.45); }
+  .btn-ghost { background: var(--surface); color: var(--text); border-color: var(--border); }
+  .btn-ghost:hover:not(:disabled) { background: var(--surface-2); border-color: var(--border-strong); }
+  .btn-quiet { background: transparent; color: var(--muted); }
+  .btn-quiet:hover:not(:disabled) { color: var(--text); background: var(--surface); }
+  .btn-accent { color: #fff; background: linear-gradient(135deg, #6d70f2, #9b6ff5); box-shadow: 0 1px 0 rgba(255,255,255,.25) inset, 0 12px 28px -10px rgba(124,111,245,.65); }
+  .btn-accent:hover:not(:disabled) { filter: brightness(1.08); transform: translateY(-1px); }
+  .btn-lg { height: 46px; padding: 0 22px; font-size: 15px; border-radius: 14px; }
+  .btn-sm { height: 32px; padding: 0 12px; font-size: 13px; border-radius: 10px; }
+
+  /* ============ Inputs ============ */
+  .field { width: 100%; height: 44px; padding: 0 14px; font: inherit; font-size: 14.5px; color: var(--text);
+    background: rgba(255,255,255,.03); border: 1px solid var(--border); border-radius: 12px; outline: none;
+    transition: border-color .18s, box-shadow .18s, background .18s; }
+  textarea.field { height: auto; padding: 12px 14px; line-height: 1.5; }
+  .field::placeholder { color: var(--faint); }
+  .field:hover { border-color: var(--border-strong); }
+  .field:focus { border-color: rgba(139,140,248,.65); background: rgba(139,140,248,.05); box-shadow: 0 0 0 4px rgba(139,140,248,.14); }
+  .field.ok  { border-color: rgba(52,211,153,.55); background: rgba(52,211,153,.07); box-shadow: 0 0 0 4px rgba(52,211,153,.10); }
+  .field.bad { border-color: rgba(251,113,133,.55); background: rgba(251,113,133,.07); box-shadow: 0 0 0 4px rgba(251,113,133,.10); }
+  .num { text-align: right; font-variant-numeric: tabular-nums; }
+  .field-sm { height: 38px; padding: 0 10px; font-size: 14px; border-radius: 10px; }
+
+  /* dynamic balance sheet: any number of columns, any rows */
+  .sheet-row { display: grid; grid-template-columns: minmax(0, 1fr) repeat(var(--n, 1), 5.6rem); gap: .6rem; align-items: center; padding: .4rem 0; font-size: 14px; color: #d4d4d8; }
+  @media (min-width: 640px) { .sheet-row { grid-template-columns: minmax(0, 1fr) repeat(var(--n, 1), minmax(5.5rem, 8.5rem)); } }
+  .sheet-head { padding: 0 0 .55rem; border-bottom: 1px solid var(--border); }
+  .sheet-col { font-size: 11.5px; color: var(--faint); text-align: right; line-height: 1.2; }
+  .sheet-group { margin: 1rem 0 .1rem; font-size: 12.5px; font-weight: 600; color: var(--muted); }
+  .sheet-label { overflow-wrap: anywhere; }
+  .sheet-sub { font-weight: 600; color: var(--text); border-top: 1px solid var(--border); margin-top: .25rem; padding-top: .6rem; }
+  .sheet-total { font-weight: 700; color: var(--text); border-top: 1px solid var(--border-strong); margin-top: .55rem; padding-top: .75rem; }
+  .cell-given { text-align: right; font-variant-numeric: tabular-nums; color: #e4e4e7; padding-right: 2px; }
+
+  /* ============ Notes / badges ============ */
+  .note { font-size: 13.5px; line-height: 1.5; border-radius: 12px; padding: 10px 14px; border: 1px solid; }
+  .note-ok   { color: #6ee7b7; background: rgba(52,211,153,.08);  border-color: rgba(52,211,153,.22); }
+  .note-bad  { color: #fda4af; background: rgba(251,113,133,.08); border-color: rgba(251,113,133,.22); }
+  .note-info { color: #c4c5fb; background: rgba(139,140,248,.09); border-color: rgba(139,140,248,.24); }
+  .note-warn { color: #fcd34d; background: rgba(251,191,36,.07);  border-color: rgba(251,191,36,.22); }
+  .badge { display: inline-flex; align-items: center; height: 22px; padding: 0 9px; font-size: 11px; font-weight: 600; letter-spacing: .04em; border-radius: 999px; border: 1px solid var(--border); color: var(--muted); background: var(--surface); }
+  .badge-pro { color: #d9d4ff; border-color: rgba(167,139,250,.4); background: linear-gradient(135deg, rgba(109,112,242,.28), rgba(155,111,245,.22)); }
+  .avatar { width: 30px; height: 30px; flex: none; display: inline-grid; place-items: center; border-radius: 999px; font-size: 13px; font-weight: 600; color: #e4e4ff;
+    background: linear-gradient(135deg, rgba(109,112,242,.55), rgba(155,111,245,.4)); border: 1px solid rgba(255,255,255,.14); }
+  .avatar .ico { width: 16px; height: 16px; }
+  .avatar-lg { width: 52px; height: 52px; font-size: 20px; }
+
+  /* ============ Navigation: sidebar on desktop, compact top bar on phones ============ */
+  .site-nav { position: fixed; z-index: 40; top: 0; left: 0; right: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px;
+    padding: 10px 14px 8px; background: rgba(12,12,14,.86); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--border); transition: transform .3s ease, opacity .3s ease; will-change: transform; }
+  .site-nav.hdr-hidden { transform: translateY(-100%); opacity: 0; pointer-events: none; }
+  .nav-brand { flex: 1; min-width: 0; text-align: left; font-size: 19px; color: var(--text); cursor: pointer; background: none; border: 0; padding: 4px 2px; }
+  .nav-list { order: 3; width: 100%; display: flex; flex-direction: row; align-items: center; gap: 6px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
+  .nav-list::-webkit-scrollbar { display: none; }
+  .nav-label, .nav-spacer { display: none; }
+  .nav-item { display: flex; align-items: center; gap: 10px; flex: none; height: 36px; padding: 0 12px; border-radius: 10px; border: 1px solid transparent;
+    font-size: 14px; font-weight: 500; color: var(--muted); background: none; cursor: pointer; white-space: nowrap; position: relative;
+    transition: background .18s, color .18s, border-color .18s; }
+  .nav-item:hover:not(:disabled) { color: var(--text); background: var(--surface); }
+  .nav-item.active { color: var(--text); background: var(--surface-2); border-color: var(--border); }
+  .nav-item:disabled { opacity: .55; cursor: default; }
+  .nav-item.nav-pro { color: #d9d4ff; background: linear-gradient(135deg, rgba(109,112,242,.16), rgba(155,111,245,.10)); border-color: rgba(167,139,250,.25); }
+  .nav-item.nav-pro:hover:not(:disabled) { background: linear-gradient(135deg, rgba(109,112,242,.26), rgba(155,111,245,.18)); }
+  .nav-account { order: 2; display: inline-flex; align-items: center; gap: 9px; max-width: 58%; height: 38px; padding: 0 12px 0 4px; border-radius: 999px; cursor: pointer;
+    color: var(--text); background: var(--surface); border: 1px solid var(--border); transition: background .18s, border-color .18s; font-size: 13.5px; }
+  .nav-account:hover { background: var(--surface-2); border-color: var(--border-strong); }
+  .nav-account .acc-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+  .trainer-main { padding: calc(var(--hdr-h, 96px) + 22px) 18px 72px; }
+  .trainer-col { max-width: 760px; margin: 0 auto; }
+
+  @media (min-width: 1024px) {
+    .site-nav { top: 0; bottom: 0; right: auto; width: var(--nav-w); flex-direction: column; flex-wrap: nowrap; align-items: stretch; gap: 0;
+      padding: 22px 14px 16px; border-bottom: 0; border-right: 1px solid var(--border); background: rgba(12,12,14,.72); overflow-y: auto;
+      transform: none !important; opacity: 1 !important; pointer-events: auto !important; }
+    .nav-brand { flex: none; font-size: 22px; padding: 4px 10px 18px; }
+    .nav-list { order: 0; flex: 1; flex-direction: column; align-items: stretch; gap: 2px; overflow: visible; width: auto; padding: 0; }
+    .nav-label { display: block; padding: 14px 12px 6px; }
+    .nav-spacer { display: block; flex: 1; min-height: 12px; }
+    .nav-item { height: 40px; }
+    .nav-item.active::before { content: ""; position: absolute; left: -14px; top: 10px; bottom: 10px; width: 3px; border-radius: 3px; background: linear-gradient(var(--accent), var(--accent-2)); }
+    .site-nav .nav-account { order: 0; max-width: none; width: 100%; height: 48px; border-radius: 14px; padding: 0 12px 0 8px; margin-top: 10px; }
+    .site-nav .nav-account .acc-name { flex: 1; text-align: left; }
+    .trainer-main { margin-left: var(--nav-w); padding: 56px 44px 96px; }
+  }
+
+  /* ============ Welcome ============ */
+  .feature { position: relative; display: block; width: 100%; text-align: left; padding: 22px; border-radius: 18px; cursor: pointer;
+    background: var(--surface); border: 1px solid var(--border); color: var(--text);
+    transition: transform .22s ease, border-color .22s ease, background .22s ease, box-shadow .22s ease; }
+  .feature:hover { transform: translateY(-3px); background: var(--surface-2); border-color: rgba(139,140,248,.35); box-shadow: 0 22px 44px -22px rgba(0,0,0,.85), 0 0 0 1px rgba(139,140,248,.10); }
+  .feature .tile { width: 40px; height: 40px; display: grid; place-items: center; border-radius: 12px; color: #c4c5fb;
+    background: linear-gradient(135deg, rgba(109,112,242,.22), rgba(155,111,245,.12)); border: 1px solid rgba(139,140,248,.22); }
+  .feature .tile .ico { width: 20px; height: 20px; }
+
+  /* ============ Task ============ */
+  .expected { font-size: 11.5px; color: #fda4af; text-align: right; margin-top: 3px; }
+  .mc-opt { display: flex; align-items: flex-start; gap: 12px; padding: 13px 16px; font-size: 14.5px; border-radius: 12px; cursor: pointer;
+    border: 1px solid var(--border); background: rgba(255,255,255,.02); color: #e4e4e7; transition: border-color .18s, background .18s, color .18s; }
+  .mc-opt:hover { background: var(--surface-2); border-color: var(--border-strong); }
+  .mc-opt:has(input:checked) { border-color: rgba(139,140,248,.6); background: rgba(139,140,248,.09); }
+  .mc-opt input { margin-top: 3px; accent-color: #8b8cf8; }
+  .mc-opt.mc-right { border-color: rgba(52,211,153,.5); background: rgba(52,211,153,.09); color: #6ee7b7; }
+  .mc-opt.mc-wrong { border-color: rgba(251,113,133,.5); background: rgba(251,113,133,.09); color: #fda4af; }
+  .mc-opt.mc-dim   { opacity: .55; }
+  .score-bar { height: 6px; border-radius: 6px; background: rgba(255,255,255,.07); overflow: hidden; }
+  .score-bar > i { display: block; height: 100%; border-radius: 6px; transition: width .6s cubic-bezier(.2,.8,.2,1); }
+
+  /* ============ Modals ============ */
+  .modal { position: fixed; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center; padding: 16px; }
+  .modal-backdrop { position: absolute; inset: 0; background: rgba(3,3,6,.66); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); animation: fbfade .22s ease both; }
+  .modal-card { position: relative; width: 100%; max-width: 440px; max-height: calc(100vh - 32px); overflow-y: auto; padding: 26px;
+    background: linear-gradient(180deg, rgba(22,22,27,.98), rgba(14,14,17,.98)); border: 1px solid var(--border-strong); border-radius: 22px;
+    box-shadow: 0 40px 90px -30px rgba(0,0,0,.9), inset 0 1px 0 rgba(255,255,255,.05); animation: fbpop .3s cubic-bezier(.2,.8,.2,1) both; }
+  .modal-card.wide { max-width: 680px; padding: 0; display: flex; flex-direction: column; overflow: hidden; }
+  .modal-x { position: absolute; top: 14px; right: 14px; width: 32px; height: 32px; display: grid; place-items: center; border-radius: 10px;
+    color: var(--faint); background: none; border: 0; cursor: pointer; transition: background .18s, color .18s; z-index: 2; }
+  .modal-x:hover { color: var(--text); background: var(--surface-2); }
+  .modal-title { font-family: "Times New Roman", Times, serif; font-size: 26px; line-height: 1.2; letter-spacing: -.01em; padding-right: 34px; }
+  .plan-card { border-radius: 16px; padding: 18px; background: linear-gradient(135deg, rgba(109,112,242,.14), rgba(155,111,245,.07)); border: 1px solid rgba(139,140,248,.26); }
+  .check-li { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; color: #d4d4d8; }
+  .check-li .ico { width: 17px; height: 17px; margin-top: 2px; color: #a5a7fb; }
+  .stat { flex: 1; padding: 12px 14px; border-radius: 12px; background: var(--surface); border: 1px solid var(--border); }
+
+  /* ============ Archive ============ */
+  .chip { height: 30px; padding: 0 12px; font-size: 13px; font-weight: 500; border-radius: 999px; color: var(--muted); background: transparent; border: 1px solid var(--border); cursor: pointer; transition: all .18s; }
+  .chip:hover { color: var(--text); border-color: var(--border-strong); }
+  .chip.active { color: #09090b; background: #f4f4f5; border-color: #f4f4f5; }
+  .a-item { border: 1px solid var(--border); border-radius: 14px; background: var(--surface); transition: border-color .18s, background .18s; }
+  .a-item:hover { border-color: var(--border-strong); }
+  .a-item.open { background: var(--surface-2); border-color: var(--border-strong); }
+  .a-head { display: flex; align-items: center; gap: 12px; width: 100%; padding: 13px 14px; text-align: left; background: none; border: 0; color: inherit; cursor: pointer; }
+  .a-type { width: 34px; height: 34px; flex: none; display: grid; place-items: center; border-radius: 10px; color: #c4c5fb; background: rgba(139,140,248,.10); border: 1px solid rgba(139,140,248,.18); }
+  .a-chev { color: var(--faint); transition: transform .2s ease; }
+  .a-item.open .a-chev { transform: rotate(180deg); }
+  .pill { display: inline-flex; align-items: center; height: 24px; padding: 0 10px; border-radius: 999px; font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; border: 1px solid; }
+  .pill-ok   { color: #6ee7b7; background: rgba(52,211,153,.10);  border-color: rgba(52,211,153,.25); }
+  .pill-mid  { color: #fcd34d; background: rgba(251,191,36,.09);  border-color: rgba(251,191,36,.25); }
+  .pill-bad  { color: #fda4af; background: rgba(251,113,133,.10); border-color: rgba(251,113,133,.25); }
+  .rv { padding: 11px 13px; border-radius: 12px; border: 1px solid var(--border); background: rgba(0,0,0,.22); }
+  .rv.ok  { border-color: rgba(52,211,153,.22); }
+  .rv.bad { border-color: rgba(251,113,133,.25); }
+
+  /* ============ Motion ============ */
+  .fade-in { animation: fade .5s cubic-bezier(.2,.8,.2,1) both; }
+  @keyframes fade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  @keyframes fbfade { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes fbpop { from { opacity: 0; transform: translateY(12px) scale(.98); } to { opacity: 1; transform: none; } }
+  .spinner { width: 28px; height: 28px; border: 2.5px solid rgba(255,255,255,.12); border-top-color: var(--accent); border-radius: 999px; animation: spin .8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) { * { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
 </style>
 </head>
 <body>
-<div class="glow"></div>
-
-<div class="flex-1">
+<div class="ambient"></div>
 
 <!-- ============ WELCOME ============ -->
-<section id="welcome" class="relative flex items-center justify-center px-5 py-16 sm:py-24 fade-in">
-  <button type="button" data-auth class="glass-btn glass absolute top-4 right-4 px-4 py-2 text-sm !rounded-xl">Sign in</button>
-  <div class="max-w-2xl w-full text-center">
-    <p class="text-xs tracking-[.3em] uppercase text-zinc-400">Financial Accounting · Practice</p>
-    <h1 class="serif mt-5 text-6xl sm:text-7xl leading-tight font-normal tracking-tight">
-      Accounting <span class="italic">Trainer</span>
-    </h1>
-    <div class="mx-auto mt-6 h-px w-24 bg-gradient-to-r from-transparent via-white/40 to-transparent"></div>
-    <p class="serif mt-6 text-lg sm:text-xl text-zinc-300 leading-relaxed">
-      Made for students who are learning financial accounting, compiling
-      <span class="italic">Balance Sheets</span> and want to sharpen their skills.
-      Fresh tasks every time, with instant feedback.
-    </p>
+<section id="welcome" class="relative min-h-screen flex flex-col fade-in">
+  <div class="flex items-center justify-end gap-2 px-4 sm:px-6 pt-4">
+    <button type="button" data-archive id="welcomeArchive" class="btn btn-ghost btn-sm hidden"><span class="ico" data-icon="archive"></span>Archive</button>
+    <button type="button" data-auth class="nav-account" style="max-width:260px"></button>
+  </div>
 
-    <div class="mt-10 grid sm:grid-cols-2 gap-4">
-      <button data-start="balance_sheet" class="glass glass-btn p-6 text-left">
-        <span class="text-2xl">📒</span>
-        <span class="serif block mt-3 text-xl">Balance Sheet Trainer</span>
-        <span class="block mt-1 text-sm text-zinc-400">Fill in a balance sheet from raw figures.</span>
-      </button>
-      <button data-start="terminology" class="glass glass-btn p-6 text-left">
-        <span class="text-2xl">🎓</span>
-        <span class="serif block mt-3 text-xl">Terminology &amp; Questions</span>
-        <span class="block mt-1 text-sm text-zinc-400">Test the core concepts and definitions.</span>
-      </button>
-      <button data-start="transactions" class="glass glass-btn p-6 text-left sm:col-span-2">
-        <span class="text-2xl">🧾</span>
-        <span class="serif block mt-3 text-xl">Journal Entries</span>
-        <span class="block mt-1 text-sm text-zinc-400">Pick the correct debit and credit for a business transaction.</span>
-      </button>
+  <div class="flex-1 flex items-center justify-center px-5 pb-10">
+    <div class="max-w-3xl w-full text-center">
+      <p class="eyebrow">Financial Accounting · Practice</p>
+      <h1 class="serif mt-5 text-6xl sm:text-7xl leading-[1.05] font-normal">Accounting <span class="italic">Trainer</span></h1>
+      <p class="mt-6 mx-auto max-w-xl text-[17px] leading-relaxed text-zinc-400">
+        Made for students learning financial accounting, compiling balance sheets and sharpening their skills.
+        Fresh tasks every time, with instant feedback.
+      </p>
+
+      <div class="mt-12 grid md:grid-cols-3 gap-3.5 text-left">
+        <button data-start="balance_sheet" class="feature">
+          <span class="tile"><span class="ico" data-icon="table"></span></span>
+          <span class="block mt-4 text-[16px] font-semibold">Balance Sheet</span>
+          <span class="block mt-1 text-sm text-zinc-400">Fill in a balance sheet from raw figures.</span>
+        </button>
+        <button data-start="transactions" class="feature">
+          <span class="tile"><span class="ico" data-icon="receipt"></span></span>
+          <span class="block mt-4 text-[16px] font-semibold">Journal Entries</span>
+          <span class="block mt-1 text-sm text-zinc-400">Pick the right debit and credit.</span>
+        </button>
+        <button data-start="terminology" class="feature">
+          <span class="tile"><span class="ico" data-icon="book"></span></span>
+          <span class="block mt-4 text-[16px] font-semibold">Terminology</span>
+          <span class="block mt-1 text-sm text-zinc-400">Test the core concepts and definitions.</span>
+        </button>
+      </div>
     </div>
   </div>
+
+  <footer class="pb-7 text-center text-xs text-zinc-600">
+    © Accounting Trainer · <button type="button" data-feedback class="underline underline-offset-2 hover:text-zinc-300 transition">Feedback</button>
+  </footer>
 </section>
 
 <!-- ============ TRAINER ============ -->
 <div id="trainer" class="hidden">
-  <header id="siteHeader" class="site-header">
-    <div class="max-w-5xl mx-auto px-4 py-2.5 flex flex-wrap items-center gap-x-3 gap-y-2 justify-between">
-      <button id="backBtn" class="glass-btn glass px-3.5 py-1.5 text-sm !rounded-xl">← Back to Home</button>
-      <nav class="flex flex-wrap gap-2">
-        <button data-topic="balance_sheet" class="mode-btn glass-btn glass px-3.5 py-1.5 text-sm !rounded-xl">Balance Sheet</button>
-        <button data-topic="terminology" class="mode-btn glass-btn glass px-3.5 py-1.5 text-sm !rounded-xl">Terminology</button>
-        <button data-topic="transactions" class="mode-btn glass-btn glass px-3.5 py-1.5 text-sm !rounded-xl">Journal Entries</button>
-        <button type="button" data-feedback class="glass-btn glass px-3.5 py-1.5 text-sm !rounded-xl text-zinc-300">💬 Feedback / Bug</button>
-        <button type="button" data-auth class="glass-btn glass px-3.5 py-1.5 text-sm !rounded-xl">Sign in</button>
-      </nav>
-    </div>
-  </header>
+  <aside id="siteNav" class="site-nav" aria-label="Main navigation">
+    <button type="button" class="nav-brand serif" data-home aria-label="Home">Accounting <span class="italic">Trainer</span></button>
 
-  <main id="trainerMain" class="max-w-3xl mx-auto px-4 pb-8" style="padding-top: calc(var(--hdr-h, 72px) + 1.5rem);">
-    <div id="loading" class="hidden flex flex-col items-center gap-4 py-24 text-zinc-400">
-      <div class="spinner"></div><span class="serif italic">Loading…</span>
-      <span id="slowHint" class="hidden text-xs text-zinc-500">The server is waking up, this can take up to a minute…</span>
-    </div>
+    <nav class="nav-list">
+      <span class="nav-label eyebrow">Practice</span>
+      <button data-topic="balance_sheet" class="nav-item mode-btn"><span class="ico" data-icon="table"></span>Balance Sheet</button>
+      <button data-topic="transactions" class="nav-item mode-btn"><span class="ico" data-icon="receipt"></span>Journal Entries</button>
+      <button data-topic="terminology" class="nav-item mode-btn"><span class="ico" data-icon="book"></span>Terminology</button>
 
-    <div id="error" class="hidden glass p-5 text-sm text-red-300" role="alert">
-      <p id="errorText"></p>
-      <button id="retryBtn" type="button" class="glass-btn glass mt-4 px-4 py-2 text-sm !rounded-xl text-white">Try again</button>
-    </div>
+      <span class="nav-label eyebrow">Library</span>
+      <button type="button" data-archive class="nav-item"><span class="ico" data-icon="archive"></span>Archive</button>
 
-    <section id="task" class="hidden fade-in">
-      <p id="company" class="text-xs tracking-[.2em] uppercase text-zinc-400"></p>
-      <h2 id="title" class="serif mt-2 text-3xl sm:text-4xl leading-tight"></h2>
+      <span class="nav-spacer"></span>
+      <button id="proBtn" type="button" class="hidden nav-item nav-pro"><span class="ico" data-icon="sparkles"></span><span id="proLabel">PRO task</span></button>
+      <button type="button" data-feedback class="nav-item"><span class="ico" data-icon="message"></span>Feedback</button>
+    </nav>
 
-      <div id="description" class="glass mt-6 p-5 text-sm leading-relaxed text-zinc-200 whitespace-pre-wrap"></div>
+    <button type="button" data-auth class="nav-account"></button>
+  </aside>
 
-      <!-- Balance sheet table mode -->
-      <div id="bsBox" class="hidden glass mt-6 p-5 sm:p-6">
-        <div class="flex items-baseline justify-between">
-          <h3 class="serif text-xl">Balance Sheet</h3>
-          <span id="bsUnit" class="text-xs text-zinc-400"></span>
+  <main id="trainerMain" class="trainer-main">
+    <div class="trainer-col">
+      <div id="loading" class="hidden flex flex-col items-center gap-4 py-28 text-zinc-400">
+        <div class="spinner"></div><span class="text-sm">Preparing your task…</span>
+        <span id="slowHint" class="hidden text-xs text-zinc-500">The server is waking up, this can take up to a minute…</span>
+      </div>
+
+      <div id="error" class="hidden card p-6" role="alert">
+        <p id="errorText" class="note note-bad"></p>
+        <button id="retryBtn" type="button" class="btn btn-ghost mt-4">Try again</button>
+      </div>
+
+      <section id="task" class="hidden fade-in">
+        <p id="company" class="eyebrow"></p>
+        <h2 id="title" class="serif mt-2 text-[32px] sm:text-4xl leading-tight"></h2>
+
+        <div id="description" class="card mt-6 p-5 text-[14.5px] leading-relaxed text-zinc-300 whitespace-pre-wrap"></div>
+
+        <!-- Balance sheet: drawn from the task data (any rows, groups, columns) -->
+        <div id="sheetBox" class="hidden mt-5"></div>
+
+        <!-- Test: drawn from the task data (single answer, select all, true/false, numeric) -->
+        <div id="testBox" class="hidden mt-5 space-y-3"></div>
+
+        <p id="hintText" class="hidden note note-warn mt-5"></p>
+        <div id="explain" class="hidden note note-info mt-3"></div>
+
+        <div class="mt-7 flex flex-wrap items-center gap-2.5">
+          <button id="checkBtn" type="button" class="btn btn-primary btn-lg">Check answer</button>
+          <button id="hintBtn" type="button" class="btn btn-ghost btn-lg"><span class="ico" data-icon="bulb"></span>Hint</button>
+          <button id="newBtn" type="button" class="btn btn-quiet btn-lg ml-auto"><span class="ico" data-icon="refresh"></span>New task</button>
         </div>
-        <div class="mt-4 grid sm:grid-cols-2 gap-x-10">
-          <div>
-            <p class="text-xs tracking-[.2em] uppercase text-zinc-400 pb-1 border-b border-white/10">Assets</p>
-            <div class="bs-row"><label for="bs_fixed_assets">Fixed Assets</label><div><input id="bs_fixed_assets" data-key="fixed_assets" class="field num" inputmode="decimal" placeholder="0"></div></div>
-            <div class="bs-row"><label for="bs_current_assets">Current Assets</label><div><input id="bs_current_assets" data-key="current_assets" class="field num" inputmode="decimal" placeholder="0"></div></div>
-            <div class="bs-row bs-total"><label for="bs_total_assets">Total Assets</label><div><input id="bs_total_assets" data-key="total_assets" class="field num" inputmode="decimal" placeholder="0"></div></div>
+
+        <div id="scoreCard" class="hidden card mt-6 p-5">
+          <div class="flex items-center justify-between gap-4">
+            <div>
+              <p class="eyebrow">Result</p>
+              <p id="score" class="serif text-4xl mt-1"></p>
+            </div>
+            <p id="scoreVerdict" class="text-sm text-zinc-400 text-right max-w-[14rem]"></p>
           </div>
-          <div class="mt-6 sm:mt-0">
-            <p class="text-xs tracking-[.2em] uppercase text-zinc-400 pb-1 border-b border-white/10">Equity &amp; Liabilities</p>
-            <div class="bs-row"><label for="bs_equity">Equity</label><div><input id="bs_equity" data-key="equity" class="field num" inputmode="decimal" placeholder="0"></div></div>
-            <div class="bs-row"><label for="bs_liabilities">Liabilities</label><div><input id="bs_liabilities" data-key="liabilities" class="field num" inputmode="decimal" placeholder="0"></div></div>
-            <div class="bs-row bs-total"><label for="bs_total_equity_and_liabilities">Total Equity &amp; Liabilities</label><div><input id="bs_total_equity_and_liabilities" data-key="total_equity_and_liabilities" class="field num" inputmode="decimal" placeholder="0"></div></div>
-          </div>
+          <div class="score-bar mt-4"><i id="scoreFill" style="width:0%"></i></div>
+          <p id="archiveNote" class="mt-3 text-xs text-zinc-500"></p>
         </div>
-      </div>
-
-      <!-- Multiple choice (journal entries) -->
-      <div id="mcBox" class="hidden glass mt-6 p-5">
-        <p id="mcLabel" class="text-sm font-medium text-zinc-100 mb-3">Choose the correct answer:</p>
-        <div id="mcOptions" class="space-y-2" role="radiogroup"></div>
-      </div>
-
-      <!-- Question list mode -->
-      <form id="answers" class="hidden mt-6 space-y-5" autocomplete="off" onsubmit="return false"></form>
-
-      <p id="hintText" class="hidden mt-5 text-sm text-amber-300 bg-amber-400/10 border border-amber-300/20 rounded-xl px-4 py-2.5"></p>
-      <div id="explain" class="hidden mt-5 text-sm text-zinc-200 glass p-4"></div>
-
-      <div class="mt-7 flex flex-wrap gap-3">
-        <button id="hintBtn" type="button" class="glass-btn glass px-5 py-2.5 text-sm !rounded-xl">💡 Hint</button>
-        <button id="checkBtn" type="button" class="glass-btn px-5 py-2.5 text-sm font-medium rounded-xl bg-white text-zinc-900 hover:bg-zinc-200">Check Answer</button>
-        <button id="proBtn" type="button" class="hidden glass-btn px-5 py-2.5 text-sm font-medium rounded-xl text-white border border-indigo-300/40 bg-indigo-400/20 hover:bg-indigo-400/30">✨ Generate PRO task (AI)</button>
-        <button id="newBtn" type="button" class="glass-btn px-4 py-2.5 text-sm text-zinc-400 hover:text-white ml-auto">New task ↻</button>
-      </div>
-      <p id="score" class="hidden serif mt-6 text-2xl"></p>
-    </section>
+      </section>
+    </div>
   </main>
 </div>
 
-</div>
-
-<!-- ============ FOOTER ============ -->
-<footer class="px-4 pb-8 pt-4">
-  <div class="glass max-w-3xl mx-auto px-6 py-7 text-center">
-    <p class="serif text-lg text-zinc-200">If you enjoyed this tool and want to support the project, you can buy me a coffee!</p>
-    <div class="mt-5 flex flex-wrap justify-center gap-3">
-      <a href="https://ko-fi.com/sixzersis" target="_blank" rel="noopener noreferrer"
-         class="glass-btn glass px-5 py-2.5 text-sm !rounded-xl">☕ Buy me a coffee (Ko-fi)</a>
-      <a href="https://www.instagram.com/sixzersis/" target="_blank" rel="noopener noreferrer"
-         class="glass-btn glass px-5 py-2.5 text-sm !rounded-xl">📷 Instagram / Services</a>
-      <button type="button" data-feedback class="glass-btn glass px-5 py-2.5 text-sm !rounded-xl">💬 Feedback / Bug</button>
-    </div>
-  </div>
-</footer>
-
 <!-- ============ UPGRADE MODAL ============ -->
-<div id="upgradeModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="upTitle">
-  <div id="upBackdrop" class="absolute inset-0 bg-black/60 backdrop-blur-sm fb-fade"></div>
-  <div class="glass relative w-full max-w-md p-6 fb-pop" style="background: rgba(24,24,27,.85);">
-    <button type="button" id="upClose" aria-label="Close" class="absolute top-3 right-4 text-2xl leading-none text-zinc-400 hover:text-white">×</button>
-    <p class="text-xs tracking-[.2em] uppercase text-indigo-300">PRO</p>
-    <h3 id="upTitle" class="serif text-3xl mt-1 pr-6">Upgrade to PRO</h3>
-    <ul class="mt-4 space-y-2 text-sm text-zinc-300">
-      <li>✨ Unlimited AI-generated Balance Sheet and Terminology tasks</li>
-      <li>♻️ Tasks never repeat: we remember what you have already solved</li>
-      <li>🎯 Fresh companies, industries and numbers every time</li>
-    </ul>
-    <p id="upStatus" class="hidden mt-4 text-sm rounded-lg px-3 py-2 border"></p>
-    <div class="mt-6 flex flex-col gap-2">
-      <button type="button" id="upSubscribe" class="glass-btn px-5 py-3 text-sm font-medium rounded-xl bg-white text-zinc-900 hover:bg-zinc-200">Subscribe</button>
-      <button type="button" id="upCancel" class="glass-btn px-5 py-2 text-xs text-zinc-400 hover:text-white">Maybe later</button>
+<div id="upgradeModal" class="hidden modal" role="dialog" aria-modal="true" aria-labelledby="upTitle">
+  <div id="upBackdrop" class="modal-backdrop"></div>
+  <div class="modal-card">
+    <button type="button" id="upClose" aria-label="Close" class="modal-x"><span class="ico" data-icon="x"></span></button>
+    <span class="badge badge-pro">PRO</span>
+    <h3 id="upTitle" class="modal-title mt-3">Unlimited AI tasks, never repeated</h3>
+    <p class="mt-2 text-sm text-zinc-400">Practice with brand-new companies and numbers every single time.</p>
+
+    <div class="plan-card mt-5">
+      <div class="flex items-end gap-1.5">
+        <span id="upPrice" class="serif text-5xl leading-none">PRO</span>
+        <span id="upPeriod" class="pb-1 text-sm text-zinc-400"></span>
+      </div>
+      <ul class="mt-4 space-y-2.5">
+        <li class="check-li"><span class="ico" data-icon="check"></span>AI-generated Balance Sheet and Terminology tasks</li>
+        <li class="check-li"><span class="ico" data-icon="check"></span>We remember what you solved: no repeats</li>
+        <li class="check-li"><span class="ico" data-icon="check"></span>Full archive of every task and your answers</li>
+      </ul>
     </div>
-    <p class="mt-3 text-center text-xs text-zinc-500">Secure checkout by Lemon Squeezy. Cancel anytime.</p>
+
+    <p id="upStatus" class="hidden note mt-4"></p>
+    <div class="mt-5 flex flex-col gap-2">
+      <button type="button" id="upSubscribe" class="btn btn-accent btn-lg">Subscribe</button>
+      <button type="button" id="upCancel" class="btn btn-quiet">Maybe later</button>
+    </div>
+    <p class="mt-3 text-center text-xs text-zinc-600">Secure checkout by Lemon Squeezy · Cancel anytime</p>
   </div>
 </div>
 
-<!-- ============ AUTH MODAL ============ -->
-<div id="authModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="authTitle">
-  <div id="authBackdrop" class="absolute inset-0 bg-black/60 backdrop-blur-sm fb-fade"></div>
-  <div class="glass relative w-full max-w-md p-6 fb-pop" style="background: rgba(24,24,27,.85);">
-    <button type="button" id="authClose" aria-label="Close" class="absolute top-3 right-4 text-2xl leading-none text-zinc-400 hover:text-white">×</button>
+<!-- ============ AUTH / ACCOUNT MODAL ============ -->
+<div id="authModal" class="hidden modal" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+  <div id="authBackdrop" class="modal-backdrop"></div>
+  <div class="modal-card">
+    <button type="button" id="authClose" aria-label="Close" class="modal-x"><span class="ico" data-icon="x"></span></button>
 
     <form id="authForm" class="space-y-3" autocomplete="on">
-      <h3 id="authTitle" class="serif text-2xl pr-6">Sign in or create an account</h3>
-      <p class="text-sm text-zinc-400">Enter any username or email and a password. New here? We'll create your account instantly, no email confirmation.</p>
-      <input type="text" name="username" required minlength="3" maxlength="64" autocomplete="username" class="field mt-2" placeholder="Username or email">
+      <h3 id="authTitle" class="modal-title">Sign in or create an account</h3>
+      <p class="text-sm text-zinc-400">Enter your email and a password. New here? We'll create your account and email you a confirmation link.</p>
+      <input type="text" name="username" required minlength="3" maxlength="64" autocomplete="username" class="field mt-2" placeholder="Email">
       <input type="password" name="password" required minlength="6" maxlength="128" autocomplete="current-password" class="field" placeholder="Password (min. 6 characters)">
-      <p id="authStatus" class="hidden text-sm rounded-lg px-3 py-2 border"></p>
-      <div class="flex justify-end gap-3 pt-1">
-        <button type="button" id="authCancel" class="glass-btn glass px-5 py-2.5 text-sm !rounded-xl">Cancel</button>
-        <button type="submit" id="authSubmit" class="glass-btn px-5 py-2.5 text-sm font-medium rounded-xl bg-white text-zinc-900 hover:bg-zinc-200">Continue</button>
+      <div class="flex items-center justify-between text-xs">
+        <button type="button" id="forgotLink" class="text-zinc-500 hover:text-zinc-200 transition">Forgot password?</button>
+        <button type="button" id="authResend" class="hidden text-[#a5a7fb] hover:text-[#c4c5fb] transition">Resend confirmation email</button>
+      </div>
+      <p id="authStatus" class="hidden note"></p>
+      <div class="flex justify-end gap-2.5 pt-1">
+        <button type="button" id="authCancel" class="btn btn-ghost">Cancel</button>
+        <button type="submit" id="authSubmit" class="btn btn-primary">Continue</button>
       </div>
     </form>
 
-    <div id="authAccount" class="hidden space-y-3">
-      <h3 class="serif text-2xl pr-6">Your account</h3>
-      <p class="text-sm text-zinc-300">Signed in as <span id="accName" class="font-medium text-white"></span></p>
-      <p id="accPlan" class="text-sm"></p>
-      <button type="button" id="accUpgrade" class="hidden glass-btn w-full px-5 py-2.5 text-sm font-medium rounded-xl text-white border border-indigo-300/40 bg-indigo-400/20 hover:bg-indigo-400/30">✨ Upgrade to PRO</button>
-      <div id="histBox" class="hidden rounded-xl border border-white/10 bg-black/30 p-3">
-        <p id="histText" class="text-sm text-zinc-300"></p>
-        <p class="mt-1 text-xs text-zinc-500">PRO tasks never repeat. Clear the history if you want the AI to be allowed to create similar tasks again.</p>
-        <button type="button" id="histReset" class="glass-btn glass mt-3 px-4 py-2 text-xs !rounded-xl">Clear solved history</button>
-      </div>
-      <div class="flex justify-end gap-3 pt-1">
-        <button type="button" id="authDone" class="glass-btn glass px-5 py-2.5 text-sm !rounded-xl">Close</button>
-        <button type="button" id="logoutBtn" class="glass-btn px-5 py-2.5 text-sm font-medium rounded-xl bg-white text-zinc-900 hover:bg-zinc-200">Log out</button>
+    <div id="authSent" class="hidden space-y-3">
+      <span class="avatar avatar-lg"><span class="ico" data-icon="mail" style="width:24px;height:24px"></span></span>
+      <h3 class="modal-title">Check your inbox</h3>
+      <p class="text-sm text-zinc-300">We sent a confirmation link to <span id="sentEmail" class="font-medium text-white break-all"></span>. Click it to activate your account, then sign in. The link is valid for 24 hours.</p>
+      <p class="text-xs text-zinc-500">Can't find it? Check your spam folder.</p>
+      <p id="sentStatus" class="hidden note"></p>
+      <div class="flex justify-end gap-2.5 pt-1">
+        <button type="button" id="sentResend" class="btn btn-ghost">Resend email</button>
+        <button type="button" id="sentBack" class="btn btn-primary">Back to sign in</button>
       </div>
     </div>
+
+    <form id="authForgot" class="hidden space-y-3">
+      <h3 class="modal-title">Forgot your password?</h3>
+      <p class="text-sm text-zinc-400">Enter your email and we'll send you a link to choose a new one.</p>
+      <input type="email" name="email" required maxlength="64" autocomplete="email" class="field mt-2" placeholder="Email">
+      <p id="forgotStatus" class="hidden note"></p>
+      <div class="flex justify-end gap-2.5 pt-1">
+        <button type="button" id="forgotBack" class="btn btn-ghost">Back</button>
+        <button type="submit" id="forgotSubmit" class="btn btn-primary">Send reset link</button>
+      </div>
+    </form>
+
+    <form id="authReset" class="hidden space-y-3">
+      <h3 class="modal-title">Choose a new password</h3>
+      <input type="password" name="password" required minlength="6" maxlength="128" autocomplete="new-password" class="field mt-2" placeholder="New password (min. 6 characters)">
+      <input type="password" name="confirm" required minlength="6" maxlength="128" autocomplete="new-password" class="field" placeholder="Repeat the new password">
+      <p id="resetStatus" class="hidden note"></p>
+      <div class="flex justify-end gap-2.5 pt-1">
+        <button type="submit" id="resetSubmit" class="btn btn-primary">Set new password</button>
+      </div>
+    </form>
+
+    <div id="authAccount" class="hidden">
+      <div class="flex items-center gap-3.5 pr-8">
+        <span id="accAvatar" class="avatar avatar-lg"></span>
+        <div class="min-w-0">
+          <p id="accName" class="font-medium truncate"></p>
+          <p class="mt-0.5"><span id="accBadge" class="badge">Free</span></p>
+        </div>
+      </div>
+
+      <div class="mt-5 flex gap-2.5">
+        <div class="stat"><p class="eyebrow">Plan</p><p id="accPlan" class="mt-1 text-sm"></p></div>
+        <div class="stat"><p class="eyebrow">Archive</p><p id="accArchive" class="mt-1 text-sm">…</p></div>
+      </div>
+
+      <button type="button" id="accUpgrade" class="hidden btn btn-accent w-full mt-3"><span class="ico" data-icon="sparkles"></span>Upgrade to PRO</button>
+      <button type="button" id="accOpenArchive" class="btn btn-ghost w-full mt-2"><span class="ico" data-icon="archive"></span>Open archive</button>
+
+      <div id="histBox" class="hidden mt-3 rounded-xl border border-white/[.07] bg-black/25 p-3.5">
+        <p id="histText" class="text-sm text-zinc-300"></p>
+        <p class="mt-1 text-xs text-zinc-500">PRO tasks never repeat. Clear the history if you want the AI to be allowed to create similar tasks again.</p>
+        <button type="button" id="histReset" class="btn btn-ghost btn-sm mt-3">Clear solved history</button>
+      </div>
+
+      <div class="mt-6 flex justify-between gap-2.5">
+        <button type="button" id="logoutBtn" class="btn btn-quiet">Log out</button>
+        <button type="button" id="authDone" class="btn btn-primary">Done</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ ARCHIVE MODAL ============ -->
+<div id="archiveModal" class="hidden modal" role="dialog" aria-modal="true" aria-labelledby="archiveTitle">
+  <div id="archiveBackdrop" class="modal-backdrop"></div>
+  <div class="modal-card wide" style="height: min(760px, calc(100vh - 32px));">
+    <button type="button" id="archiveClose" aria-label="Close" class="modal-x"><span class="ico" data-icon="x"></span></button>
+    <div class="px-6 pt-6 pb-4 border-b border-white/[.07]">
+      <h3 id="archiveTitle" class="modal-title">Archive</h3>
+      <p id="archiveSub" class="mt-1 text-sm text-zinc-400">Your solved tasks, answers and corrections.</p>
+      <div id="archiveChips" class="mt-4 flex flex-wrap gap-2">
+        <button type="button" class="chip active" data-filter="">All</button>
+        <button type="button" class="chip" data-filter="balance_sheet">Balance Sheet</button>
+        <button type="button" class="chip" data-filter="transactions">Journal Entries</button>
+        <button type="button" class="chip" data-filter="terminology">Terminology</button>
+      </div>
+    </div>
+    <div id="archiveBody" class="flex-1 overflow-y-auto px-6 py-4 space-y-2.5"></div>
   </div>
 </div>
 
 <!-- ============ FEEDBACK MODAL ============ -->
-<div id="fbModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="fbTitle">
-  <div id="fbBackdrop" class="absolute inset-0 bg-black/60 backdrop-blur-sm fb-fade"></div>
-  <div class="glass relative w-full max-w-md p-6 fb-pop" style="background: rgba(24,24,27,.85);">
-    <button type="button" id="fbClose" aria-label="Close" class="absolute top-3 right-4 text-2xl leading-none text-zinc-400 hover:text-white">×</button>
-    <h3 id="fbTitle" class="serif text-2xl pr-6">Found a bug or have an idea?</h3>
+<div id="fbModal" class="hidden modal" role="dialog" aria-modal="true" aria-labelledby="fbTitle">
+  <div id="fbBackdrop" class="modal-backdrop"></div>
+  <div class="modal-card">
+    <button type="button" id="fbClose" aria-label="Close" class="modal-x"><span class="ico" data-icon="x"></span></button>
+    <h3 id="fbTitle" class="modal-title">Found a bug or have an idea?</h3>
     <p class="mt-2 text-sm text-zinc-400">Tell us what could be improved or what error you ran into.</p>
 
     <form id="fbForm" action="https://formspree.io/f/mzednkgr" method="POST" class="mt-5 space-y-3">
       <textarea name="message" required rows="5" class="field" style="resize: vertical;" placeholder="Describe the problem or your suggestion..."></textarea>
       <input type="email" name="email" class="field" placeholder="Your email for a reply (optional)">
       <input type="text" name="_gotcha" tabindex="-1" autocomplete="off" class="hidden" aria-hidden="true">
-      <p id="fbStatus" class="hidden text-sm rounded-lg px-3 py-2 border"></p>
-      <div class="flex justify-end gap-3 pt-1">
-        <button type="button" id="fbCancel" class="glass-btn glass px-5 py-2.5 text-sm !rounded-xl">Cancel</button>
-        <button type="submit" id="fbSend" class="glass-btn px-5 py-2.5 text-sm font-medium rounded-xl bg-white text-zinc-900 hover:bg-zinc-200">Send</button>
+      <p id="fbStatus" class="hidden note"></p>
+      <div class="flex justify-end gap-2.5 pt-1">
+        <button type="button" id="fbCancel" class="btn btn-ghost">Cancel</button>
+        <button type="submit" id="fbSend" class="btn btn-primary">Send</button>
       </div>
     </form>
   </div>
 </div>
-
 <script>
 // Same origin when served by FastAPI; fall back to the local backend when opened as a file.
 const API = location.protocol.startsWith("http") ? "" : "http://127.0.0.1:8000";
 const $ = (id) => document.getElementById(id);
-const BS_KEYS = ["fixed_assets", "current_assets", "total_assets", "equity", "liabilities", "total_equity_and_liabilities"];
 let recentIds = [];
-let currentTopic = null, currentPro = false, task = null, hintStep = 0;
+let currentTopic = null, currentPro = false, task = null, hintStep = 0, attemptId = "";
 
+// ---------- icons (inline SVG, injected into [data-icon]) ----------
+const ICONS = {
+  table: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M12 4v16M3 10h18"/>',
+  receipt: '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/>',
+  book: '<path d="M2 4h6a4 4 0 0 1 4 4v12a3 3 0 0 0-3-3H2z"/><path d="M22 4h-6a4 4 0 0 0-4 4v12a3 3 0 0 1 3-3h7z"/>',
+  archive: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  sparkles: '<path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 3v4M17 5h4"/>',
+  message: '<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/>',
+  bulb: '<path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.3 1 2.1h5c0-.8.4-1.6 1-2.1A6 6 0 0 0 12 3z"/>',
+  refresh: '<path d="M20 11a8 8 0 0 0-14.9-3M4 5v4h4"/><path d="M4 13a8 8 0 0 0 14.9 3M20 19v-4h-4"/>',
+  x: '<path d="M6 6l12 12M18 6L6 18"/>',
+  check: '<path d="M5 12l5 5 9-10"/>',
+  chevron: '<path d="M6 9l6 6 6-6"/>',
+  trash: '<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>',
+  user: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+  mail: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>',
+  lock: '<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
+};
+const svg = (name) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" width="100%" height="100%">${ICONS[name] || ""}</svg>`;
+const setIcon = (el, name) => { el.innerHTML = svg(name); };
+document.querySelectorAll("[data-icon]").forEach((el) => setIcon(el, el.dataset.icon));
+function el(tag, cls, text) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (text !== undefined) e.textContent = text;
+  return e;
+}
+
+// ---------- views ----------
 function view(name) {               // "welcome" | "trainer"
   showHeader(); lastY = 0;
   const show = $(name), hide = $(name === "welcome" ? "trainer" : "welcome");
@@ -326,7 +563,7 @@ function view(name) {               // "welcome" | "trainer"
   void show.offsetWidth;
   show.classList.add("fade-in");
   window.scrollTo(0, 0);
-  if (name === "trainer") syncHeaderHeight();
+  if (name === "trainer") syncNavHeight();
 }
 
 function panel(which) {             // "loading" | "error" | "task"
@@ -334,23 +571,11 @@ function panel(which) {             // "loading" | "error" | "task"
 }
 
 function setActive(topic) {
-  document.querySelectorAll(".mode-btn").forEach((b) => b.classList.toggle("pill-active", b.dataset.topic === topic));
+  document.querySelectorAll(".mode-btn").forEach((b) => b.classList.toggle("active", b.dataset.topic === topic));
 }
 
 function setBusy(busy) {
   document.querySelectorAll(".mode-btn, #newBtn, #checkBtn, #hintBtn, #proBtn").forEach((b) => (b.disabled = busy));
-}
-
-// Question-mode data: {question, hint} / {answer, explanation}; accept plain strings and objects too.
-function normalize(data) {
-  const reqs = (data.requirements || []).map((r) =>
-    typeof r === "string" ? { question: r, hint: "" } : { question: r.question || r.text || "", hint: r.hint || "" });
-  let key = data.solution_key || [];
-  if (!Array.isArray(key)) key = Object.entries(key).map(([k, v]) => ({ answer: String(v), explanation: k }));
-  key = key.map((k) =>
-    typeof k === "object" && k !== null ? { answer: String(k.answer ?? ""), explanation: k.explanation || "" }
-                                         : { answer: String(k), explanation: "" });
-  return { ...data, requirements: reqs, solution_key: key };
 }
 
 const LOAD_TIMEOUT_MS = 70000;   // a sleeping free-tier server + a Claude call can take a while
@@ -393,8 +618,10 @@ async function load(topic, pro = false) {
       try { msg = (await res.json()).detail || msg; } catch {}
       throw new Error(typeof msg === "string" ? msg : "Request failed");
     }
-    task = normalize(await res.json());
-    if (task.id) { recentIds.push(task.id); recentIds = recentIds.slice(-8); }   // do not repeat pool tasks right away
+    task = await res.json();
+    if (task.type !== "balance_sheet" && task.type !== "test") throw new Error("This task has an unsupported format.");
+    (task.ids || (task.id ? [task.id] : [])).forEach((id) => recentIds.push(id));   // do not repeat pool tasks right away
+    recentIds = recentIds.slice(-12);
     render();
   } catch (e) {
     $("errorText").textContent = friendlyError(e, status);
@@ -406,206 +633,315 @@ async function load(topic, pro = false) {
   }
 }
 
-const isMC = () => task && Array.isArray(task.options) && task.options.length > 1;
-const isBS = () => task && task.balance_sheet_key && typeof task.balance_sheet_key === "object";
+const isSheet = () => task && task.type === "balance_sheet";
+const isTest = () => task && task.type === "test";
+const newAttemptId = () => (window.crypto && crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2, 12));
+let sheetCells = [], testItems = [];
 
 function render() {
   hintStep = 0;
+  attemptId = newAttemptId();          // one archive record per task shown; re-checking updates it
   $("company").textContent = task.company_name || "";
   $("title").textContent = task.task_title || "Task";
   $("description").textContent = task.description || "";
-  for (const id of ["score", "hintText", "explain"]) { $(id).classList.add("hidden"); $(id).textContent = ""; }
+  $("description").classList.toggle("hidden", !task.description);
+  for (const id of ["hintText", "explain"]) { $(id).classList.add("hidden"); $(id).textContent = ""; }
+  $("scoreCard").classList.add("hidden");
+  $("archiveNote").textContent = "";
 
-  $("bsBox").classList.toggle("hidden", !isBS());
-  $("mcBox").classList.toggle("hidden", !isMC());
-  $("answers").classList.toggle("hidden", isBS() || isMC());
-
-  $("hintBtn").classList.toggle("hidden", isMC() && !task.hint);   // pool questions without a hint: no empty hint button
-  if (isMC()) {
-    $("mcLabel").textContent = task.choose_label || "Choose the correct answer:";
-    const box = $("mcOptions");
-    box.innerHTML = "";
-    task.options.forEach((opt, i) => {
-      const lab = document.createElement("label");
-      lab.className = "mc-opt flex items-start gap-3 rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm cursor-pointer hover:bg-white/5 transition";
-      lab.innerHTML = '<input type="radio" name="mc" class="mt-1 accent-indigo-400"><span></span>';
-      lab.querySelector("input").value = opt;
-      lab.querySelector("span").textContent = opt;
-      box.appendChild(lab);
-    });
-  } else if (isBS()) {
-    $("bsUnit").textContent = task.unit ? "Amounts in " + task.unit : "";
-    document.querySelectorAll("#bsBox input").forEach((inp) => {
-      inp.value = "";
-      inp.className = "field num";
-      const old = inp.parentElement.querySelector(".expected");
-      if (old) old.remove();
-    });
-  } else {
-    const form = $("answers");
-    form.innerHTML = "";
-    task.requirements.forEach((r, i) => {
-      const wrap = document.createElement("div");
-      wrap.className = "glass p-4";
-      wrap.innerHTML = `
-        <label class="block text-sm font-medium mb-2 text-zinc-100"></label>
-        <input type="text" class="field" placeholder="Your answer">
-        <p class="hint hidden mt-2 text-xs text-amber-300 bg-amber-400/10 border border-amber-300/20 rounded-lg px-3 py-1.5"></p>
-        <div class="feedback hidden mt-2 text-sm rounded-lg px-3 py-2 border"></div>`;
-      wrap.querySelector("label").textContent = `${i + 1}. ${r.question}`;
-      wrap.querySelector(".hint").textContent = "Hint: " + (r.hint || "no hint available");
-      form.appendChild(wrap);
-    });
-  }
+  $("sheetBox").classList.toggle("hidden", !isSheet());
+  $("testBox").classList.toggle("hidden", !isTest());
+  $("hintBtn").classList.toggle("hidden", isTest() && !task.hint);   // tests without a hint: no empty hint button
+  isSheet() ? renderSheet() : renderTest();
   panel("task");
 }
 
 // --- comparison helpers ---
 function parseAmount(s) {
-  let t = String(s).replace(/[\s ]/g, "").replace(/[A-Za-z]/g, "");
+  let t = String(s).replace(/[\s ]/g, "").replace(/[A-Za-z$€£]/g, "");
   if (/^-?\d{1,3}(\.\d{3})+$/.test(t)) t = t.replace(/\./g, "");   // 1.250.000
   t = t.replace(/,/g, "");                                          // 1,250
   return /^-?\d+(\.\d+)?$/.test(t) ? parseFloat(t) : null;
 }
 const fmt = (n) => Number(n).toLocaleString("en-US");
 
-const num = (s) => {
-  const m = String(s).replace(/\s/g, "").replace(/,/g, ".").match(/-?\d+(\.\d+)?/);
-  return m ? parseFloat(m[0]) : null;
-};
-const words = (s) => String(s).toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, " ").split(/\s+/).filter((w) => w.length > 2);
-
-function isCorrect(user, expected) {
-  if (!user.trim()) return false;
-  const a = num(user), b = num(expected);
-  if (a !== null && b !== null && /^[\s\-\d.,%a-zA-Z]*$/.test(String(expected)) && words(expected).length <= 2) {
-    return Math.abs(a - b) <= Math.max(0.005 * Math.abs(b), 0.01);
-  }
-  const exp = new Set(words(expected)), got = new Set(words(user));
-  if (!exp.size) return user.trim().toLowerCase() === String(expected).trim().toLowerCase();
-  let hit = 0;
-  exp.forEach((w) => got.has(w) && hit++);
-  return hit / exp.size >= 0.6;
+// ================= balance sheet: dynamic table =================
+function renderSheet() {
+  const box = $("sheetBox");
+  box.replaceChildren();
+  sheetCells = [];
+  const ncol = task.columns.length;
+  const card = el("div", "card p-5 sm:p-6");
+  card.style.setProperty("--n", ncol);
+  const head = el("div", "flex items-baseline justify-between gap-3");
+  head.append(el("h3", "text-[15px] font-semibold", "Balance Sheet"), el("span", "text-xs text-zinc-500", task.unit ? "Amounts in " + task.unit : ""));
+  const grid = el("div", "mt-4 " + (task.layout === "two_sided" ? "grid md:grid-cols-2 gap-x-10 gap-y-8" : "space-y-8"));
+  task.sides.forEach((side) => grid.append(sideEl(side, ncol)));
+  card.append(head, grid);
+  // Enter moves to the next empty cell, like in a spreadsheet
+  card.addEventListener("keydown", (e) => {
+    if (e.key !== "Enter" || !e.target.matches("input")) return;
+    e.preventDefault();
+    const inputs = sheetCells.map((c) => c.input);
+    const next = inputs[inputs.indexOf(e.target) + 1];
+    next ? next.focus() : $("checkBtn").focus();
+  });
+  box.append(card);
 }
 
-function checkBalanceSheet() {
-  let ok = 0;
-  document.querySelectorAll("#bsBox input").forEach((inp) => {
-    const expected = Number(task.balance_sheet_key[inp.dataset.key]);
-    const got = parseAmount(inp.value);
-    const good = got !== null && Math.abs(got - expected) <= 0.5;
-    if (good) ok++;
-    inp.className = "field num " + (good ? "ok" : "bad");
-    let hint = inp.parentElement.querySelector(".expected");
-    if (hint) hint.remove();
-    if (!good) {
-      hint = document.createElement("div");
-      hint.className = "expected";
-      hint.textContent = "Correct: " + fmt(expected);
-      inp.parentElement.appendChild(hint);
-    }
+function sideEl(side, ncol) {
+  const wrap = el("div");
+  const head = el("div", "sheet-row sheet-head");
+  head.append(el("span", "eyebrow", side.title));
+  if (ncol > 1) task.columns.forEach((c) => head.append(el("span", "sheet-col", c)));
+  wrap.append(head);
+  side.groups.forEach((g) => {
+    if (g.title) wrap.append(el("p", "sheet-group", g.title));
+    g.rows.forEach((r) => wrap.append(rowEl(r.label, r.cells, "item")));
+    if (g.subtotal) wrap.append(rowEl(g.subtotal.label, g.subtotal.cells, "sub"));
   });
-  if (task.explanation) {
-    $("explain").textContent = task.explanation;
+  wrap.append(rowEl(side.total.label, side.total.cells, "total"));
+  return wrap;
+}
+
+function rowEl(label, cells, kind) {
+  const row = el("div", "sheet-row" + (kind === "sub" ? " sheet-sub" : kind === "total" ? " sheet-total" : ""));
+  row.append(el("span", "sheet-label", label));
+  cells.forEach((cell, i) => row.append(cellEl(cell, label, i)));
+  return row;
+}
+
+function cellEl(cell, label, i) {
+  if (!cell.blank) return el("span", "cell-given num", fmt(cell.value));       // shown to the student
+  const colName = task.columns.length > 1 ? task.columns[i] : "";
+  const wrap = el("div");
+  const input = el("input", "field field-sm num");
+  input.type = "text"; input.inputMode = "decimal"; input.autocomplete = "off"; input.placeholder = "?";
+  input.setAttribute("aria-label", label + (colName ? " (" + colName + ")" : ""));
+  wrap.append(input);
+  sheetCells.push({ input, wrap, expected: cell.value, label: label + (colName ? " · " + colName : "") });
+  return wrap;
+}
+
+// Each check returns { ok, total, review: [{label, yours, expected, correct, note}], explanation, answered }
+function checkSheet() {
+  let ok = 0, answered = false;
+  const review = [];
+  sheetCells.forEach((c) => {
+    const got = parseAmount(c.input.value);
+    const good = got !== null && Math.abs(got - c.expected) <= 0.5;
+    if (good) ok++;
+    if (c.input.value.trim()) answered = true;
+    c.input.className = "field field-sm num " + (good ? "ok" : "bad");
+    const old = c.wrap.querySelector(".expected");
+    if (old) old.remove();
+    if (!good) c.wrap.append(el("div", "expected", "Correct: " + fmt(c.expected)));
+    review.push({ label: c.label, yours: c.input.value.trim(), expected: fmt(c.expected), correct: good, note: "" });
+  });
+  const explanation = task.explanation || "";
+  if (explanation) {
+    $("explain").textContent = explanation;
     $("explain").classList.remove("hidden");
   }
-  return [ok, BS_KEYS.length];
+  return { ok, total: sheetCells.length, review, explanation, answered };
 }
 
-function checkChoice() {
-  const labels = [...document.querySelectorAll("#mcOptions .mc-opt")];
-  const chosen = labels.find((l) => l.querySelector("input").checked);
-  let good = false;
-  labels.forEach((l) => {
-    const isRight = l.querySelector("input").value === task.correct_answer;
-    const isChosen = l === chosen;
-    l.className = "mc-opt flex items-start gap-3 rounded-xl border px-4 py-3 text-sm transition " +
-      (isRight ? "border-emerald-300/40 bg-emerald-400/10 text-emerald-300"
-        : isChosen ? "border-rose-300/40 bg-rose-400/10 text-rose-300"
-        : "border-white/10 bg-black/30 text-zinc-400");
-    if (isRight && isChosen) good = true;
+// ================= tests: single answer, select all, true/false, numeric =================
+const KIND_NOTE = { multi: "Select all that apply", tf: "True or false", numeric: "Numeric answer" };
+
+function renderTest() {
+  const box = $("testBox");
+  box.replaceChildren();
+  testItems = [];
+  task.questions.forEach((q, i) => {
+    const card = el("div", "card p-5");
+    const top = el("div", "flex items-center justify-between gap-3");
+    top.append(el("span", "eyebrow", `Question ${i + 1} of ${task.questions.length}`));
+    if (KIND_NOTE[q.kind]) top.append(el("span", "badge", KIND_NOTE[q.kind]));
+    card.append(top, el("p", "mt-2 text-[15px] leading-relaxed text-zinc-100", q.prompt));
+    const item = { q, card, inputs: [], labels: [], note: el("p", "hidden note mt-3") };
+    if (q.kind === "numeric") {
+      const row = el("div", "mt-3 flex items-center gap-3");
+      const input = el("input", "field num");
+      input.type = "text"; input.inputMode = "decimal"; input.autocomplete = "off"; input.placeholder = "Your answer"; input.style.maxWidth = "12rem";
+      input.setAttribute("aria-label", "Answer to question " + (i + 1));
+      row.append(input);
+      if (q.unit) row.append(el("span", "text-sm text-zinc-500", q.unit));
+      card.append(row);
+      item.inputs = [input];
+    } else {
+      const opts = el("div", "mt-3 space-y-2");
+      (q.kind === "tf" ? ["True", "False"] : q.options).forEach((text, k) => {
+        const lab = el("label", "mc-opt");
+        const input = document.createElement("input");
+        input.type = q.kind === "multi" ? "checkbox" : "radio";
+        input.name = "q" + i; input.value = String(k);
+        lab.append(input, el("span", "", text));
+        opts.append(lab);
+        item.inputs.push(input);
+        item.labels.push(lab);
+      });
+      card.append(opts);
+    }
+    card.append(item.note);
+    box.append(card);
+    testItems.push(item);
   });
-  const ex = $("explain");
-  ex.textContent = chosen ? (good ? "Correct!" : "Not quite. The correct answer is highlighted in green.")
-                          : "Pick an option first. The correct answer is highlighted in green.";
-  ex.classList.remove("hidden");
-  return [good ? 1 : 0, 1];
 }
 
-function checkQuestions() {
-  const blocks = $("answers").children;
-  let ok = 0;
-  task.requirements.forEach((_, i) => {
-    const key = task.solution_key[i] || { answer: "—", explanation: "" };
-    const good = isCorrect(blocks[i].querySelector("input").value, key.answer);
-    if (good) ok++;
-    const fb = blocks[i].querySelector(".feedback");
-    fb.className = "feedback mt-2 text-sm rounded-lg px-3 py-2 border " +
-      (good ? "bg-emerald-400/10 border-emerald-300/20 text-emerald-300"
-            : "bg-rose-400/10 border-rose-300/20 text-rose-300");
-    fb.textContent = (good ? "✓ Correct. " : "✗ Expected: " + key.answer + ". ") + key.explanation;
+function gradeItem(it) {
+  const q = it.q;
+  let correct = false, yours = "", expected = "", answered = false;
+  if (q.kind === "numeric") {
+    const raw = it.inputs[0].value.trim(), got = parseAmount(raw);
+    answered = raw !== "";
+    const tol = Math.max(q.tolerance || 0, Math.abs(q.correct) < 10 ? 0.005 : 0.5);
+    correct = got !== null && Math.abs(got - q.correct) <= tol;
+    yours = raw;
+    expected = fmt(q.correct) + (q.unit ? " " + q.unit : "");
+    it.inputs[0].className = "field num " + (correct ? "ok" : "bad");
+  } else {
+    const options = q.kind === "tf" ? ["True", "False"] : q.options;
+    const right = q.kind === "multi" ? q.correct : [q.kind === "tf" ? (q.correct ? 0 : 1) : q.correct];
+    const chosen = it.inputs.map((inp, k) => (inp.checked ? k : -1)).filter((k) => k >= 0);
+    answered = chosen.length > 0;
+    correct = chosen.length === right.length && right.every((k) => chosen.includes(k));
+    yours = chosen.map((k) => options[k]).join("; ");
+    expected = right.map((k) => options[k]).join("; ");
+    it.labels.forEach((lab, k) => {
+      lab.className = "mc-opt " + (right.includes(k) ? "mc-right" : chosen.includes(k) ? "mc-wrong" : "mc-dim");
+    });
+  }
+  it.note.className = "note mt-3 " + (correct ? "note-ok" : "note-bad");
+  it.note.textContent = (correct ? "Correct. " : answered ? "Not quite. " : "No answer given. ") + (q.explanation || "");
+  if (q.kind === "numeric") {
+    const old = it.card.querySelector(".expected");
+    if (old) old.remove();
+    if (!correct) it.inputs[0].parentElement.after(el("div", "expected", "Correct: " + expected));
+  }
+  return { correct, yours, expected, answered };
+}
+
+function checkTest() {
+  let ok = 0, answered = false;
+  const review = testItems.map((it, i) => {
+    const g = gradeItem(it);
+    if (g.correct) ok++;
+    if (g.answered) answered = true;
+    return { label: `Q${i + 1}. ${it.q.prompt}`.slice(0, 300), yours: g.yours, expected: g.expected, correct: g.correct, note: it.q.explanation || "" };
   });
-  return [ok, task.requirements.length];
+  return { ok, total: testItems.length, review, explanation: "", answered };
+}
+
+// ---------- result card + archive saving ----------
+const clip = (s, n) => String(s ?? "").slice(0, n);
+
+function showResult(res) {
+  const ratio = res.total ? res.ok / res.total : 0;
+  $("score").innerHTML = `${res.ok}<span class="text-zinc-600"> / ${res.total}</span>`;
+  $("scoreVerdict").textContent = ratio === 1 ? "Perfect. Everything matches."
+    : ratio >= 0.8 ? "Great work. Just a detail or two to review."
+    : ratio >= 0.5 ? "Good progress. Review the highlighted answers."
+    : "Keep practicing. The correct answers are shown above.";
+  const fill = $("scoreFill");
+  fill.style.background = ratio >= 0.8 ? "var(--ok)" : ratio >= 0.5 ? "var(--warn)" : "var(--bad)";
+  fill.style.width = "0%";
+  $("scoreCard").classList.remove("hidden");
+  requestAnimationFrame(() => (fill.style.width = Math.round(ratio * 100) + "%"));
+}
+
+async function saveToArchive(res) {
+  const note = $("archiveNote");
+  if (!res.answered) { note.textContent = ""; return; }            // nothing was answered: nothing to archive
+  if (!session) {
+    note.replaceChildren("Results are not saved. ");
+    const b = el("button", "underline underline-offset-2 hover:text-zinc-300 transition", "Sign in to keep an archive");
+    b.type = "button"; b.onclick = openAuth;
+    note.append(b);
+    return;
+  }
+  try {
+    const r = await fetch(API + "/api/archive", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...authHeader() },
+      body: JSON.stringify({
+        attempt_id: attemptId,
+        topic: currentTopic,
+        source: currentPro ? "pro" : "free",
+        title: clip(task.task_title, 200),
+        company: clip(task.company_name, 200),
+        condition: clip(task.description, 6000),
+        explanation: clip(res.explanation, 2000),
+        review: res.review.slice(0, 30).map((x) => ({ label: clip(x.label, 300), yours: clip(x.yours, 500), expected: clip(x.expected, 500), correct: !!x.correct, note: clip(x.note, 600) })),
+        score: res.ok,
+        total: res.total,
+      }),
+    });
+    if (r.status === 401) { setSession(null); renderAuth(); note.textContent = "Your session expired. Sign in to save results."; return; }
+    note.textContent = r.ok ? "Saved to your archive ✓" : "Could not save this result to your archive.";
+  } catch {
+    note.textContent = "Could not save this result (connection problem).";
+  }
 }
 
 $("checkBtn").onclick = () => {
   if (!task) return;
-  const [ok, total] = isMC() ? checkChoice() : isBS() ? checkBalanceSheet() : checkQuestions();
-  const s = $("score");
-  s.innerHTML = `Score: <span class="italic">${ok} / ${total}</span>`;
-  s.classList.remove("hidden");
+  const res = isSheet() ? checkSheet() : checkTest();
+  showResult(res);
+  saveToArchive(res);
 };
 
 $("hintBtn").onclick = () => {
   if (!task) return;
-  if (isBS() || isMC()) {
-    const h = $("hintText");
-    h.textContent = "Hint: " + (task.hint || "Classify every item as fixed asset, current asset, equity or liability, then add them up.");
-    h.classList.remove("hidden");
-  } else {   // reveal question hints one by one, top to bottom
-    const next = document.querySelector("#answers .hint.hidden");
-    if (next) next.classList.remove("hidden");
-  }
+  const text = task.hint || (isSheet() ? "Assets = Equity + Liabilities. Work from the subtotals you are given." : "");
+  if (!text) return;
+  const h = $("hintText");
+  h.textContent = "Hint: " + text;
+  h.classList.remove("hidden");
 };
 
-// --- header: hide on scroll down, show on scroll up / at the top ---
-const siteHeader = $("siteHeader");
+// --- navigation: fixed sidebar on desktop; on phones the top bar hides on scroll down and returns on scroll up ---
+const siteNav = $("siteNav");
+const mobileMq = window.matchMedia("(max-width: 1023px)");
 let lastY = window.scrollY;
 
-function syncHeaderHeight() {
-  // reserve exactly the header's height above the task so the first lines are never covered
-  const h = siteHeader.offsetHeight;
+function syncNavHeight() {
+  // reserve exactly the top bar's height above the task so the first lines are never covered
+  if (!mobileMq.matches) return;
+  const h = siteNav.offsetHeight;
   if (h) document.documentElement.style.setProperty("--hdr-h", h + "px");
 }
-const showHeader = () => siteHeader.classList.remove("hdr-hidden");
-const hideHeader = () => siteHeader.classList.add("hdr-hidden");
+const showHeader = () => siteNav.classList.remove("hdr-hidden");
+const hideHeader = () => siteNav.classList.add("hdr-hidden");
 
 function onScroll() {
+  if (!mobileMq.matches) { showHeader(); return; }
   const y = Math.max(window.scrollY, 0);
   const delta = y - lastY;
   if (y <= 0) showHeader();
-  else if (Math.abs(delta) > 6) {                         // ignore tiny jitters
-    if (delta > 0 && y > siteHeader.offsetHeight) hideHeader();   // scrolling down
-    else if (delta < 0) showHeader();                              // scrolling up
+  else if (Math.abs(delta) > 6) {                              // ignore tiny jitters
+    if (delta > 0 && y > siteNav.offsetHeight) hideHeader();   // scrolling down
+    else if (delta < 0) showHeader();                          // scrolling up
   }
   lastY = y;
 }
 window.addEventListener("scroll", onScroll, { passive: true });
-siteHeader.addEventListener("focusin", showHeader);       // keyboard users never lose the bar
-window.addEventListener("resize", syncHeaderHeight);
-if ("ResizeObserver" in window) new ResizeObserver(syncHeaderHeight).observe(siteHeader);
-syncHeaderHeight();
+siteNav.addEventListener("focusin", showHeader);               // keyboard users never lose the bar
+window.addEventListener("resize", () => { showHeader(); syncNavHeight(); });
+if ("ResizeObserver" in window) new ResizeObserver(syncNavHeight).observe(siteNav);
+syncNavHeight();
+
+// --- shared modal helpers ---
+function setBox(elm, text, ok) {
+  elm.textContent = text;
+  elm.className = "note " + (ok ? "note-ok" : "note-bad");
+}
 
 // --- feedback modal (Formspree) ---
 const fbModal = $("fbModal"), fbForm = $("fbForm"), fbStatus = $("fbStatus");
 let fbTimer = null;
 
-function fbMessage(text, ok) {
-  fbStatus.textContent = text;
-  fbStatus.className = "text-sm rounded-lg px-3 py-2 border " +
-    (ok ? "bg-emerald-400/10 border-emerald-300/20 text-emerald-300"
-        : "bg-rose-400/10 border-rose-300/20 text-rose-300");
-}
+const fbMessage = (text, ok) => setBox(fbStatus, text, ok);
 function openFeedback() {
   clearTimeout(fbTimer);
   fbStatus.classList.add("hidden");
@@ -642,7 +978,7 @@ fbForm.addEventListener("submit", async (e) => {
 });
 
 // --- auth (token in localStorage) ---
-let session = null;   // {token, username, is_pro}
+let session = null;   // {token, username, is_pro, pro_expires_at}
 try { session = JSON.parse(localStorage.getItem("session") || "null"); } catch {}
 
 function setSession(s) {
@@ -653,40 +989,62 @@ const authHeader = () => (session ? { Authorization: "Bearer " + session.token }
 
 function renderAuth() {
   document.querySelectorAll("[data-auth]").forEach((b) => {
-    b.textContent = session ? "👤 " + session.username + (session.is_pro ? " · PRO" : "") : "Sign in";
+    const avatar = el("span", "avatar");
+    if (session) avatar.textContent = (session.username[0] || "?").toUpperCase(); else setIcon(avatar, "user");
+    b.replaceChildren(avatar, el("span", "acc-name", session ? session.username : "Sign in"));
+    if (session && session.is_pro) b.append(el("span", "badge badge-pro", "PRO"));
   });
-  // PRO button only for signed-in users; free accounts see it locked
+  $("welcomeArchive").classList.toggle("hidden", !session);
+  // the PRO entry is only for signed-in users; free accounts see it locked
   const pb = $("proBtn");
   pb.classList.toggle("hidden", !session);
-  pb.textContent = session && !session.is_pro ? "🔒 PRO task (AI)" : "✨ Generate PRO task (AI)";
+  setIcon(pb.querySelector(".ico"), session && !session.is_pro ? "lock" : "sparkles");
+  $("proLabel").textContent = session && !session.is_pro ? "PRO task (locked)" : "PRO task";
 }
 
 const authModal = $("authModal"), authForm = $("authForm"), authStatus = $("authStatus");
+const authMessage = (text, ok) => setBox(authStatus, text, ok);
 
-function authMessage(text, ok) {
-  authStatus.textContent = text;
-  authStatus.className = "text-sm rounded-lg px-3 py-2 border " +
-    (ok ? "bg-emerald-400/10 border-emerald-300/20 text-emerald-300"
-        : "bg-rose-400/10 border-rose-300/20 text-rose-300");
+// the auth modal shows one panel at a time
+const AUTH_PANELS = ["authForm", "authSent", "authForgot", "authReset", "authAccount"];
+function showPanel(name) {
+  AUTH_PANELS.forEach((id) => $(id).classList.toggle("hidden", id !== name));
+  authModal.classList.remove("hidden");
 }
+const EMAIL_RX = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+let pendingEmail = "", resetToken = "";
 const dateOnly = (iso) => { const d = new Date(iso); return isNaN(d) ? "" : d.toISOString().slice(0, 10); };   // UTC date, YYYY-MM-DD
 
 function openAuth() {
+  closeArchive();
   authStatus.classList.add("hidden");
-  authForm.classList.toggle("hidden", !!session);
-  $("authAccount").classList.toggle("hidden", !session);
+  $("authResend").classList.add("hidden");
+  showPanel(session ? "authAccount" : "authForm");
   if (session) {
     $("accName").textContent = session.username;
+    $("accAvatar").textContent = (session.username[0] || "?").toUpperCase();
+    const badge = $("accBadge");
+    badge.textContent = session.is_pro ? "PRO" : "Free";
+    badge.className = "badge" + (session.is_pro ? " badge-pro" : "");
     $("accPlan").textContent = session.is_pro
-      ? (session.pro_expires_at ? "PRO active until " + dateOnly(session.pro_expires_at) + " ✨" : "PRO active ✨")
-      : "Plan: Free. Upgrade to PRO for unique AI tasks that never repeat.";
-    $("accPlan").className = "text-sm " + (session.is_pro ? "text-indigo-200" : "text-zinc-400");
+      ? (session.pro_expires_at ? "PRO active until " + dateOnly(session.pro_expires_at) : "PRO active")
+      : "Free plan";
     $("accUpgrade").classList.toggle("hidden", session.is_pro);
+    refreshArchiveCount();
   }
   $("histBox").classList.toggle("hidden", !(session && session.is_pro));
   if (session && session.is_pro) refreshHistory();
   authModal.classList.remove("hidden");
   if (!session) authForm.elements.username.focus();
+}
+async function refreshArchiveCount() {
+  $("accArchive").textContent = "…";
+  try {
+    const r = await fetch(API + "/api/archive?limit=1", { headers: authHeader() });
+    if (!r.ok) throw new Error();
+    const n = (await r.json()).total;
+    $("accArchive").textContent = n === 1 ? "1 task" : n + " tasks";
+  } catch { $("accArchive").textContent = "—"; }
 }
 async function refreshHistory() {
   $("histText").textContent = "Solved PRO tasks remembered: …";
@@ -722,11 +1080,27 @@ authForm.addEventListener("submit", async (e) => {
   btn.disabled = true; btn.textContent = "Please wait…";
   try {
     // Try to log in; if the user does not exist yet, create the account right away.
+    $("authResend").classList.add("hidden");
     let r = await authRequest("/api/login", body);
-    if (r.status === 404) r = await authRequest("/api/register", body);
+    if (r.status === 404) {
+      if (!EMAIL_RX.test(body.username)) throw new Error("No account with that name. To create one, use a valid email address.");
+      r = await authRequest("/api/auth/register", body);
+      if (r.ok) {                                    // account created, now confirm the email
+        pendingEmail = r.data.email || body.username;
+        $("sentEmail").textContent = pendingEmail;
+        $("sentStatus").classList.add("hidden");
+        authForm.reset();
+        showPanel("authSent");
+        return;
+      }
+    }
+    if (r.status === 403) {                          // correct password, email not confirmed yet
+      pendingEmail = body.username;
+      $("authResend").classList.remove("hidden");
+    }
     if (!r.ok) {
       const d = r.data.detail;
-      throw new Error(typeof d === "string" ? d : "Please check the username and password.");
+      throw new Error(typeof d === "string" ? d : "Please check your email and password.");
     }
     setSession({ token: r.data.token, username: r.data.username, is_pro: r.data.is_pro, pro_expires_at: r.data.pro_expires_at });
     authForm.reset();
@@ -738,6 +1112,77 @@ authForm.addEventListener("submit", async (e) => {
     btn.disabled = false; btn.textContent = "Continue";
   }
 });
+
+async function resendConfirmation(statusEl) {
+  const r = await authRequest("/api/auth/resend-verification", { email: pendingEmail });
+  const msg = r.ok ? "Confirmation email sent. Check your inbox." : (typeof r.data.detail === "string" ? r.data.detail : "Could not send the email. Please try again.");
+  setBox(statusEl, msg, r.ok);
+}
+$("authResend").onclick = () => resendConfirmation(authStatus);
+$("sentResend").onclick = () => resendConfirmation($("sentStatus"));
+$("sentBack").onclick = () => { authStatus.classList.add("hidden"); showPanel("authForm"); };
+
+$("forgotLink").onclick = () => {
+  const typed = authForm.elements.username.value.trim();
+  $("authForgot").elements.email.value = EMAIL_RX.test(typed) ? typed : "";
+  $("forgotStatus").classList.add("hidden");
+  showPanel("authForgot");
+  $("authForgot").elements.email.focus();
+};
+$("forgotBack").onclick = () => showPanel("authForm");
+$("authForgot").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const btn = $("forgotSubmit");
+  btn.disabled = true; btn.textContent = "Sending…";
+  try {
+    const r = await authRequest("/api/auth/forgot-password", { email: $("authForgot").elements.email.value.trim() });
+    setBox($("forgotStatus"), r.ok ? "If an account exists for that email, we sent a reset link. It is valid for 1 hour."
+      : (typeof r.data.detail === "string" ? r.data.detail : "Could not send the email. Please try again."), r.ok);
+  } catch {
+    setBox($("forgotStatus"), "Can't reach the server. Check your connection and try again.", false);
+  } finally {
+    btn.disabled = false; btn.textContent = "Send reset link";
+  }
+});
+
+$("authReset").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const f = $("authReset").elements, st = $("resetStatus"), btn = $("resetSubmit");
+  if (f.password.value !== f.confirm.value) return setBox(st, "The two passwords do not match.", false);
+  btn.disabled = true; btn.textContent = "Saving…";
+  try {
+    const r = await authRequest("/api/auth/reset-password", { token: resetToken, password: f.password.value });
+    if (!r.ok) return setBox(st, typeof r.data.detail === "string" ? r.data.detail : "Could not reset the password.", false);
+    resetToken = "";
+    $("authReset").reset();
+    showPanel("authForm");
+    authMessage("Password updated. You can sign in now.", true);
+  } catch {
+    setBox(st, "Can't reach the server. Check your connection and try again.", false);
+  } finally {
+    btn.disabled = false; btn.textContent = "Set new password";
+  }
+});
+
+// links from the e-mails: /reset-password?token=...  and  /?verified=1  /?verify_error=1
+function handleAuthLinks() {
+  const q = new URLSearchParams(location.search);
+  if (location.pathname === "/reset-password") {
+    resetToken = q.get("token") || "";
+    history.replaceState(null, "", "/");
+    $("resetStatus").classList.add("hidden");
+    showPanel("authReset");
+  } else if (q.has("verified")) {
+    history.replaceState(null, "", "/");
+    authStatus.classList.add("hidden");
+    showPanel("authForm");
+    authMessage("Email confirmed! You can sign in now.", true);
+  } else if (q.has("verify_error")) {
+    history.replaceState(null, "", "/");
+    showPanel("authForm");
+    authMessage("This confirmation link is invalid or has expired. Sign in to get a new one.", false);
+  }
+}
 
 $("logoutBtn").onclick = async () => {
   try { await fetch(API + "/api/logout", { method: "POST", headers: authHeader() }); } catch {}
@@ -760,19 +1205,21 @@ const upgradeModal = $("upgradeModal"), upStatus = $("upStatus");
 let plan = { price_label: "", checkout_available: true };
 
 function upMessage(text, kind) {
-  const colors = { ok: "bg-emerald-400/10 border-emerald-300/20 text-emerald-300",
-                   err: "bg-rose-400/10 border-rose-300/20 text-rose-300",
-                   info: "bg-indigo-400/10 border-indigo-300/20 text-indigo-200" };
   upStatus.textContent = text;
-  upStatus.className = "mt-4 text-sm rounded-lg px-3 py-2 border " + colors[kind || "info"];
+  upStatus.className = "note mt-4 " + ({ ok: "note-ok", err: "note-bad", info: "note-info" }[kind || "info"]);
 }
 function setSubscribeLabel() {
   const b = $("upSubscribe");
   b.textContent = !session ? "Sign in to subscribe"
     : plan.price_label ? "Subscribe for " + plan.price_label : "Subscribe";
+  // "$5/mo" -> big "$5" + small "/ mo"
+  const m = /^(.+?)\s*\/\s*(.+)$/.exec(plan.price_label || "");
+  $("upPrice").textContent = m ? m[1] : (plan.price_label || "PRO");
+  $("upPeriod").textContent = m ? "/ " + m[2] : "";
 }
 async function openUpgrade() {
   closeAuth();
+  closeArchive();
   upStatus.classList.add("hidden");
   $("upSubscribe").classList.remove("hidden");
   $("upSubscribe").disabled = false;
@@ -840,8 +1287,179 @@ async function handleUpgradeReturn() {
   $("upCancel").textContent = "Close";
 }
 
+// --- archive of solved tasks ---
+const archiveModal = $("archiveModal"), archiveBody = $("archiveBody");
+const TOPIC_LABEL = { balance_sheet: "Balance Sheet", transactions: "Journal Entries", terminology: "Terminology" };
+const TOPIC_ICON = { balance_sheet: "table", transactions: "receipt", terminology: "book" };
+const archive = { topic: "", items: [], total: 0, hasMore: false, loading: false, details: new Map(), open: new Set(), error: false };
+
+const fmtDate = (iso) => {
+  const d = new Date(iso);
+  return isNaN(d) ? "" : d.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
+};
+const pillClass = (score, total) => { const r = total ? score / total : 0; return r >= 0.8 ? "pill-ok" : r >= 0.5 ? "pill-mid" : "pill-bad"; };
+
+function openArchive() {
+  closeAuth();
+  closeUpgrade();
+  archiveModal.classList.remove("hidden");
+  loadArchive(true);
+}
+function closeArchive() { archiveModal.classList.add("hidden"); }
+
+async function loadArchive(reset) {
+  if (!session) { renderArchive(); return; }
+  if (archive.loading) return;
+  archive.loading = true;
+  archive.error = false;
+  if (reset) {
+    archive.items = []; archive.total = 0; archive.hasMore = false; archive.open.clear();
+    archiveBody.replaceChildren(el("p", "py-16 text-center text-sm text-zinc-500", "Loading…"));
+  }
+  try {
+    const q = new URLSearchParams({ limit: "15", offset: String(archive.items.length) });
+    if (archive.topic) q.set("topic", archive.topic);
+    const r = await fetch(`${API}/api/archive?${q}`, { headers: authHeader() });
+    if (r.status === 401) { setSession(null); renderAuth(); archive.loading = false; renderArchive(); return; }
+    if (!r.ok) throw new Error();
+    const d = await r.json();
+    archive.items.push(...d.items);
+    archive.total = d.total;
+    archive.hasMore = d.has_more;
+  } catch {
+    archive.error = true;
+  }
+  archive.loading = false;
+  renderArchive();
+}
+
+function emptyState(title, text, actionLabel, action) {
+  const box = el("div", "py-14 text-center");
+  const ic = el("span", "avatar avatar-lg mx-auto"); setIcon(ic, "archive"); ic.firstChild.style.cssText = "width:24px;height:24px";
+  box.append(ic, el("p", "mt-4 font-medium", title), el("p", "mt-1 text-sm text-zinc-500 max-w-xs mx-auto", text));
+  if (actionLabel) { const b = el("button", "btn btn-primary mt-5", actionLabel); b.type = "button"; b.onclick = action; box.append(b); }
+  return box;
+}
+
+function renderArchive() {
+  $("archiveSub").textContent = session
+    ? (archive.total ? `${archive.total} solved ${archive.total === 1 ? "task" : "tasks"}${archive.topic ? " in this category" : ""}` : "Your solved tasks, answers and corrections.")
+    : "Your solved tasks, answers and corrections.";
+  document.querySelectorAll("#archiveChips .chip").forEach((c) => c.classList.toggle("active", c.dataset.filter === archive.topic));
+  if (!session) {
+    archiveBody.replaceChildren(emptyState("Sign in to see your archive", "Every task you check is saved here with your answers, the correct ones and the explanation.", "Sign in", () => { closeArchive(); openAuth(); }));
+    return;
+  }
+  if (archive.error) {
+    const b = el("button", "btn btn-ghost mt-4", "Try again"); b.type = "button"; b.onclick = () => loadArchive(archive.items.length === 0);
+    const box = el("div", "py-14 text-center"); box.append(el("p", "note note-bad inline-block", "Could not load your archive."), el("br"), b);
+    archiveBody.replaceChildren(box);
+    return;
+  }
+  if (!archive.items.length) {
+    archiveBody.replaceChildren(emptyState("Nothing here yet", archive.topic ? "No solved tasks in this category yet." : "Solve a task and press “Check answer”: it will appear here.", "Start practicing", () => { closeArchive(); if (!currentTopic) view("welcome"); }));
+    return;
+  }
+  const nodes = archive.items.map(archiveItemEl);
+  if (archive.hasMore) {
+    const more = el("button", "btn btn-ghost w-full mt-1", archive.loading ? "Loading…" : "Load more");
+    more.type = "button"; more.onclick = () => loadArchive(false);
+    nodes.push(more);
+  }
+  archiveBody.replaceChildren(...nodes);
+}
+
+function archiveItemEl(it) {
+  const wrap = el("div", "a-item" + (archive.open.has(it.id) ? " open" : ""));
+  const head = el("button", "a-head"); head.type = "button";
+  const ty = el("span", "a-type"); ty.style.cssText = "padding:8px"; setIcon(ty, TOPIC_ICON[it.topic] || "table");
+  const primary = it.topic === "balance_sheet" && it.company ? it.company : (it.title || TOPIC_LABEL[it.topic]);
+  const mid = el("span", "flex-1 min-w-0");
+  mid.append(
+    el("span", "block text-[14.5px] font-medium truncate", primary),
+    el("span", "block text-xs text-zinc-500 truncate", [TOPIC_LABEL[it.topic] || it.topic, it.source === "pro" ? "PRO" : "", fmtDate(it.updated_at)].filter(Boolean).join(" · "))
+  );
+  const chev = el("span", "a-chev ico"); setIcon(chev, "chevron");
+  head.append(ty, mid, el("span", "pill " + pillClass(it.score, it.total), `${it.score}/${it.total}`), chev);
+  const body = el("div", "px-4 pb-4 " + (archive.open.has(it.id) ? "" : "hidden"));
+  wrap.append(head, body);
+
+  const fill = async () => {
+    body.replaceChildren(el("p", "py-4 text-sm text-zinc-500", "Loading…"));
+    try {
+      let d = archive.details.get(it.id);
+      if (!d) {
+        const r = await fetch(`${API}/api/archive/${it.id}`, { headers: authHeader() });
+        if (!r.ok) throw new Error();
+        d = await r.json();
+        archive.details.set(it.id, d);
+      }
+      body.replaceChildren(...archiveDetailEls(d, wrap));
+    } catch {
+      body.replaceChildren(el("p", "note note-bad mt-1", "Could not load this entry."));
+    }
+  };
+  head.onclick = () => {
+    const open = !archive.open.has(it.id);
+    open ? archive.open.add(it.id) : archive.open.delete(it.id);
+    wrap.classList.toggle("open", open);
+    body.classList.toggle("hidden", !open);
+    if (open) fill();
+  };
+  if (archive.open.has(it.id)) fill();
+  return wrap;
+}
+
+function archiveDetailEls(d, wrap) {
+  const out = [];
+  if (d.condition) {
+    const box = el("div", "rv mt-1 text-[13.5px] leading-relaxed text-zinc-300 whitespace-pre-wrap overflow-y-auto", d.condition);
+    box.style.maxHeight = "11rem";
+    out.push(el("p", "eyebrow mt-1 mb-2", "Task"), box);
+  }
+  out.push(el("p", "eyebrow mt-4 mb-2", "Your answers"));
+  const list = el("div", "space-y-2");
+  (d.review || []).forEach((rv) => {
+    const row = el("div", "rv " + (rv.correct ? "ok" : "bad"));
+    const top = el("div", "flex items-start justify-between gap-3");
+    top.append(el("span", "text-[13.5px] font-medium", rv.label));
+    const st = el("span", "ico", ""); st.style.color = rv.correct ? "var(--ok)" : "var(--bad)"; setIcon(st, rv.correct ? "check" : "x");
+    top.append(st);
+    row.append(top);
+    const yours = el("p", "mt-1 text-[13px] " + (rv.correct ? "text-emerald-300" : "text-rose-300"), "You: " + (rv.yours || "(no answer)"));
+    row.append(yours);
+    if (!rv.correct) row.append(el("p", "text-[13px] text-emerald-300", "Correct: " + rv.expected));
+    if (rv.note) row.append(el("p", "mt-1 text-xs text-zinc-500", rv.note));
+    list.append(row);
+  });
+  out.push(list);
+  if (d.explanation) out.push(el("p", "note note-info mt-3", d.explanation));
+  const del = el("button", "btn btn-quiet btn-sm mt-3", "Remove from archive");
+  del.type = "button";
+  del.onclick = async () => {
+    if (!confirm("Remove this task from your archive?")) return;
+    try {
+      const r = await fetch(`${API}/api/archive/${d.id}`, { method: "DELETE", headers: authHeader() });
+      if (!r.ok && r.status !== 404) throw new Error();
+      archive.items = archive.items.filter((x) => x.id !== d.id);
+      archive.total = Math.max(0, archive.total - 1);
+      archive.open.delete(d.id); archive.details.delete(d.id);
+      renderArchive();
+    } catch { del.textContent = "Could not remove, try again"; }
+  };
+  out.push(del);
+  return out;
+}
+
+document.querySelectorAll("[data-archive]").forEach((b) => (b.onclick = openArchive));
+$("accOpenArchive").onclick = openArchive;
+$("archiveClose").onclick = $("archiveBackdrop").onclick = closeArchive;
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeArchive(); });
+document.querySelectorAll("#archiveChips .chip").forEach((c) => (c.onclick = () => { archive.topic = c.dataset.filter; loadArchive(true); }));
+
 // Validate the stored token and refresh the PRO flag (it can change on the server).
 renderAuth();
+handleAuthLinks();
 if (session) {
   fetch(API + "/api/me", { headers: authHeader() })
     .then(async (r) => {
@@ -854,7 +1472,7 @@ if (session) {
 
 $("newBtn").onclick = () => currentTopic && load(currentTopic, currentPro);
 $("retryBtn").onclick = () => currentTopic && load(currentTopic, currentPro);
-$("backBtn").onclick = () => view("welcome");
+document.querySelectorAll("[data-home]").forEach((b) => (b.onclick = () => view("welcome")));
 document.querySelectorAll("[data-start]").forEach((b) => (b.onclick = () => load(b.dataset.start)));
 document.querySelectorAll(".mode-btn").forEach((b) => (b.onclick = () => load(b.dataset.topic)));
 </script>

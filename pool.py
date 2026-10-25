@@ -7,6 +7,8 @@ import json
 import random
 from pathlib import Path
 
+import exam
+
 BASE_DIR = Path(__file__).resolve().parent
 TASKS_PATH = BASE_DIR / "tasks_pool.json"            # balance_sheet, transactions
 TERMINOLOGY_PATH = BASE_DIR / "terminology_pool.json"  # terminology
@@ -88,80 +90,112 @@ POOL = _load()
 POOL_TOPICS = {t for t, items in POOL.items() if items}
 
 
-def _pick(topic: str, exclude: set[str]) -> dict:
+QUESTIONS_PER_TEST = {"terminology": 6, "transactions": 4}
+
+
+def _pick_many(topic: str, exclude: set[str], n: int) -> list[dict]:
+    """n distinct items, preferring ones the student has not just seen."""
     items = POOL[topic]
     fresh = [t for t in items if t["id"] not in exclude]
-    return random.choice(fresh or items)
+    stale = [t for t in items if t["id"] in exclude]
+    random.shuffle(fresh)
+    random.shuffle(stale)
+    return (fresh + stale)[: min(n, len(items))]
+
+
+# ---------------------------------------------------------------- balance sheets
+BS_VARIANTS = (("totals", 4), ("missing_item", 4), ("missing_two", 2))   # (variant, weight)
+
+
+def _bs_raw(t: dict, variant: str) -> tuple[dict, str, str, str]:
+    """Builds the raw sheet for a pool item. Returns (raw, description, hint, explanation)."""
+    assets = list(t["assets"].items())
+    fixed = [(k, v) for k, v in assets if k in FIXED_ASSETS]
+    current = [(k, v) for k, v in assets if k not in FIXED_ASSETS]
+    totals_blank = variant == "totals"
+
+    def group(title, items, sub_label):
+        return {"title": title, "rows": [{"label": k, "values": [v], "blank": False} for k, v in items],
+                "subtotal": {"label": sub_label, "blank": totals_blank}}
+
+    asset_groups = []
+    if fixed:
+        asset_groups.append(group("A. Fixed assets", fixed, "Total fixed assets"))
+    if current:
+        asset_groups.append(group("B. Current assets", current, "Total current assets"))
+    eq_group = group("C. Equity", list(t["equity"].items()), "Total equity")
+    liab_group = group("D. Liabilities", list(t["liabilities"].items()), "Total liabilities")
+    sides = [
+        {"title": "Assets", "groups": asset_groups, "total": {"label": "Total assets", "blank": totals_blank}},
+        {"title": "Equity and liabilities", "groups": [eq_group, liab_group], "total": {"label": "Total equity and liabilities", "blank": totals_blank}},
+    ]
+    total_assets, total_el = sum(t["assets"].values()), sum(t["liabilities"].values()) + sum(t["equity"].values())
+    name = t["title"]
+
+    if variant == "totals":
+        description = f"{name} reports the line items below (amounts in {CURRENCY}). Calculate every subtotal and both totals."
+        hint = "Add the lines of each group, then add the groups. Assets must equal equity plus liabilities."
+        explanation = (f"Total assets {total_assets:,} = Total equity and liabilities {total_el:,}. "
+                       "Each subtotal is the sum of the lines above it.")
+        return {"sides": sides}, description, hint, explanation
+
+    # missing_item / missing_two: blank line items, subtotals and totals are shown
+    asset_rows = [(g, r) for g in asset_groups for r in g["rows"]]
+    el_rows = [(g, r) for g in (eq_group, liab_group) for r in g["rows"]]
+    if variant == "missing_two":
+        picks = [random.choice(asset_rows), random.choice(el_rows)]
+    else:
+        equity_rows = [(eq_group, r) for r in eq_group["rows"]]
+        pool_rows = equity_rows if equity_rows and random.random() < 0.4 else asset_rows + el_rows
+        picks = [random.choice(pool_rows)]
+    parts = []
+    for g, r in picks:
+        r["blank"] = True
+        value = r["values"][0]
+        subtotal = sum(x["values"][0] for x in g["rows"])
+        others = subtotal - value
+        parts.append(f"{r['label']}: {g['subtotal']['label']} {subtotal:,} minus the other lines {others:,} = {value:,}.")
+    n = len(picks)
+    description = (f"The balance sheet of {name} is shown below (amounts in {CURRENCY}) with {n} line{'s' if n > 1 else ''} left blank. "
+                   f"Use the accounting equation and the subtotals to find the missing amount{'s' if n > 1 else ''}.")
+    hint = "Assets = Equity + Liabilities. A subtotal minus the other lines of its group gives the missing line."
+    return {"sides": sides}, description, hint, " ".join(parts)
 
 
 def _balance_sheet_task(t: dict) -> dict:
-    assets, liabilities, equity = t["assets"], t["liabilities"], t["equity"]
-    fixed = sum(v for k, v in assets.items() if k in FIXED_ASSETS)
-    total_assets = sum(assets.values())
-    total_liab, total_eq = sum(liabilities.values()), sum(equity.values())
-
-    items = list({**assets, **liabilities, **equity}.items())
-    random.shuffle(items)  # items without section labels: the student classifies them
-    lines = "\n".join(f"{name}: {value:,}" for name, value in items)
-    return {
-        "id": t["id"],
-        "task_title": "Prepare a Balance Sheet",
-        "company_name": t["title"],
-        "unit": CURRENCY,
-        "description": (
-            f"{t['title']} reports the following items at year-end (in {CURRENCY}). "
-            f"Classify them and fill in the balance sheet totals.\n\n{lines}"
-        ),
-        "hint": BS_HINT,
-        "balance_sheet_key": {
-            "fixed_assets": fixed,
-            "current_assets": total_assets - fixed,
-            "total_assets": total_assets,
-            "equity": total_eq,
-            "liabilities": total_liab,
-            "total_equity_and_liabilities": total_liab + total_eq,
-        },
-        "explanation": (
-            f"Fixed assets: {', '.join(k for k in assets if k in FIXED_ASSETS) or 'none'}. "
-            f"Current assets: {', '.join(k for k in assets if k not in FIXED_ASSETS)}. "
-            f"Assets {total_assets:,} = Liabilities {total_liab:,} + Equity {total_eq:,}."
-        ),
-    }
+    variant = random.choices([v for v, _ in BS_VARIANTS], [w for _, w in BS_VARIANTS])[0]
+    raw, description, hint, explanation = _bs_raw(t, variant)
+    raw.update(
+        task_title="Complete the Balance Sheet" if variant == "totals" else "Find the Missing Balance Sheet Item",
+        company_name=t["title"], unit=CURRENCY, layout="two_sided", columns=["Amount"],
+        description=description, hint=hint, explanation=explanation,
+    )
+    task = exam.normalize_balance_sheet(raw, variant)
+    task["id"] = t["id"]
+    return task
 
 
-def _transaction_task(t: dict) -> dict:
-    options = list(t["options"])
-    random.shuffle(options)  # in the source file the correct answer is almost always first
-    return {
-        "id": t["id"],
-        "task_title": t["title"],
-        "company_name": "Journal entry",
-        "description": t["description"],
-        "hint": TR_HINT,
-        "options": options,
-        "correct_answer": t["correct_answer"],
-        "choose_label": "Choose the correct journal entry:",
-    }
-
-
-def _terminology_task(t: dict) -> dict:
-    options = list(t["options"])
-    random.shuffle(options)
-    return {
-        "id": t["id"],
-        "task_title": "Terminology & Concepts",
-        "company_name": "Quick question",
-        "description": t["question"],
-        "options": options,
-        "correct_answer": t["correct_answer"],
-        "choose_label": "Choose the correct answer:",
-    }
+# ---------------------------------------------------------------- multiple-choice tests
+def _test_task(topic: str, picks: list[dict]) -> dict:
+    if topic == "terminology":
+        questions = [exam.mcq_from_options(t["question"], t["options"], t["correct_answer"]) for t in picks]
+        title, label = "Terminology: Midterm-Style Test", f"Multiple choice · {len(picks)} questions"
+        description, hint = "Choose the best answer for each question.", ""
+    else:
+        questions = [exam.mcq_from_options(f"{t['title']}: {t['description']}", t["options"], t["correct_answer"]) for t in picks]
+        title, label = "Journal Entries", f"Multiple choice · {len(picks)} transactions"
+        description, hint = "Choose the correct journal entry for each transaction.", TR_HINT
+    task = exam.normalize_test({"task_title": title, "company_name": label, "description": description, "questions": questions})
+    task["hint"] = hint
+    task["ids"] = [t["id"] for t in picks]
+    return task
 
 
 def get_task(topic: str, exclude: set[str] | None = None) -> dict | None:
     """Returns a task in the frontend format, or None if the topic has no pool."""
     if topic not in POOL_TOPICS:
         return None
-    t = _pick(topic, exclude or set())
-    builders = {"balance_sheet": _balance_sheet_task, "transactions": _transaction_task, "terminology": _terminology_task}
-    return builders[topic](t)
+    exclude = exclude or set()
+    if topic == "balance_sheet":
+        return _balance_sheet_task(_pick_many(topic, exclude, 1)[0])
+    return _test_task(topic, _pick_many(topic, exclude, QUESTIONS_PER_TEST[topic]))
