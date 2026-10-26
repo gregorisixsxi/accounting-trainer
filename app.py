@@ -579,6 +579,36 @@ def public_base_url(request: Request) -> str:
     return match.group(0).rstrip("/") if match else "https://accountingtrainer.app"
 
 
+STARTED_AT = time.time()
+
+
+@app.get("/api/health")
+def health():
+    """For uptime monitors and for the 'everything is on fire' runbook. Reports only yes/no flags, never values."""
+    try:
+        with db.connect() as c:
+            c.execute("SELECT 1 FROM users LIMIT 1").fetchone()
+        database = True
+    except Exception as e:
+        print(f"[health] database check failed: {e!r}")
+        database = False
+    lemon = lemon_config()
+    body = {
+        "ok": database,
+        "database": database,
+        "uptime_seconds": int(time.time() - STARTED_AT),
+        "persistent_db_path": bool(os.environ.get("DB_PATH")),      # False on Render = the data is wiped on every deploy
+        "configured": {
+            "anthropic": bool(os.environ.get("ANTHROPIC_API_KEY")),
+            "resend": email_service.is_configured(),
+            "lemon_squeezy": bool(lemon["api_key"] and lemon["store_id"] and lemon["variant_id"] and lemon["secret"]),
+            "x_login": twitter_auth.is_configured(),
+            "task_secret": bool(os.environ.get("TASK_SECRET")),     # False = open tasks break after every restart
+        },
+    }
+    return JSONResponse(body, status_code=200 if database else 503)
+
+
 @app.get("/api/plans")
 def plans():
     cfg = lemon_config()
