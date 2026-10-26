@@ -296,6 +296,15 @@
     background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.015)); border: 1px solid var(--border-strong); transition: all .2s ease; }
   .social-btn:hover { color: #fff; border-color: rgba(139,140,248,.55); background: rgba(139,140,248,.10); transform: translateY(-1px); }
   .social-btn .ico { width: 15px; height: 15px; }
+  /* Giveaway: a diamond-like glow that slowly fades out and lights up again */
+  .giveaway-btn { color: #eaf6ff; border: 1px solid rgba(150,215,255,.55); background: linear-gradient(135deg, rgba(120,200,255,.16), rgba(190,140,255,.16));
+    animation: diamond-glow 2.6s ease-in-out infinite; }
+  .giveaway-btn:hover { background: linear-gradient(135deg, rgba(120,200,255,.28), rgba(190,140,255,.28)); }
+  @keyframes diamond-glow {
+    0%, 100% { box-shadow: 0 0 4px rgba(150,215,255,.15), 0 0 12px rgba(160,140,255,.10); border-color: rgba(150,215,255,.30); filter: brightness(.95); }
+    50% { box-shadow: 0 0 10px rgba(150,215,255,.65), 0 0 28px rgba(170,140,255,.45), 0 0 52px rgba(120,200,255,.25); border-color: rgba(190,235,255,.9); filter: brightness(1.15); }
+  }
+  @media (prefers-reduced-motion: reduce) { .giveaway-btn { animation: none; box-shadow: 0 0 14px rgba(150,215,255,.4); } }
   .level-box { display: flex; flex-direction: column; align-items: center; flex: none; margin-left: auto; }
   .level-label { font-size: 12px; font-weight: 700; letter-spacing: .2em; margin-top: -6px; }
   .gauge { display: block; overflow: visible; }
@@ -388,6 +397,7 @@
 <!-- ============ WELCOME ============ -->
 <section id="welcome" class="relative min-h-screen flex flex-col view-in">
   <div class="flex items-center justify-end gap-2 px-4 sm:px-6 pt-4">
+    <button type="button" id="giveawayBtn" class="btn btn-sm giveaway-btn"><span class="ico" data-icon="gift"></span>Giveaway</button>
     <button type="button" data-rating class="btn btn-ghost btn-sm"><span class="ico" data-icon="trophy"></span>Rating</button>
     <button type="button" data-auth class="nav-account" style="max-width:260px"></button>
   </div>
@@ -459,7 +469,7 @@
       <section id="rating" class="hidden fade-in mx-auto" style="max-width: 860px">
         <p class="eyebrow">Competition</p>
         <h2 class="serif mt-2 text-[32px] sm:text-4xl leading-tight">Rating</h2>
-        <p class="mt-2 text-sm text-zinc-400 max-w-xl">The 50 best players by ELO. Finish your 5 Balance Sheet calibration tasks to enter the table. Yearly and monthly boards list the players who earned rating in that period.</p>
+        <p class="mt-2 text-sm text-zinc-400 max-w-xl">The 50 best players by Score. Finish your 5 Balance Sheet calibration tasks, then keep earning Score with PRO to stay on the table. Yearly and monthly boards list the players who earned Score in that period.</p>
         <div id="ratingTabs" class="seg mt-6" role="tablist">
           <button type="button" class="seg-btn active" data-period="all" role="tab">All-time</button>
           <button type="button" class="seg-btn" data-period="year" role="tab">Yearly</button>
@@ -612,9 +622,9 @@
               <span id="accBadge" class="badge">Free</span>
               <span id="rankBadge" class="hidden rank-badge"></span>
             </div>
-            <p id="accEmail" class="mt-0.5 text-xs text-zinc-500 truncate"></p>
+            <p id="accEmail" class="hidden mt-0.5 text-xs text-zinc-500 truncate"></p>
             <div class="mt-3 flex flex-wrap gap-2">
-              <button type="button" class="social-btn" data-social="X"><span class="ico" data-icon="xsocial"></span>Connect X</button>
+              <button type="button" id="xConnect" class="social-btn" data-social="X"><span class="ico" data-icon="xsocial"></span>Connect X</button>
             </div>
             <p id="socialNote" class="hidden mt-2 text-xs text-zinc-500"></p>
           </div>
@@ -635,7 +645,7 @@
       <div id="levelProgress" class="mt-5"></div>
 
       <div class="stats-row mt-4">
-        <div class="stat"><p class="eyebrow">ELO</p><p id="statElo" class="v">-</p></div>
+        <div class="stat"><p class="eyebrow">Score</p><p id="statElo" class="v">-</p></div>
         <div class="stat"><p class="eyebrow">Tasks solved</p><p id="statTasks" class="v">0</p></div>
         <div class="stat"><p class="eyebrow">Accuracy</p><p id="statAcc" class="v">-</p></div>
         <div class="stat"><p class="eyebrow">Plan</p><p id="accPlan" class="mt-1 text-sm"></p></div>
@@ -664,6 +674,20 @@
         <button type="button" id="logoutBtn" class="btn btn-quiet">Log out</button>
         <button type="button" id="authDone" class="btn btn-primary">Done</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ GIVEAWAY MODAL ============ -->
+<div id="gwModal" class="hidden modal" role="dialog" aria-modal="true" aria-labelledby="gwTitle">
+  <div id="gwBackdrop" class="modal-backdrop"></div>
+  <div class="modal-card">
+    <button type="button" id="gwClose" aria-label="Close" class="modal-x"><span class="ico" data-icon="x"></span></button>
+    <h3 id="gwTitle" class="modal-title">Giveaway</h3>
+    <p class="mt-2 text-sm text-zinc-300 leading-relaxed">Make a Reel that promotes Accounting Trainer and earn money when it goes viral. The more people your Reel reaches, the more you can earn.</p>
+    <p class="mt-3 text-sm text-zinc-400 leading-relaxed">The rules, the payouts and how to submit your Reel are coming soon. Follow us to hear first.</p>
+    <div class="flex justify-end gap-2.5 pt-5">
+      <button type="button" id="gwOk" class="btn btn-primary">Got it</button>
     </div>
   </div>
 </div>
@@ -713,6 +737,7 @@ const ICONS = {
   mail: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>',
   edit: '<path d="M4 20h4L19 9a2.1 2.1 0 0 0-3-3L5 17z"/><path d="M14 7l3 3"/>',
   xsocial: '<path fill="currentColor" stroke="none" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>',
+  gift: '<rect x="3" y="8" width="18" height="4" rx="1"/><path d="M5 12v8h14v-8M12 8v12M12 8C10 8 8 7 8 5.5S9.5 3 12 8c2.5-5 4-3.5 4-2.5S14 8 12 8z"/>',
   trophy: '<path d="M8 4h8v5a4 4 0 0 1-8 0z"/><path d="M8 6H5a1 1 0 0 0-1 1 4 4 0 0 0 4 4M16 6h3a1 1 0 0 1 1 1 4 4 0 0 1-4 4M12 13v4M8 21h8M10 17h4"/>',
   lock: '<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
 };
@@ -1075,11 +1100,13 @@ function showRatingChange(info) {
     row.append(el("span", "note note-warn", "Answered too fast to count for your rating."));
   } else if (info.already_counted) {
     row.append(el("span", "text-xs text-zinc-500", "This task already counted for your rating. Re-checks do not change it."));
+  } else if (info.no_pro) {
+    row.append(el("span", "note note-warn", "No Score earned: after calibration Score is earned with PRO only, and the leaderboard is for PRO players."));
   } else if (info.not_calibrating) {
     row.append(el("span", "text-xs text-zinc-500", "Only Balance Sheet tasks count towards calibration."));
   } else {
     const d = info.delta;
-    row.append(el("span", "pill " + (d > 0 ? "pill-ok" : d < 0 ? "pill-bad" : "pill-mid"), (d > 0 ? "+" : "") + d + " ELO"));
+    row.append(el("span", "pill " + (d > 0 ? "pill-ok" : d < 0 ? "pill-bad" : "pill-mid"), (d > 0 ? "+" : "") + d + " Score"));
     if (info.calibration_completed) row.append(el("span", "note note-ok", "Calibration complete! You start as Level " + info.level_after + "."));
     else if (info.calibrating) row.append(el("span", "text-xs text-zinc-400", `Calibration ${info.calibration_total - info.calibration_left} / ${info.calibration_total}`));
     else if (info.level_after !== info.level_before) row.append(el("span", "note " + (info.level_after > info.level_before ? "note-ok" : "note-bad"),
@@ -1220,6 +1247,13 @@ function setBox(elm, text, ok) {
   elm.className = "note " + (ok ? "note-ok" : "note-bad");
 }
 
+// --- giveaway modal (placeholder) ---
+const gwModal = $("gwModal");
+const closeGiveaway = () => gwModal.classList.add("hidden");
+$("giveawayBtn").onclick = () => gwModal.classList.remove("hidden");
+$("gwClose").onclick = $("gwOk").onclick = $("gwBackdrop").onclick = closeGiveaway;
+document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !gwModal.classList.contains("hidden")) closeGiveaway(); });
+
 // --- feedback modal (Formspree) ---
 const fbModal = $("fbModal"), fbForm = $("fbForm"), fbStatus = $("fbStatus");
 let fbTimer = null;
@@ -1312,9 +1346,12 @@ function renderLeaderboard(d) {
     const b = el("button", "btn btn-primary btn-sm", "Sign in"); b.type = "button"; b.onclick = openAuth; card.append(b);
   } else if (d.me && d.me.calibrating) {
     card.append(el("span", "text-sm text-zinc-300", `Calibration: ${d.me.calibration_total - d.me.calibration_left} / ${d.me.calibration_total} tasks. Finish it to enter the rating.`));
+  } else if (d.me && !d.me.is_pro) {
+    card.append(levelPill({ level: d.me.level, calibrating: false }), el("span", "text-sm text-zinc-300 tabular-nums", d.me.elo.toLocaleString("en-US") + " Score"),
+      el("span", "text-sm text-zinc-400", "Without PRO no Score is earned after calibration, so you are not on the leaderboard."));
   } else if (d.me && d.me.rank) {
     card.append(el("span", "eyebrow", "Your position"), el("span", "serif text-2xl", "#" + d.me.rank), el("span", "text-sm font-medium", nicknameOf(session)));
-    card.append(levelPill({ level: d.me.level, calibrating: false }), el("span", "text-sm text-zinc-300 tabular-nums", d.me.elo.toLocaleString("en-US") + " ELO"));
+    card.append(levelPill({ level: d.me.level, calibrating: false }), el("span", "text-sm text-zinc-300 tabular-nums", d.me.elo.toLocaleString("en-US") + " Score"));
     if (!d.me.in_top) card.append(el("span", "text-xs text-zinc-500", "Outside the top " + d.size));
   } else {
     card.append(el("span", "text-sm text-zinc-300", `No counted tasks${periodWord} yet. Solve a task to enter this board.`));
@@ -1440,7 +1477,10 @@ function renderProfile() {
   const p = session.profile || { level: 3, elo: 1000, calibrating: true, calibration_left: 5, calibration_total: 5, calibration_done: 0, progress: 0, tasks: 0, accuracy: null, next_level: null, elo_to_next: null };
   const nick = nicknameOf(session);
   $("accName").textContent = nick;
-  $("accEmail").textContent = session.username;
+  // accounts made through X have a technical placeholder login (x<id>@twitter.invalid): never show it
+  const showEmail = !/\.invalid$/i.test(session.username);
+  $("accEmail").textContent = showEmail ? session.username : "";
+  $("accEmail").classList.toggle("hidden", !showEmail);
   applyAvatar($("accAvatar"), session.avatar, nick, session.avatar_url);
   // X account: the stub button shows the linked handle
   const xBtn = document.querySelector('[data-social="X"]');
@@ -1475,12 +1515,15 @@ function renderProfile() {
     : p.next_level ? `Level ${p.level} → ${p.next_level}` : "Maximum level reached";
   const right = p.calibrating
     ? `${p.calibration_left} to go · the best possible start is Level 7`
-    : p.next_level ? `${p.elo_to_next} ELO to Level ${p.next_level}` : "Level 10";
+    : p.next_level ? `${p.elo_to_next} Score to Level ${p.next_level}` : "Level 10";
   $("levelProgress").innerHTML =
     `<div class="flex items-center justify-between gap-3 text-xs text-zinc-400"><span>${left}</span><span class="text-right">${right}</span></div>` +
     `<div class="score-bar mt-2"><i style="width:${p.progress}%;background:${p.calibrating ? "linear-gradient(90deg,#71717a,#a1a1aa)" : color}"></i></div>`;
 
-  $("statElo").textContent = p.calibrating ? "?" : p.elo.toLocaleString("en-US");
+  if (!p.calibrating && !session.is_pro) {
+    $("levelProgress").innerHTML += `<p class="note note-warn mt-3">Without PRO your Score no longer grows and you are not on the leaderboard. Your level stays.</p>`;
+  }
+  $("statElo").textContent =p.calibrating ? "?" : p.elo.toLocaleString("en-US");
   $("statTasks").textContent = p.tasks;
   $("statAcc").textContent = p.accuracy === null ? "-" : p.accuracy + "%";
   $("histBox").classList.toggle("hidden", !session.is_pro);
@@ -1561,11 +1604,27 @@ $("nickForm").addEventListener("submit", async (e) => {
     btn.disabled = false;
   }
 });
-document.querySelectorAll("[data-social]").forEach((b) => (b.onclick = () => {
+function socialMessage(text) {
   const note = $("socialNote");
-  note.textContent = `Linking ${b.dataset.social} is coming soon.`;
-  note.classList.remove("hidden");
-}));
+  note.textContent = text;
+  note.classList.toggle("hidden", !text);
+}
+// "Connect X": a signed-in user attaches an X account to the current account (no new account is created)
+$("xConnect").onclick = async () => {
+  if (!session) return;
+  if (session.x_username) { socialMessage("X account @" + session.x_username + " is linked."); return; }
+  const b = $("xConnect");
+  b.disabled = true;
+  try {
+    const r = await fetch(API + "/api/auth/twitter/link", { method: "POST", headers: authHeader() });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(d.detail || "Could not start the X link.");
+    location.href = d.url;
+  } catch (e) {
+    socialMessage(e.message || "Could not start the X link.");
+    b.disabled = false;
+  }
+};
 
 async function refreshHistory() {
   $("histText").textContent = "Solved PRO tasks remembered: …";
@@ -1721,6 +1780,14 @@ async function handleXReturn() {
       showPanel("authForm");
       authMessage(X_ERRORS.failed, false);
     }
+    return true;
+  }
+  if (q.has("x_linked") || (session && (q.get("x_error") === "taken" || q.get("x_error") === "other"))) {
+    history.replaceState({ v: "welcome" }, "", location.pathname);
+    if (q.has("x_linked")) await refreshProfile();
+    openAuth();
+    socialMessage(q.has("x_linked") ? "X account linked." : q.get("x_error") === "taken"
+      ? "That X account is already used by another account." : "This account already has a different X account.");
     return true;
   }
   if (q.has("x_error")) {

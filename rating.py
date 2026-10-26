@@ -1,10 +1,11 @@
-"""FACEIT-style rating: ELO, levels 1-10 and a calibration phase.
+"""FACEIT-style rating: Score (called ELO inside the code and the database), levels 1-10 and a calibration phase.
 
 How it works
-  * A new account starts at 1000 ELO and has CALIBRATION_TASKS scored tasks of calibration. While it calibrates
-    the level is not shown ("?"), rating moves fast (K=100) and, when the calibration ends, the rating is capped
+  * A new account starts at 1000 Score and has CALIBRATION_TASKS scored tasks of calibration. While it calibrates
+    the level is not shown ("?"), rating moves fast (K=125) and, when the calibration ends, the rating is capped
     at the top of level 7 (1700). Nobody can finish calibration above Level 7.
-  * Afterwards every scored task moves the rating by  K * weight * (accuracy - expected_accuracy)  with K=24.
+  * Afterwards (PRO accounts only: free accounts keep their Score and level but earn nothing more and are not on
+    the leaderboard) every scored task moves the rating by  K * weight * (accuracy - expected_accuracy)  with K=30.
     The expected accuracy rises with the rating (about 54% at 1000, 75% at 1500, 93% at 2000), so the higher you
     are the more precise you must be to keep climbing; a harder task type lowers the expectation a little.
     Level 10 (2001+) therefore needs near-perfect accuracy over many tasks.
@@ -21,8 +22,8 @@ CALIBRATION_TASKS = 5
 CALIBRATION_TOPICS = ("balance_sheet",)   # only these task types count towards calibration
 CALIBRATION_MAX_ELO = 1700          # top of level 7
 CALIBRATION_MAX_LEVEL = 7
-K_CALIBRATION, K_RANKED = 100, 24
-DAILY_GAIN_CAP = 100
+K_CALIBRATION, K_RANKED = 125, 30     # +25% over the first version (100 / 24)
+DAILY_GAIN_CAP = 125
 
 # how much harder than average a task type is (lowers the expected accuracy)
 DIFFICULTY_PENALTY = {"totals": 0.0, "compile": 0.04, "comparative": 0.08, "test": 0.0}

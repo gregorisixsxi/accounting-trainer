@@ -617,7 +617,13 @@ def period_start(period: str) -> str | None:
 def _ranked_filter(period: str) -> tuple[str, list]:
     """Players with a rating: calibration finished and at least one counted task. Year/month boards only
     list players who earned rating in that period."""
-    where, params = "calibration_left = 0 AND tasks_total > 0", []
+    # only PRO players are on the board (free accounts do not earn Score after calibration)
+    pro_sql = "(is_pro = 1 AND (pro_expires_at IS NULL OR pro_expires_at > ?))"
+    params = [iso(now_utc())]
+    if PRO_USERS:
+        pro_sql = pro_sql[:-1] + " OR LOWER(username) IN (" + ",".join("?" * len(PRO_USERS)) + "))"
+        params += sorted(PRO_USERS)
+    where = f"calibration_left = 0 AND tasks_total > 0 AND {pro_sql}"
     start = period_start(period)
     if start:
         where += " AND last_scored_at >= ?"
@@ -714,6 +720,30 @@ def find_or_create_twitter_user(twitter_id: str, handle: str, avatar_url: str | 
                 continue
             return _public(c.execute("SELECT * FROM users WHERE id = ?", (cur.lastrowid,)).fetchone()), True
     raise RuntimeError("could not create the X account")
+
+
+def link_twitter(user_id: int, twitter_id: str, handle: str, avatar_url: str | None) -> str:
+    """Attaches an X account to an existing account. -> 'ok' | 'taken' (that X account belongs to another user) | 'other'
+    (this account already has a different X account). The nickname is never touched."""
+    twitter_id = str(twitter_id)
+    picture = _clean_avatar_url(avatar_url)
+    with connect() as c:
+        if c.execute("SELECT 1 FROM users WHERE twitter_id = ? AND id <> ?", (twitter_id, user_id)).fetchone():
+            return "taken"
+        row = c.execute("SELECT twitter_id FROM users WHERE id = ?", (user_id,)).fetchone()
+        if row is None:
+            return "other"
+        if row["twitter_id"] and row["twitter_id"] != twitter_id:
+            return "other"
+        try:
+            c.execute(
+                "UPDATE users SET twitter_id = ?, twitter_username = ?, "
+                "avatar_url = CASE WHEN avatar IS NULL AND avatar_url IS NULL THEN ? ELSE avatar_url END WHERE id = ?",
+                (twitter_id, handle, picture, user_id),
+            )
+        except sqlite3.IntegrityError:
+            return "taken"
+    return "ok"
 
 
 def mark_verified(user_id: int) -> None:

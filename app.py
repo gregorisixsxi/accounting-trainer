@@ -324,7 +324,7 @@ class ProfileUpdate(BaseModel):
 
 @app.get("/api/leaderboard")
 def get_leaderboard(period: str = "all", user: dict | None = Depends(optional_user)):
-    """Top 50 by ELO. Only nicknames, avatars, levels, ELO and task counts are public."""
+    """Top 50 PRO players by Score. Only nicknames, avatars, levels, Score and task counts are public."""
     if period not in db.PERIODS:
         raise HTTPException(status_code=422, detail="period must be all, year or month.")
     rows = db.leaderboard(period)
@@ -335,7 +335,7 @@ def get_leaderboard(period: str = "all", user: dict | None = Depends(optional_us
         rank = db.user_rank(user["id"], period)
         me = {
             "rank": rank, "in_top": bool(rank and rank <= db.LEADERBOARD_SIZE),
-            "elo": fresh["elo"], "level": rating.profile_view(fresh)["level"],
+            "elo": fresh["elo"], "level": rating.profile_view(fresh)["level"], "is_pro": fresh["is_pro"],
             "calibrating": fresh["calibration_left"] > 0, "calibration_left": fresh["calibration_left"],
             "calibration_total": rating.CALIBRATION_TASKS, "tasks": fresh["tasks_total"],
         }
@@ -357,16 +357,40 @@ def auth_providers():
     return {"x": twitter_auth.is_configured()}
 
 
+X_LINK_SECONDS = 300
+
+
+@app.post("/api/auth/twitter/link")
+def twitter_link_start(user: dict = Depends(current_user)):
+    """Signed-in user wants to attach an X account: returns the address that starts the X flow in link mode.
+    The one-time ticket is signed and short-lived, because a plain browser redirect cannot carry the session header."""
+    if not twitter_auth.is_configured():
+        raise HTTPException(status_code=503, detail="Sign in with X is not set up yet.")
+    if user.get("twitter_username"):
+        raise HTTPException(status_code=409, detail="An X account is already linked.")
+    ticket = grading.pack({"k": "xlink", "uid": user["id"], "iat": int(time.time())})
+    return {"url": "/auth/twitter/login?link=" + ticket}
+
+
 @app.get("/auth/twitter/login")
-def twitter_login(request: Request):
+def twitter_login(request: Request, link: str = ""):
     if not twitter_auth.is_configured():
         return RedirectResponse("/?x_error=not_configured", status_code=303)
+    link_user = None
+    if link:
+        try:
+            ticket = grading.open_token(link)
+        except grading.TokenError:
+            return RedirectResponse("/?x_error=state", status_code=303)
+        if ticket.get("k") != "xlink" or time.time() - ticket.get("iat", 0) > X_LINK_SECONDS:
+            return RedirectResponse("/?x_error=state", status_code=303)
+        link_user = ticket["uid"]
     state = secrets.token_urlsafe(24)
     verifier, challenge = twitter_auth.new_pkce()
     redirect_uri = twitter_redirect_uri(request)
     response = RedirectResponse(twitter_auth.authorize_url(redirect_uri, state, challenge), status_code=303)
     response.set_cookie(
-        X_COOKIE, grading.pack({"k": "x", "s": state, "v": verifier, "iat": int(time.time())}),
+        X_COOKIE, grading.pack({"k": "x", "s": state, "v": verifier, "l": link_user, "iat": int(time.time())}),
         max_age=X_COOKIE_SECONDS, httponly=True, samesite="lax", secure=redirect_uri.startswith("https://"), path=X_COOKIE_PATH,
     )
     return response
@@ -395,6 +419,10 @@ def twitter_callback(request: Request, code: str = "", state: str = "", error: s
         me = twitter_auth.fetch_me(twitter_auth.exchange_code(code, saved["v"], twitter_redirect_uri(request)))
     except twitter_auth.TwitterError:
         return finish("/?x_error=failed")
+
+    if saved.get("l"):                       # link mode: attach this X account to the signed-in user, no new session
+        outcome = db.link_twitter(saved["l"], me["id"], me.get("username", ""), me.get("profile_image_url"))
+        return finish("/?x_linked=1" if outcome == "ok" else "/?x_error=" + ("taken" if outcome == "taken" else "other"))
 
     user, created = db.find_or_create_twitter_user(me["id"], me.get("username", ""), me.get("profile_image_url"))
     token = db.create_session(user["id"])
@@ -480,8 +508,10 @@ def check_answers(body: CheckRequest, user: dict | None = Depends(optional_user)
         }))
         if not first:
             rating_info = {"already_counted": True}
-        elif (db.get_user(user["id"]) or user)["calibration_left"] > 0 and payload["topic"] not in rating.CALIBRATION_TOPICS:
+        elif (fresh := db.get_user(user["id"]) or user)["calibration_left"] > 0 and payload["topic"] not in rating.CALIBRATION_TOPICS:
             rating_info = {"not_calibrating": True}      # while calibrating, only Balance Sheet tasks count
+        elif fresh["calibration_left"] == 0 and not fresh["is_pro"]:
+            rating_info = {"no_pro": True}               # after calibration Score is earned with PRO only
         elif time.time() - payload["iat"] < MIN_SECONDS_PER_POINT * result["total"]:
             rating_info = {"too_fast": True}
         else:
