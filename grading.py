@@ -72,10 +72,17 @@ def _condition(task: dict) -> str:
     return text[:6000]
 
 
-def seal(task: dict, topic: str, source: str) -> dict:
+def fingerprint(task: dict, topic: str) -> list[str]:
+    """Stable ids of what the student is about to solve (pool task id, or the ids of the pool questions)."""
+    ids = task.get("ids") or ([task["id"]] if task.get("id") else [])
+    return [f"{topic}:{i}" for i in ids]
+
+
+def seal(task: dict, topic: str, source: str, fp: list[str] | None = None) -> dict:
     """Returns the task as the browser gets it: no answers, plus a token that carries them."""
     public = copy.deepcopy(task)
     payload = {
+        "fp": (fp if fp is not None else fingerprint(task, topic))[:50],
         "v": 1, "jti": secrets.token_urlsafe(12), "iat": int(time.time()), "topic": topic, "source": source,
         "kind": task["type"], "title": task.get("task_title", ""), "company": task.get("company_name", ""),
         "condition": _condition(task), "explanation": task.get("explanation", ""),

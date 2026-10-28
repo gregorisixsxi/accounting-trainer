@@ -506,6 +506,8 @@ def check_answers(body: CheckRequest, user: dict | None = Depends(optional_user)
             "explanation": result["explanation"][:2000], "review": result["review"][:30],
             "score": result["score"], "total": result["total"],
         }))
+        if first:
+            db.mark_solved(user["id"], payload.get("fp", []))          # feeds the "Solved previously" tag
         if not first:
             rating_info = {"already_counted": True}
         elif (fresh := db.get_user(user["id"]) or user)["calibration_left"] > 0 and payload["topic"] not in rating.CALIBRATION_TOPICS:
@@ -802,13 +804,23 @@ def health_check():
 FREE_TOPICS = ("balance_sheet", "terminology")   # what the UI offers; other topics are not public
 
 
+def with_solved_flag(sealed: dict, user: dict | None) -> dict:
+    """Adds {"solved": {"seen": n, "total": m}} when a signed-in student has already checked (part of) this task."""
+    if user:
+        fp = grading.open_token(sealed["token"]).get("fp", [])
+        seen = db.count_solved(user["id"], fp)
+        if seen:
+            sealed["solved"] = {"seen": seen, "total": len(fp)}
+    return sealed
+
+
 @app.get("/api/generate/{topic}")
-def generate_task(topic: str, exclude: str = ""):
+def generate_task(topic: str, exclude: str = "", user: dict | None = Depends(optional_user)):
     """Free mode: tasks come from the local pools (no API cost); other topics fall back to Claude."""
     recent = {x for x in exclude.split(",") if x}
     task = pool.get_task(topic, recent)
     if task is not None:
-        return grading.seal(task, topic, "free")
+        return with_solved_flag(grading.seal(task, topic, "free"), user)
     if topic not in FREE_TOPICS:
         raise HTTPException(status_code=404, detail=f"Unknown topic '{topic}'. Available: {', '.join(FREE_TOPICS)}")
     # only reached if a pool file is missing: keep the site working, still limited by the per-IP rate limit
@@ -887,7 +899,7 @@ def generate_pro(body: ProRequest, user: dict = Depends(current_user)):
         raise HTTPException(status_code=500, detail="Could not generate a task. Please try again.")
 
     db.add_to_history(user["id"], {"topic": body.topic, "summary": summary, "key": key, "ts": int(time.time())})
-    return grading.seal(task, body.topic, "pro")
+    return grading.seal(task, body.topic, "pro", fp=[f"pro:{key}"])
 
 
 if __name__ == "__main__":

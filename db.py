@@ -94,6 +94,14 @@ def init() -> None:
         )
         c.execute("CREATE INDEX IF NOT EXISTS idx_archive_user ON archive(user_id, id DESC)")
         c.execute(
+            """CREATE TABLE IF NOT EXISTS solved_items (
+                   user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                   item_id    TEXT NOT NULL,            -- stable id of a pool task / question: "<topic>:<id>" (AI tasks: "pro:<key>")
+                   created_at TEXT NOT NULL,
+                   PRIMARY KEY (user_id, item_id)
+               )"""
+        )
+        c.execute(
             """CREATE TABLE IF NOT EXISTS pro_usage (
                    user_id INTEGER NOT NULL,
                    day     TEXT NOT NULL,
@@ -301,6 +309,34 @@ def add_to_history(user_id: int, entry: dict) -> None:
             "UPDATE users SET solved_tasks = ? WHERE id = ?",
             (json.dumps(items[-HISTORY_LIMIT:], ensure_ascii=False), user_id),
         )
+
+
+SOLVED_ITEMS_LIMIT = 5000
+
+
+def mark_solved(user_id: int, item_ids: list[str]) -> None:
+    """Remembers that these pool tasks / questions were checked by the user (drives the 'Solved previously' tag)."""
+    ids = [str(i)[:80] for i in item_ids][:50]
+    if not ids:
+        return
+    now = iso(now_utc())
+    with connect() as c:
+        c.executemany("INSERT OR IGNORE INTO solved_items (user_id, item_id, created_at) VALUES (?, ?, ?)", [(user_id, i, now) for i in ids])
+        c.execute(
+            "DELETE FROM solved_items WHERE user_id = ? AND item_id NOT IN "
+            "(SELECT item_id FROM solved_items WHERE user_id = ? ORDER BY created_at DESC LIMIT ?)",
+            (user_id, user_id, SOLVED_ITEMS_LIMIT),
+        )
+
+
+def count_solved(user_id: int, item_ids: list[str]) -> int:
+    """How many of these ids the user has already solved."""
+    ids = [str(i)[:80] for i in item_ids][:50]
+    if not ids:
+        return 0
+    with connect() as c:
+        marks = ",".join("?" * len(ids))
+        return c.execute(f"SELECT COUNT(*) AS n FROM solved_items WHERE user_id = ? AND item_id IN ({marks})", [user_id, *ids]).fetchone()["n"]
 
 
 def clear_history(user_id: int) -> None:

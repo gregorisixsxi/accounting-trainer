@@ -131,6 +131,22 @@
   .link-accent { color: var(--carbon); text-decoration: underline; text-underline-offset: 2px; }
   .rule { height: 2px; flex: 1; background: var(--border); }
 
+  /* toggle switch: AI-generated PRO tasks */
+  .switch-row { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+  .switch { position: relative; flex: none; width: 46px; height: 26px; padding: 0; cursor: pointer; background: var(--paper); border: 2px solid var(--ink);
+    border-radius: 3px; box-shadow: 2px 2px 0 var(--shadow); transition: background .12s; }
+  .switch::after { content: ""; position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; background: var(--ink); transition: transform .12s ease; }
+  .switch[aria-checked="true"] { background: var(--mark); }
+  .switch[aria-checked="true"]::after { transform: translateX(20px); background: #1B1A17; }
+  .switch.locked::after { background: var(--ink-faint); }
+  .switch:disabled { opacity: .55; cursor: default; }
+  .switch:active:not(:disabled) { transform: translate(1px, 1px); box-shadow: 1px 1px 0 var(--shadow); }
+  .switch-label { font-size: 14px; font-weight: 600; }
+  .switch-state { font-size: 11px; color: var(--ink-faint); }
+  /* a faint ink tag next to the task title: this one is already in the archive */
+  .solved-badge { display: inline-block; padding: 1px 8px; font-family: var(--font-stamp); font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase;
+    color: var(--ink-soft); border: 1px solid var(--ink-faint); border-radius: 2px; opacity: .85; white-space: nowrap; }
+
   /* ============ Surfaces: index cards with a hard shadow ============ */
   .card { background:
       repeating-linear-gradient(transparent 0 27px, color-mix(in srgb, var(--ink) 9%, transparent) 27px 28px),
@@ -538,7 +554,6 @@
       <button type="button" id="ratingBtn" data-rating class="nav-item"><span class="ico" data-icon="trophy"></span>The Ledger</button>
 
       <span class="nav-spacer"></span>
-      <button id="proBtn" type="button" class="hidden nav-item nav-pro"><span class="ico" data-icon="sparkles"></span><span id="proLabel">PRO task</span></button>
       <button type="button" data-feedback class="nav-item"><span class="ico" data-icon="message"></span>Feedback</button>
       <button type="button" data-theme-toggle class="nav-item"><span class="ico" data-icon="moon"></span>Night shift</button>
     </nav>
@@ -548,6 +563,13 @@
 
   <main id="trainerMain" class="trainer-main">
     <div class="trainer-col">
+      <!-- AI-generated PRO tasks: ON by default for PRO accounts; free accounts see it locked -->
+      <div id="proRow" class="hidden switch-row">
+        <button type="button" id="proSwitch" class="switch" role="switch" aria-checked="false" aria-labelledby="proSwitchLabel"></button>
+        <span id="proSwitchLabel" class="switch-label">AI-generated PRO tasks</span>
+        <span id="proSwitchState" class="stamp-font switch-state"></span>
+      </div>
+
       <div id="loading" class="hidden flex flex-col items-center gap-4 py-28 t-soft">
         <span class="pencil"></span><span class="text-sm">Sharpening pencils&hellip;</span>
         <span id="slowHint" class="hidden text-xs t-faint">Waking up the server. It's a morning person, just a very slow one.</span>
@@ -573,7 +595,10 @@
 
       <section id="task" class="hidden fade-in">
         <p id="company" class="eyebrow"></p>
-        <h2 id="title" class="serif mt-2 text-[32px] sm:text-4xl leading-tight"></h2>
+        <div class="mt-2 flex flex-wrap items-baseline gap-x-4 gap-y-1">
+          <h2 id="title" class="serif text-[32px] sm:text-4xl leading-tight"></h2>
+          <span id="solvedBadge" class="hidden solved-badge"></span>
+        </div>
 
         <!-- Balance sheet tasks on wide screens: the instructions and the items stay in view (left) while the answers are typed (right) -->
         <div id="taskGrid" class="mt-4">
@@ -923,6 +948,8 @@ window.addEventListener("popstate", (e) => {
 function panel(which) {             // "loading" | "error" | "task" | "rating"
   for (const id of ["loading", "error", "task", "rating"]) $(id).classList.toggle("hidden", id !== which);
   $("ratingBtn").classList.toggle("active", which === "rating");
+  currentPanel = which;
+  updateProRow();
 }
 
 function setActive(topic) {
@@ -930,7 +957,7 @@ function setActive(topic) {
 }
 
 function setBusy(busy) {
-  document.querySelectorAll(".mode-btn, #newBtn, #checkBtn, #hintBtn, #proBtn").forEach((b) => (b.disabled = busy));
+  document.querySelectorAll(".mode-btn, #newBtn, #checkBtn, #hintBtn, #proSwitch").forEach((b) => (b.disabled = busy));
 }
 
 const LOAD_TIMEOUT_MS = 70000;   // a sleeping free-tier server + a Claude call can take a while
@@ -945,7 +972,34 @@ function friendlyError(e, status) {
   return "The server dropped the pen. Try again.";
 }
 
-async function load(topic, pro = false) {
+// ---------- AI-generated PRO tasks: a switch above the task ----------
+// ON by default for PRO accounts; the choice is remembered per account in this browser. Free accounts see the switch locked.
+let currentPanel = "loading";
+const proPrefKey = () => "at-pro-mode:" + (session ? session.username : "");
+function proPref() {
+  try { const v = localStorage.getItem(proPrefKey()); if (v === "on" || v === "off") return v === "on"; } catch (e) {}
+  return true;                                                  // no choice made yet: PRO accounts start with AI tasks
+}
+const wantPro = () => !!(session && session.is_pro && proPref());
+function updateProRow() {
+  const row = $("proRow");
+  row.classList.toggle("hidden", !session || currentPanel === "rating");
+  if (!session) return;
+  const sw = $("proSwitch"), locked = !session.is_pro, on = wantPro();
+  sw.setAttribute("aria-checked", on ? "true" : "false");
+  sw.classList.toggle("locked", locked);
+  $("proSwitchState").textContent = locked ? "PRO" : on ? "On" : "Off";
+  sw.title = locked ? "Included with PRO" : on ? "New tasks are written by AI" : "New tasks come from the standard set";
+}
+$("proSwitch").onclick = () => {
+  if (!session) return openAuth();
+  if (!session.is_pro) return openUpgrade();
+  try { localStorage.setItem(proPrefKey(), proPref() ? "off" : "on"); } catch (e) {}
+  updateProRow();
+  if (currentTopic) load(currentTopic);                         // the next task already follows the new setting
+};
+
+async function load(topic, pro = wantPro()) {
   currentTopic = topic;
   currentPro = pro;
   setActive(topic);
@@ -979,7 +1033,7 @@ async function load(topic, pro = false) {
     recentIds = recentIds.slice(-12);
     render();
   } catch (e) {
-    $("errorText").textContent = friendlyError(e, status);
+    $("errorText").textContent = friendlyError(e, status) + (pro && status === 429 ? " Switch off AI-generated tasks to keep practising with the standard set." : "");
     panel("error");
   } finally {
     clearTimeout(slowTimer);
@@ -996,6 +1050,12 @@ function render() {
   hintStep = 0;
   $("company").textContent = task.company_name || "";
   $("title").textContent = task.task_title || "Task";
+  const badge = $("solvedBadge"), sv = task.solved;           // set by the server when the student has checked this task before
+  badge.classList.toggle("hidden", !sv);
+  if (sv) {
+    badge.textContent = sv.seen >= sv.total ? "✓ Solved previously" : `${sv.seen} of ${sv.total} questions seen before`;
+    badge.title = "You have already checked this task. It is in your archive.";
+  }
   $("description").textContent = task.description || "";
   $("description").classList.toggle("hidden", !task.description);
   $("itemsBox").replaceChildren();
@@ -1598,11 +1658,7 @@ function renderAuth() {
     if (session && session.profile) b.append(levelPill(session.profile));     // no rating data: nothing is shown
     if (session && session.is_pro) b.append(el("span", "badge badge-pro", "PRO"));
   });
-  // the PRO entry is only for signed-in users; free accounts see it locked
-  const pb = $("proBtn");
-  pb.classList.toggle("hidden", !session);
-  setIcon(pb.querySelector(".ico"), session && !session.is_pro ? "lock" : "sparkles");
-  $("proLabel").textContent = session && !session.is_pro ? "PRO task (locked)" : "PRO task";
+  updateProRow();      // the AI-tasks switch follows the account (hidden when signed out, locked for free accounts)
 }
 
 const authModal = $("authModal"), authForm = $("authForm"), authStatus = $("authStatus");
@@ -1977,12 +2033,6 @@ document.querySelectorAll("[data-auth]").forEach((b) => (b.onclick = openAuth));
 $("authClose").onclick = $("authCancel").onclick = $("authDone").onclick = $("authBackdrop").onclick = closeAuth;
 document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeAuth(); });
 
-$("proBtn").onclick = () => {
-  if (!session) return openAuth();
-  if (!session.is_pro) return openUpgrade();
-  load(currentTopic || "balance_sheet", true);
-};
-
 // --- upgrade / checkout (Lemon Squeezy) ---
 const upgradeModal = $("upgradeModal"), upStatus = $("upStatus");
 let plan = { price_label: "", checkout_available: true };
@@ -2241,8 +2291,8 @@ if (session) {
     .finally(() => { renderAuth(); handleUpgradeReturn(); });
 }
 
-$("newBtn").onclick = () => currentTopic && load(currentTopic, currentPro);
-$("retryBtn").onclick = () => currentTopic && load(currentTopic, currentPro);
+$("newBtn").onclick = () => currentTopic && load(currentTopic);
+$("retryBtn").onclick = () => currentTopic && load(currentTopic);
 document.querySelectorAll("[data-home]").forEach((b) => (b.onclick = () => view("welcome")));
 document.querySelectorAll("[data-start]").forEach((b) => (b.onclick = () => load(b.dataset.start)));
 document.querySelectorAll(".mode-btn").forEach((b) => (b.onclick = () => load(b.dataset.topic)));
