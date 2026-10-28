@@ -16,6 +16,9 @@ BASE_DIR = Path(__file__).resolve().parent
 # On Render set DB_PATH to a persistent disk path (e.g. /var/data/app.db),
 # otherwise the database file is wiped on every deploy.
 DB_PATH = os.environ.get("DB_PATH") or str(BASE_DIR / "data.db")
+if os.environ.get("RENDER") and not os.environ.get("DB_PATH"):
+    print("[db] WARNING: DB_PATH is not set on Render. The database lives on the ephemeral disk and every deploy wipes all accounts and ratings. "
+          "Add a Render Disk and set DB_PATH=/var/data/app.db")
 
 HISTORY_LIMIT = 300  # how many recent tasks to keep per user
 ARCHIVE_LIMIT = 300  # solved tasks kept in the archive per user (oldest are dropped)
@@ -231,8 +234,8 @@ def create_user(username: str, password: str, verified: bool = False) -> dict | 
     with connect() as c:
         try:
             cur = c.execute(
-                "INSERT INTO users (username, password_hash, is_verified) VALUES (?, ?, ?)",
-                (username, hash_password(password), 1 if verified else 0),
+                "INSERT INTO users (username, password_hash, is_verified, calibration_left) VALUES (?, ?, ?, ?)",
+                (username, hash_password(password), 1 if verified else 0, rating.CALIBRATION_TASKS),
             )
         except sqlite3.IntegrityError:
             return None
@@ -712,9 +715,9 @@ def find_or_create_twitter_user(twitter_id: str, handle: str, avatar_url: str | 
                 username = f"x{twitter_id}-{secrets.token_hex(3)}@twitter.invalid"     # the placeholder was squatted: pick another
             try:
                 cur = c.execute(
-                    """INSERT INTO users (username, password_hash, is_verified, twitter_id, twitter_username, nickname, avatar_url)
-                       VALUES (?, ?, 1, ?, ?, ?, ?)""",
-                    (username, hash_password(secrets.token_urlsafe(32)), twitter_id, handle, _unique_nickname(c, handle), picture),
+                    """INSERT INTO users (username, password_hash, is_verified, twitter_id, twitter_username, nickname, avatar_url, calibration_left)
+                       VALUES (?, ?, 1, ?, ?, ?, ?, ?)""",
+                    (username, hash_password(secrets.token_urlsafe(32)), twitter_id, handle, _unique_nickname(c, handle), picture, rating.CALIBRATION_TASKS),
                 )
             except sqlite3.IntegrityError:
                 continue

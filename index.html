@@ -170,11 +170,20 @@
   .field-sm { height: 38px; padding: 0 10px; font-size: 14px; }
 
   /* dynamic balance sheet: ledger columns, sums aligned by digit place */
-  .sheet-row { display: grid; grid-template-columns: minmax(0, 1fr) repeat(var(--n, 1), 5.6rem); gap: .6rem; align-items: center; padding: .4rem 0; font-size: 14px; color: var(--ink); }
+  .sheet-row { display: grid; grid-template-columns: minmax(0, 1fr) repeat(var(--n, 1), 5.6rem); gap: .5rem; align-items: center; padding: .2rem 0; font-size: 13.5px; color: var(--ink); }
+  .sheet-row .field-sm { height: 32px; font-size: 13.5px; }
+  .items-list > * + * { border-top: 1px solid var(--border); }
+  /* task mode: instructions and items stay in view on the left while the answers are typed on the right */
+  #refCol { margin-bottom: 14px; } #refCol > * + * { margin-top: 12px; }
+  @media (min-width: 1100px) {
+    #taskGrid.split { display: grid; grid-template-columns: minmax(300px, 360px) minmax(0, 1fr); gap: 24px; align-items: start; }
+    #taskGrid.split #refCol { position: sticky; top: 84px; max-height: calc(100vh - 104px); overflow-y: auto; margin-bottom: 0; padding: 0 8px 8px 0; }
+  }
+  @media (max-width: 1499px) { #sheetBox .sheet-two.wide-needed { grid-template-columns: minmax(0, 1fr); } }
   @media (min-width: 640px) { .sheet-row { grid-template-columns: minmax(0, 1fr) repeat(var(--n, 1), minmax(5.5rem, 8.5rem)); } }
   .sheet-head { padding: 0 0 .55rem; border-bottom: 2px solid var(--ink); }
   .sheet-col { font-family: var(--font-stamp); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-soft); text-align: right; line-height: 1.2; }
-  .sheet-group { margin: 1rem 0 .1rem; font-family: var(--font-stamp); font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-soft); }
+  .sheet-group { margin: .7rem 0 .1rem; font-family: var(--font-stamp); font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-soft); }
   .sheet-label { overflow-wrap: anywhere; }
   .sheet-sub { font-weight: 600; color: var(--ink); border-top: 1px solid var(--ink); margin-top: .25rem; padding-top: .6rem; }          /* single line above a subtotal */
   .sheet-total { font-weight: 700; color: var(--ink); border-top: 1px solid var(--ink); border-bottom: 6px double var(--ink); margin-top: .55rem; padding: .75rem 0; }   /* double line under a total */
@@ -379,15 +388,17 @@
   .social-btn .ico { width: 15px; height: 15px; }
 
   /* Giveaway: a perforated lottery ticket, not a neon button */
-  .ticket { position: relative; display: inline-flex; align-items: center; gap: 12px; padding: 6px 16px 6px 14px; color: #1B1A17; cursor: pointer; text-align: left;
+  .ticket { position: relative; display: inline-flex; flex: none; align-items: center; gap: 8px; height: 34px; margin: 0 6px; padding: 0 12px 0 10px; color: #1B1A17; cursor: pointer; text-align: left; line-height: 1;
     background: var(--mark); border: 2px dashed var(--ink); border-radius: var(--radius); box-shadow: 3px 3px 0 var(--shadow); font: inherit; transition: transform .08s, box-shadow .08s; }
   .ticket::before, .ticket::after { content: ""; position: absolute; top: 50%; width: 12px; height: 12px; margin-top: -6px; background: var(--paper); border: 2px solid var(--ink); border-radius: 50%; }
   .ticket::before { left: -8px; clip-path: inset(0 0 0 50%); }
   .ticket::after { right: -8px; clip-path: inset(0 50% 0 0); }
   .ticket:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--shadow); }
-  .ticket .no { font-family: var(--font-stamp); font-size: 11px; letter-spacing: .12em; padding-right: 12px; border-right: 2px dashed var(--ink); }
-  .ticket b { font-family: var(--font-head); font-weight: 700; font-size: 15px; }
-  .ticket small { display: block; font-size: 12px; line-height: 1.15; opacity: .8; }
+  .ticket .no { font-family: var(--font-stamp); font-size: 10px; letter-spacing: .1em; padding-right: 8px; border-right: 2px dashed var(--ink); line-height: 1.6; }
+  .ticket b { font-family: var(--font-head); font-weight: 700; font-size: 14px; }
+  .ticket::before, .ticket::after { width: 10px; height: 10px; margin-top: -5px; }
+  .ticket::before { left: -7px; } .ticket::after { right: -7px; }
+  .welcome-bar { position: relative; z-index: 2; row-gap: 10px; margin-bottom: 14px; }
 
   .level-box { display: flex; flex-direction: column; align-items: center; flex: none; margin-left: auto; }
   .level-label { font-family: var(--font-stamp); font-size: 12px; letter-spacing: .14em; margin-top: -6px; text-transform: uppercase; text-align: center; }
@@ -471,10 +482,9 @@
 
 <!-- ============ WELCOME ============ -->
 <section id="welcome" class="relative min-h-screen flex flex-col view-in">
-  <div class="flex flex-wrap items-center justify-end gap-3 px-4 sm:px-6 pt-4">
+  <div class="welcome-bar flex flex-wrap items-center justify-end gap-2 px-4 sm:px-6 pt-4 pb-2">
     <button type="button" id="giveawayBtn" class="ticket" aria-label="Giveaway">
-      <span class="no">No. 0001</span>
-      <span><b>Giveaway</b><small>Win the Reel lottery</small></span>
+      <b>Giveaway</b>
     </button>
     <button type="button" data-rating class="btn btn-ghost btn-sm"><span class="ico" data-icon="trophy"></span>The Ledger</button>
     <button type="button" data-auth class="nav-account" style="max-width:260px"></button>
@@ -565,18 +575,24 @@
         <p id="company" class="eyebrow"></p>
         <h2 id="title" class="serif mt-2 text-[32px] sm:text-4xl leading-tight"></h2>
 
-        <div id="description" class="card mt-6 p-5 text-[14.5px] leading-relaxed t-ink whitespace-pre-wrap"></div>
+        <!-- Balance sheet tasks on wide screens: the instructions and the items stay in view (left) while the answers are typed (right) -->
+        <div id="taskGrid" class="mt-4">
+        <aside id="refCol">
+          <div id="description" class="card p-4 text-[14px] leading-relaxed t-ink whitespace-pre-wrap"></div>
+          <div id="itemsBox"></div>
+        </aside>
+        <div id="mainCol">
 
         <!-- Balance sheet: drawn from the task data (any rows, groups, columns) -->
-        <div id="sheetBox" class="hidden mt-5"></div>
+        <div id="sheetBox" class="hidden"></div>
 
         <!-- Test: drawn from the task data (single answer, select all, true/false, numeric) -->
-        <div id="testBox" class="hidden mt-5 space-y-3"></div>
+        <div id="testBox" class="hidden space-y-3"></div>
 
-        <p id="hintText" class="hidden note note-warn mt-5"></p>
+        <p id="hintText" class="hidden note note-warn mt-4"></p>
         <div id="explain" class="hidden note note-info mt-3"></div>
 
-        <div class="mt-7 flex flex-wrap items-center gap-2.5">
+        <div class="mt-5 flex flex-wrap items-center gap-2.5">
           <button id="checkBtn" type="button" class="btn btn-primary btn-lg">Check answer</button>
           <button id="hintBtn" type="button" class="btn btn-ghost btn-lg"><span class="ico" data-icon="bulb"></span>Hint</button>
           <button id="newBtn" type="button" class="btn btn-quiet btn-lg ml-auto"><span class="ico" data-icon="refresh"></span>New task</button>
@@ -584,7 +600,7 @@
 
         <p id="checkMsg" class="hidden note note-bad mt-4"></p>
 
-        <div id="scoreCard" class="hidden card mt-6 p-5">
+        <div id="scoreCard" class="hidden card mt-5 p-5">
           <div class="flex items-center justify-between gap-4">
             <div>
               <p class="eyebrow">Result</p>
@@ -597,6 +613,8 @@
           <div id="ratingBox" class="hidden mt-4"></div>
           <p id="archiveNote" class="mt-3 text-xs t-faint"></p>
         </div>
+        </div><!-- /mainCol -->
+        </div><!-- /taskGrid -->
       </section>
     </div>
   </main>
@@ -980,6 +998,9 @@ function render() {
   $("title").textContent = task.task_title || "Task";
   $("description").textContent = task.description || "";
   $("description").classList.toggle("hidden", !task.description);
+  $("itemsBox").replaceChildren();
+  $("refCol").classList.toggle("hidden", !task.description && !(task.items && task.items.length));
+  $("taskGrid").classList.toggle("split", isSheet());      // wide screens: instructions on the left, answers on the right
   for (const id of ["hintText", "explain"]) { $(id).classList.add("hidden"); $(id).textContent = ""; }
   $("scoreCard").classList.add("hidden");
   $("archiveNote").textContent = "";
@@ -1003,12 +1024,12 @@ const fmt = (n) => Number(n).toLocaleString("en-US");
 // ================= balance sheet: dynamic table =================
 function itemsCard() {
   // "compile" tasks: the list of items the student sorts into the balance sheet lines
-  const card = el("div", "card p-5 sm:p-6 mb-4");
+  const card = el("div", "card p-4");
   const head = el("div", "flex items-baseline justify-between gap-3");
   head.append(el("h3", "text-[15px] font-semibold", "Balance sheet value items"), el("span", "text-xs t-faint", task.unit ? "Amounts in " + task.unit : ""));
-  const list = el("div", "mt-3 divide-y divide-white/[.06]");
+  const list = el("div", "mt-2 items-list");
   task.items.forEach((it) => {
-    const row = el("div", "flex items-start justify-between gap-4 py-2 text-[14px]");
+    const row = el("div", "flex items-start justify-between gap-4 py-1 text-[13.5px]");
     row.append(el("span", "t-ink", it.name), el("span", "num t-ink shrink-0", fmt(it.amount)));
     list.append(row);
   });
@@ -1021,13 +1042,13 @@ function renderSheet() {
   box.replaceChildren();
   sheetCells = [];
   const ncol = task.columns.length;
-  if (task.items && task.items.length) box.append(itemsCard());
-  const card = el("div", "card p-5 sm:p-6");
+  if (task.items && task.items.length) $("itemsBox").append(itemsCard());
+  const card = el("div", "card p-4");
   card.style.setProperty("--n", ncol);
   const head = el("div", "flex items-baseline justify-between gap-3");
   head.append(el("h3", "text-[15px] font-semibold", "Balance sheet"), el("span", "text-xs t-faint", task.items && task.items.length ? "" : (task.unit ? "Amounts in " + task.unit : "")));
   const rules = el("p", "mt-1 text-xs t-faint", "Enter plain numbers without spaces or punctuation, e.g. 1234. Use a minus sign for a negative value (-100) and 0 for zero.");
-  const grid = el("div", "mt-4 " + (task.layout === "two_sided" ? "grid md:grid-cols-2 gap-x-10 gap-y-8" : "space-y-8"));
+  const grid = el("div", "mt-3 " + (task.layout === "two_sided" ? "grid md:grid-cols-2 gap-x-8 gap-y-5 sheet-two" + (ncol > 1 ? " wide-needed" : "") : "space-y-5"));
   task.sides.forEach((side) => grid.append(sideEl(side, ncol)));
   card.append(head, rules, grid);
   // Enter moves to the next empty cell, like in a spreadsheet
