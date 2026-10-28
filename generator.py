@@ -55,7 +55,7 @@ def _load_examples() -> str:
 ENGLISH_RULE = (
     "STRICT REQUIREMENT: All generated content MUST be 100% in English. Never use Russian or any "
     "other language for company names, transaction descriptions, financial items, options, or "
-    "categories. Use USD ($) for amounts and international GAAP/IFRS account names (e.g., "
+    "categories. Use USD ($) for amounts (in balance sheet tables the amounts are in THOUSAND USD, see the format) and international GAAP/IFRS account names (e.g., "
     "'Accounts Payable', 'Raw Materials', 'Work in Process', 'Equipment', 'Debit:', 'Credit:'). "
     "Do NOT use numeric account codes (like 10, 20, 43). Company names must be English-style names "
     "(e.g. 'FitLife Gym & Club', 'Maple Street Bakery'). "
@@ -96,15 +96,15 @@ BALANCE_SHEET_FORMAT = (
     "{\n"
     '  "task_title": "short exam-style title",\n'
     '  "company_name": "English company name",\n'
-    '  "unit": "USD",\n'
+    '  "unit": "thousand USD",\n'
     '  "columns": ["Amount"],\n'
     '  "description": "the task statement for the student",\n'
-    '  "accounts": [{"name": "Patent purchased by the company", "amount": 30000, "row": "I. Intangible assets"}],   (compile variant only)\n'
+    '  "accounts": [{"name": "Patent purchased by the company", "amount": 30, "row": "I. Intangible assets"}],   (compile variant only)\n'
     '  "sides": [\n'
     '    {"title": "Assets", "groups": [\n'
     '        {"title": "A. Non-current assets",\n'
-    '         "rows": [{"label": "I. Intangible assets", "values": [30000], "blank": true},\n'
-    '                  {"label": "II. Tangible assets", "values": [280000], "blank": true}],\n'
+    '         "rows": [{"label": "I. Intangible assets", "values": [30], "blank": true},\n'
+    '                  {"label": "II. Tangible assets", "values": [280], "blank": true}],\n'
     '         "subtotal": {"label": "Total non-current assets", "mode": "hidden"}},\n'
     '        {"title": "B. Current assets", "rows": [...], "subtotal": {"label": "Total current assets", "mode": "hidden"}}],\n'
     '     "total": {"label": "TOTAL ASSETS", "mode": "hidden"}},\n'
@@ -131,7 +131,9 @@ BALANCE_SHEET_FORMAT = (
     "Assets = Equity and liabilities in every column. Choose the other amounts as plausible round numbers, and make the Equity and liabilities side without the plug "
     "clearly SMALLER than the Assets side (the plug is then a positive retained earnings figure).\n"
     "- The table must be DETAILED and exam-sized: 10 to 16 rows in total, and at least 8 cells the student has to type "
-    "(rows, subtotals and totals together; at most 24). Amounts are whole numbers, usually multiples of 5 or 10 (or 1,000).\n"
+    "(rows, subtotals and totals together; at most 24). AMOUNT SCALE: the unit is thousand USD, so write SMALL whole numbers like a real exam: single items between 20 and 900, "
+    "usually multiples of 5 or 10, and a total assets figure of roughly 800 to 2,500. Never write amounts like 350,000 or 1,200,000. "
+    "In the description and explanation say 'thousand USD' (or 'th USD'), not '$' with extra zeros.\n"
     "- Be compact: no extra fields, 'description' at most 4 sentences, 'explanation' at most 6 sentences."
 )
 

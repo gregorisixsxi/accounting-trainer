@@ -12,7 +12,8 @@ import exam
 BASE_DIR = Path(__file__).resolve().parent
 TASKS_PATH = BASE_DIR / "tasks_pool.json"              # balance_sheet
 TERMINOLOGY_PATH = BASE_DIR / "terminology_pool.json"  # terminology
-CURRENCY = "USD"
+CURRENCY = "thousand USD"          # amounts are shown in thousands, like the real exam (350, 120, 520 ...), not as 350,000
+AMOUNT_DIVISOR = 1000              # the pool file stores whole dollars; they are scaled once when the pool is loaded
 
 # Items that count as fixed (non-current) assets in the "totals" variant. Everything else under assets is current.
 FIXED_ASSETS = {
@@ -82,6 +83,16 @@ def _valid_terminology(t: dict) -> bool:
         return False
 
 
+def _scale_amounts(t: dict) -> dict:
+    """Dollars -> thousands of dollars for every line of a balance sheet task. The sheet still balances because every
+    amount in the pool is a multiple of 1,000; the check afterwards skips the task if that ever stops being true."""
+    out = dict(t)
+    for key in ("assets", "liabilities", "equity"):
+        if isinstance(t.get(key), dict):
+            out[key] = {name: round(v / AMOUNT_DIVISOR) for name, v in t[key].items()}
+    return out
+
+
 def _load() -> dict[str, list[dict]]:
     sources = (
         (TASKS_PATH, "balance_sheet", _valid_balance_sheet),
@@ -98,6 +109,8 @@ def _load() -> dict[str, list[dict]]:
                 files[path] = {}
         good, seen = [], set()
         for t in files[path].get(topic, []):
+            if topic == "balance_sheet" and isinstance(t, dict):
+                t = _scale_amounts(t)
             if isinstance(t, dict) and t.get("id") not in seen and "id" in t and check(t):
                 good.append(t)
                 seen.add(t["id"])
