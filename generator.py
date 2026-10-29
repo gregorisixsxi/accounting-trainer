@@ -40,15 +40,22 @@ MODEL = os.getenv("ANTHROPIC_MODEL", "claude-haiku-5-5")
 EXAMPLES_PATH = BASE_DIR / "midterm_examples.txt"
 
 
-def _load_examples() -> str:
+def _load_examples(topic: str = "") -> str:
+    # midterm_templates.py holds the real midterm tasks with their rules (types, wording, logic, kind of wrong options)
+    try:
+        import midterm_templates
+        templates = midterm_templates.examples_for(topic)
+    except Exception as e:  # a broken or missing templates file must never stop task generation
+        print(f"[generator] midterm_templates not used: {e}")
+        templates = ""
     try:
         text = EXAMPLES_PATH.read_text(encoding="utf-8").strip()
     except OSError:
-        return ""
+        return templates
     if not text:
-        return ""
-    return ("\n\nREAL EXAM EXAMPLES. Imitate their structure, wording, difficulty and level of detail "
-            "(do NOT copy their companies or numbers):\n" + text[:6000])
+        return templates
+    return templates + ("\n\nREAL EXAM EXAMPLES. Imitate their structure, wording, difficulty and level of detail "
+                        "(do NOT copy their companies or numbers):\n" + text[:6000])
 
 
 # ---------------------------------------------------------------- shared prompt parts
@@ -257,7 +264,7 @@ def _avoid_text(avoid: list[str] | None) -> str:
 
 def build_prompts(topic: str, avoid: list[str] | None = None, variant: str | None = None) -> tuple[str, str, str | None]:
     """Returns (system prompt, user prompt, balance-sheet variant)."""
-    examples = _load_examples()
+    examples = _load_examples(topic)
     if topic == "balance_sheet":
         variant = variant or random.choices(list(BALANCE_SHEET_VARIANT_WEIGHTS), list(BALANCE_SHEET_VARIANT_WEIGHTS.values()))[0]
         user = "Create ONE new balance sheet task.\n" + BALANCE_SHEET_VARIANTS[variant]

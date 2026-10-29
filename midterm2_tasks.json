@@ -1,0 +1,2069 @@
+{
+ "source": "midterm2",
+ "note": "Practice tasks modelled on midterm 2. Tables: journal, trial_balance, ledger_posting. mcq = exam.normalize_question format.",
+ "seed": 20261029,
+ "currency": "th USD",
+ "types": [
+  {
+   "type_id": "m2_q01",
+   "title": "Record transactions in the journal",
+   "kind": "journal",
+   "tasks": [
+    {
+     "id": "m2_q01_01",
+     "type_id": "m2_q01",
+     "kind": "journal",
+     "points": 8,
+     "description": "Required: Record the given transactions in the journal!",
+     "account_options": [
+      "Bank account",
+      "Bank loan",
+      "Buildings",
+      "Cash",
+      "Contributed capital",
+      "Cost of goods sold",
+      "Dividends",
+      "Equipment",
+      "Goods",
+      "Land",
+      "Long-term bank loan",
+      "Rent expense",
+      "Salaries and wages expense",
+      "Sales revenue",
+      "Trade payables",
+      "Trade receivables",
+      "Vehicles"
+     ],
+     "entries": [
+      {
+       "no": 1,
+       "text": "Purchased a vehicle and paid $700 by bank transfer",
+       "debit": "Vehicles",
+       "credit": "Bank account",
+       "amount": 700
+      },
+      {
+       "no": 2,
+       "text": "Paid $800 of trade payables by bank transfer",
+       "debit": "Trade payables",
+       "credit": "Bank account",
+       "amount": 800
+      },
+      {
+       "no": 3,
+       "text": "Goods sold for $600; the customer paid by bank transfer.",
+       "debit": "Bank account",
+       "credit": "Sales revenue",
+       "amount": 600
+      },
+      {
+       "no": 4,
+       "text": "The cost of goods sold is $450.",
+       "debit": "Cost of goods sold",
+       "credit": "Goods",
+       "amount": 450
+      }
+     ],
+     "explanation": "1. Debit Vehicles, credit Bank account, 700. 2. Debit Trade payables, credit Bank account, 800. 3. Debit Bank account, credit Sales revenue, 600. 4. Debit Cost of goods sold, credit Goods, 450."
+    },
+    {
+     "id": "m2_q01_02",
+     "type_id": "m2_q01",
+     "kind": "journal",
+     "points": 8,
+     "description": "Required: Record the given transactions in the journal!",
+     "account_options": [
+      "Bank account",
+      "Bank loan",
+      "Buildings",
+      "Cash",
+      "Contributed capital",
+      "Cost of goods sold",
+      "Dividends",
+      "Equipment",
+      "Goods",
+      "Land",
+      "Long-term bank loan",
+      "Rent expense",
+      "Salaries and wages expense",
+      "Sales revenue",
+      "Trade payables",
+      "Trade receivables",
+      "Vehicles"
+     ],
+     "entries": [
+      {
+       "no": 1,
+       "text": "Purchased goods for $1100 on credit (payment term: 30 days)",
+       "debit": "Goods",
+       "credit": "Trade payables",
+       "amount": 1100
+      },
+      {
+       "no": 2,
+       "text": "Repaid $700 of the long-term bank loan from the bank account",
+       "debit": "Long-term bank loan",
+       "credit": "Bank account",
+       "amount": 700
+      },
+      {
+       "no": 3,
+       "text": "Goods sold for $600; the customer paid by bank transfer.",
+       "debit": "Bank account",
+       "credit": "Sales revenue",
+       "amount": 600
+      },
+      {
+       "no": 4,
+       "text": "The cost of goods sold is $350.",
+       "debit": "Cost of goods sold",
+       "credit": "Goods",
+       "amount": 350
+      }
+     ],
+     "explanation": "1. Debit Goods, credit Trade payables, 1100. 2. Debit Long-term bank loan, credit Bank account, 700. 3. Debit Bank account, credit Sales revenue, 600. 4. Debit Cost of goods sold, credit Goods, 350."
+    },
+    {
+     "id": "m2_q01_03",
+     "type_id": "m2_q01",
+     "kind": "journal",
+     "points": 8,
+     "description": "Required: Record the given transactions in the journal!",
+     "account_options": [
+      "Bank account",
+      "Bank loan",
+      "Buildings",
+      "Cash",
+      "Contributed capital",
+      "Cost of goods sold",
+      "Dividends",
+      "Equipment",
+      "Goods",
+      "Land",
+      "Long-term bank loan",
+      "Rent expense",
+      "Salaries and wages expense",
+      "Sales revenue",
+      "Trade payables",
+      "Trade receivables",
+      "Vehicles"
+     ],
+     "entries": [
+      {
+       "no": 1,
+       "text": "Purchased goods for $400 on credit (payment term: 30 days)",
+       "debit": "Goods",
+       "credit": "Trade payables",
+       "amount": 400
+      },
+      {
+       "no": 2,
+       "text": "Paid $600 of trade payables by bank transfer",
+       "debit": "Trade payables",
+       "credit": "Bank account",
+       "amount": 600
+      },
+      {
+       "no": 3,
+       "text": "Goods sold for $400; the customer paid by bank transfer.",
+       "debit": "Bank account",
+       "credit": "Sales revenue",
+       "amount": 400
+      },
+      {
+       "no": 4,
+       "text": "The cost of goods sold is $150.",
+       "debit": "Cost of goods sold",
+       "credit": "Goods",
+       "amount": 150
+      }
+     ],
+     "explanation": "1. Debit Goods, credit Trade payables, 400. 2. Debit Trade payables, credit Bank account, 600. 3. Debit Bank account, credit Sales revenue, 400. 4. Debit Cost of goods sold, credit Goods, 150."
+    },
+    {
+     "id": "m2_q01_04",
+     "type_id": "m2_q01",
+     "kind": "journal",
+     "points": 8,
+     "description": "Required: Record the given transactions in the journal!",
+     "account_options": [
+      "Bank account",
+      "Bank loan",
+      "Buildings",
+      "Cash",
+      "Contributed capital",
+      "Cost of goods sold",
+      "Dividends",
+      "Equipment",
+      "Goods",
+      "Land",
+      "Long-term bank loan",
+      "Rent expense",
+      "Salaries and wages expense",
+      "Sales revenue",
+      "Trade payables",
+      "Trade receivables",
+      "Vehicles"
+     ],
+     "entries": [
+      {
+       "no": 1,
+       "text": "Purchased land and paid cash of $1100",
+       "debit": "Land",
+       "credit": "Cash",
+       "amount": 1100
+      },
+      {
+       "no": 2,
+       "text": "Paid $400 salaries to the employees in cash",
+       "debit": "Salaries and wages expense",
+       "credit": "Cash",
+       "amount": 400
+      },
+      {
+       "no": 3,
+       "text": "Goods sold for $900; the customer paid by bank transfer.",
+       "debit": "Bank account",
+       "credit": "Sales revenue",
+       "amount": 900
+      },
+      {
+       "no": 4,
+       "text": "The cost of goods sold is $400.",
+       "debit": "Cost of goods sold",
+       "credit": "Goods",
+       "amount": 400
+      }
+     ],
+     "explanation": "1. Debit Land, credit Cash, 1100. 2. Debit Salaries and wages expense, credit Cash, 400. 3. Debit Bank account, credit Sales revenue, 900. 4. Debit Cost of goods sold, credit Goods, 400."
+    }
+   ]
+  },
+  {
+   "type_id": "m2_q02",
+   "title": "Ledger accounts, trial balance and closing balance sheet",
+   "kind": "trial_balance",
+   "tasks": [
+    {
+     "id": "m2_q02_01",
+     "type_id": "m2_q02",
+     "kind": "trial_balance",
+     "points": 8,
+     "unit": "th USD",
+     "description": "Based on the data of the given ledger accounts, determine the missing values in the trial balance, and prepare the Closing Balance Sheet!",
+     "ledger": [
+      {
+       "account": "Other equipment",
+       "debit": [
+        250,
+        70,
+        170
+       ],
+       "credit": [
+        140
+       ]
+      },
+      {
+       "account": "Goods",
+       "debit": [
+        100,
+        150
+       ],
+       "credit": [
+        140
+       ]
+      },
+      {
+       "account": "Cash",
+       "debit": [
+        130
+       ],
+       "credit": []
+      },
+      {
+       "account": "Contributed capital",
+       "debit": [],
+       "credit": [
+        360
+       ]
+      },
+      {
+       "account": "Long-term loans",
+       "debit": [
+        140,
+        30
+       ],
+       "credit": [
+        230,
+        110
+       ]
+      },
+      {
+       "account": "Trade payables",
+       "debit": [
+        140
+       ],
+       "credit": [
+        180
+       ]
+      },
+      {
+       "account": "Cost of services used",
+       "debit": [
+        90
+       ],
+       "credit": []
+      },
+      {
+       "account": "Cost of salaries and wages",
+       "debit": [
+        60
+       ],
+       "credit": []
+      },
+      {
+       "account": "Sales revenue",
+       "debit": [],
+       "credit": [
+        170
+       ]
+      }
+     ],
+     "trial_balance": [
+      {
+       "account": "Other equipment",
+       "debit": 350,
+       "credit": 0,
+       "asked": false
+      },
+      {
+       "account": "Goods",
+       "debit": 110,
+       "credit": 0,
+       "asked": false
+      },
+      {
+       "account": "Cash",
+       "debit": 130,
+       "credit": 0,
+       "asked": false
+      },
+      {
+       "account": "Contributed capital",
+       "debit": 0,
+       "credit": 360,
+       "asked": false
+      },
+      {
+       "account": "Long-term loans",
+       "debit": 0,
+       "credit": 170,
+       "asked": true
+      },
+      {
+       "account": "Trade payables",
+       "debit": 0,
+       "credit": 40,
+       "asked": true
+      },
+      {
+       "account": "Cost of services used",
+       "debit": 90,
+       "credit": 0,
+       "asked": false
+      },
+      {
+       "account": "Cost of salaries and wages",
+       "debit": 60,
+       "credit": 0,
+       "asked": false
+      },
+      {
+       "account": "Sales revenue",
+       "debit": 0,
+       "credit": 170,
+       "asked": false
+      }
+     ],
+     "trial_balance_totals": {
+      "balance_sheet_accounts_total": {
+       "debit": 20,
+       "credit": 0
+      },
+      "profit_and_loss_accounts_total": {
+       "debit": 0,
+       "credit": 20
+      }
+     },
+     "closing_balance_sheet": {
+      "assets": [
+       {
+        "label": "Tangible assets",
+        "answer": 350
+       },
+       {
+        "label": "Supplies",
+        "answer": 110
+       },
+       {
+        "label": "Cash",
+        "answer": 130
+       },
+       {
+        "label": "Cash at bank",
+        "answer": 0
+       },
+       {
+        "label": "Total Assets",
+        "answer": 590
+       }
+      ],
+      "equity_and_liabilities": [
+       {
+        "label": "Contributed capital",
+        "answer": 360
+       },
+       {
+        "label": "Retained earnings",
+        "answer": 0
+       },
+       {
+        "label": "Net Income",
+        "answer": 20
+       },
+       {
+        "label": "Liabilities",
+        "answer": 210
+       },
+       {
+        "label": "Total Owner's Equity and Liabilities",
+        "answer": 590
+       }
+      ]
+     },
+     "explanation": "Every balance is the difference of the two sides. Net income = revenue 170 - costs 150 = 20. Assets 590 = capital 360 + net income 20 + liabilities (170 + 40) = 590."
+    },
+    {
+     "id": "m2_q02_02",
+     "type_id": "m2_q02",
+     "kind": "trial_balance",
+     "points": 8,
+     "unit": "th USD",
+     "description": "Based on the data of the given ledger accounts, determine the missing values in the trial balance, and prepare the Closing Balance Sheet!",
+     "ledger": [
+      {
+       "account": "Other equipment",
+       "debit": [
+        410
+       ],
+       "credit": [
+        120
+       ]
+      },
+      {
+       "account": "Goods",
+       "debit": [
+        40,
+        80,
+        150
+       ],
+       "credit": [
+        100
+       ]
+      },
+      {
+       "account": "Bank account",
+       "debit": [
+        210
+       ],
+       "credit": []
+      },
+      {
+       "account": "Contributed capital",
+       "debit": [],
+       "credit": [
+        350
+       ]
+      },
+      {
+       "account": "Long-term loans",
+       "debit": [
+        50
+       ],
+       "credit": [
+        50,
+        230
+       ]
+      },
+      {
+       "account": "Trade payables",
+       "debit": [
+        30
+       ],
+       "credit": [
+        30,
+        20,
+        40
+       ]
+      },
+      {
+       "account": "Cost of services used",
+       "debit": [
+        50
+       ],
+       "credit": []
+      },
+      {
+       "account": "Cost of salaries and wages",
+       "debit": [
+        60
+       ],
+       "credit": []
+      },
+      {
+       "account": "Sales revenue",
+       "debit": [],
+       "credit": [
+        140
+       ]
+      }
+     ],
+     "trial_balance": [
+      {
+       "account": "Other equipment",
+       "debit": 290,
+       "credit": 0,
+       "asked": false
+      },
+      {
+       "account": "Goods",
+       "debit": 170,
+       "credit": 0,
+       "asked": true
+      },
+      {
+       "account": "Bank account",
+       "debit": 210,
+       "credit": 0,
+       "asked": false
+      },
+      {
+       "account": "Contributed capital",
+       "debit": 0,
+       "credit": 350,
+       "asked": false
+      },
+      {
+       "account": "Long-term loans",
+       "debit": 0,
+       "credit": 230,
+       "asked": false
+      },
+      {
+       "account": "Trade payables",
+       "debit": 0,
+       "credit": 60,
+       "asked": true
+      },
+      {
+       "account": "Cost of services used",
+       "debit": 50,
+       "credit": 0,
+       "asked": false
+      },
+      {
+       "account": "Cost of salaries and wages",
+       "debit": 60,
+       "credit": 0,
+       "asked": false
+      },
+      {
+       "account": "Sales revenue",
+       "debit": 0,
+       "credit": 140,
+       "asked": false
+      }
+     ],
+     "trial_balance_totals": {
+      "balance_sheet_accounts_total": {
+       "debit": 30,
+       "credit": 0
+      },
+      "profit_and_loss_accounts_total": {
+       "debit": 0,
+       "credit": 30
+      }
+     },
+     "closing_balance_sheet": {
+      "assets": [
+       {
+        "label": "Tangible assets",
+        "answer": 290
+       },
+       {
+        "label": "Supplies",
+        "answer": 170
+       },
+       {
+        "label": "Cash",
+        "answer": 0
+       },
+       {
+        "label": "Cash at bank",
+        "answer": 210
+       },
+       {
+        "label": "Total Assets",
+        "answer": 670
+       }
+      ],
+      "equity_and_liabilities": [
+       {
+        "label": "Contributed capital",
+        "answer": 350
+       },
+       {
+        "label": "Retained earnings",
+        "answer": 0
+       },
+       {
+        "label": "Net Income",
+        "answer": 30
+       },
+       {
+        "label": "Liabilities",
+        "answer": 290
+       },
+       {
+        "label": "Total Owner's Equity and Liabilities",
+        "answer": 670
+       }
+      ]
+     },
+     "explanation": "Every balance is the difference of the two sides. Net income = revenue 140 - costs 110 = 30. Assets 670 = capital 350 + net income 30 + liabilities (230 + 60) = 670."
+    },
+    {
+     "id": "m2_q02_03",
+     "type_id": "m2_q02",
+     "kind": "trial_balance",
+     "points": 8,
+     "unit": "th USD",
+     "description": "Based on the data of the given ledger accounts, determine the missing values in the trial balance, and prepare the Closing Balance Sheet!",
+     "ledger": [
+      {
+       "account": "Other equipment",
+       "debit": [
+        250
+       ],
+       "credit": [
+        40
+       ]
+      },
+      {
+       "account": "Goods",
+       "debit": [
+        330,
+        130
+       ],
+       "credit": [
+        80,
+        80
+       ]
+      },
+      {
+       "account": "Cash",
+       "debit": [
+        170
+       ],
+       "credit": []
+      },
+      {
+       "account": "Contributed capital",
+       "debit": [],
+       "credit": [
+        270
+       ]
+      },
+      {
+       "account": "Long-term loans",
+       "debit": [
+        70,
+        20
+       ],
+       "credit": [
+        200
+       ]
+      },
+      {
+       "account": "Trade payables",
+       "debit": [
+        70,
+        60
+       ],
+       "credit": [
+        190,
+        40,
+        170
+       ]
+      },
+      {
+       "account": "Cost of services used",
+       "debit": [
+        80
+       ],
+       "credit": []
+      },
+      {
+       "account": "Cost of salaries and wages",
+       "debit": [
+        120
+       ],
+       "credit": []
+      },
+      {
+       "account": "Sales revenue",
+       "debit": [],
+       "credit": [
+        230
+       ]
+      }
+     ],
+     "trial_balance": [
+      {
+       "account": "Other equipment",
+       "debit": 210,
+       "credit": 0,
+       "asked": false
+      },
+      {
+       "account": "Goods",
+       "debit": 300,
+       "credit": 0,
+       "asked": true
+      },
+      {
+       "account": "Cash",
+       "debit": 170,
+       "credit": 0,
+       "asked": false
+      },
+      {
+       "account": "Contributed capital",
+       "debit": 0,
+       "credit": 270,
+       "asked": false
+      },
+      {
+       "account": "Long-term loans",
+       "debit": 0,
+       "credit": 110,
+       "asked": false
+      },
+      {
+       "account": "Trade payables",
+       "debit": 0,
+       "credit": 270,
+       "asked": true
+      },
+      {
+       "account": "Cost of services used",
+       "debit": 80,
+       "credit": 0,
+       "asked": false
+      },
+      {
+       "account": "Cost of salaries and wages",
+       "debit": 120,
+       "credit": 0,
+       "asked": false
+      },
+      {
+       "account": "Sales revenue",
+       "debit": 0,
+       "credit": 230,
+       "asked": false
+      }
+     ],
+     "trial_balance_totals": {
+      "balance_sheet_accounts_total": {
+       "debit": 30,
+       "credit": 0
+      },
+      "profit_and_loss_accounts_total": {
+       "debit": 0,
+       "credit": 30
+      }
+     },
+     "closing_balance_sheet": {
+      "assets": [
+       {
+        "label": "Tangible assets",
+        "answer": 210
+       },
+       {
+        "label": "Supplies",
+        "answer": 300
+       },
+       {
+        "label": "Cash",
+        "answer": 170
+       },
+       {
+        "label": "Cash at bank",
+        "answer": 0
+       },
+       {
+        "label": "Total Assets",
+        "answer": 680
+       }
+      ],
+      "equity_and_liabilities": [
+       {
+        "label": "Contributed capital",
+        "answer": 270
+       },
+       {
+        "label": "Retained earnings",
+        "answer": 0
+       },
+       {
+        "label": "Net Income",
+        "answer": 30
+       },
+       {
+        "label": "Liabilities",
+        "answer": 380
+       },
+       {
+        "label": "Total Owner's Equity and Liabilities",
+        "answer": 680
+       }
+      ]
+     },
+     "explanation": "Every balance is the difference of the two sides. Net income = revenue 230 - costs 200 = 30. Assets 680 = capital 270 + net income 30 + liabilities (110 + 270) = 680."
+    }
+   ]
+  },
+  {
+   "type_id": "m2_q03",
+   "title": "Record economic events in ledger accounts, gross profit and merchandise balance",
+   "kind": "ledger_posting",
+   "tasks": [
+    {
+     "id": "m2_q03_01",
+     "type_id": "m2_q03",
+     "kind": "ledger_posting",
+     "points": 6,
+     "unit": "thousand USD",
+     "economic_events": [
+      "The company sold inventory worth 240 thousand USD to its domestic partner for 550 thousand USD in cash.",
+      "Our company purchased inventory worth 310 thousand USD. Payment for the inventory is due in 30 days.",
+      "Our company complained about the quality of the goods upon receipt, so it subsequently requested and received a 20% discount. The invoice was corrected.",
+      "Our company has transferred its entire trade payables from the settlement deposit account. The settlement deposit account debit notification has been received."
+     ],
+     "task": "Record economic events in thousands of USD! Answer the questions! Only write the amount on the appropriate side of the ledger accounts, NOT the event number!",
+     "accounts": [
+      {
+       "name": "Goods",
+       "opening": {
+        "side": "debit",
+        "amount": 800
+       },
+       "entries": [
+        {
+         "event": 1,
+         "side": "credit",
+         "amount": 240
+        },
+        {
+         "event": 2,
+         "side": "debit",
+         "amount": 310
+        },
+        {
+         "event": 3,
+         "side": "credit",
+         "amount": 62
+        }
+       ]
+      },
+      {
+       "name": "Trade payables",
+       "opening": null,
+       "entries": [
+        {
+         "event": 2,
+         "side": "credit",
+         "amount": 310
+        },
+        {
+         "event": 3,
+         "side": "debit",
+         "amount": 62
+        },
+        {
+         "event": 4,
+         "side": "debit",
+         "amount": 248
+        }
+       ]
+      },
+      {
+       "name": "Cash",
+       "opening": null,
+       "entries": [
+        {
+         "event": 1,
+         "side": "debit",
+         "amount": 550
+        }
+       ]
+      },
+      {
+       "name": "Bank account",
+       "opening": {
+        "side": "debit",
+        "amount": 600
+       },
+       "entries": [
+        {
+         "event": 4,
+         "side": "credit",
+         "amount": 248
+        }
+       ]
+      },
+      {
+       "name": "Cost of goods sold",
+       "opening": null,
+       "entries": [
+        {
+         "event": 1,
+         "side": "debit",
+         "amount": 240
+        }
+       ]
+      },
+      {
+       "name": "Sales revenue",
+       "opening": null,
+       "entries": [
+        {
+         "event": 1,
+         "side": "credit",
+         "amount": 550
+        }
+       ]
+      }
+     ],
+     "questions": [
+      {
+       "prompt": "What is the Gross Profit from Sales?",
+       "format": "for a profit: +1234, for a loss: -1234",
+       "answer": 310
+      },
+      {
+       "prompt": "What is the merchandise account balance at the end of the period?",
+       "format": "only the amount, without spaces or other punctuation marks",
+       "answer": 808
+      }
+     ],
+     "explanation": "Gross profit = sales revenue 550 - cost of goods sold 240 = 310. Goods: 800 - 240 + 310 - 62 = 808. The discount is 20% of 310 = 62; the remaining payable 310 - 62 = 248 is paid from the bank account."
+    },
+    {
+     "id": "m2_q03_02",
+     "type_id": "m2_q03",
+     "kind": "ledger_posting",
+     "points": 6,
+     "unit": "thousand USD",
+     "economic_events": [
+      "The company sold inventory worth 300 thousand USD to its domestic partner for 690 thousand USD in cash.",
+      "Our company purchased inventory worth 270 thousand USD. Payment for the inventory is due in 20 days.",
+      "Our company complained about the quality of the goods upon receipt, so it subsequently requested and received a 20% discount. The invoice was corrected.",
+      "Our company has transferred its entire trade payables from the settlement deposit account. The settlement deposit account debit notification has been received."
+     ],
+     "task": "Record economic events in thousands of USD! Answer the questions! Only write the amount on the appropriate side of the ledger accounts, NOT the event number!",
+     "accounts": [
+      {
+       "name": "Goods",
+       "opening": {
+        "side": "debit",
+        "amount": 800
+       },
+       "entries": [
+        {
+         "event": 1,
+         "side": "credit",
+         "amount": 300
+        },
+        {
+         "event": 2,
+         "side": "debit",
+         "amount": 270
+        },
+        {
+         "event": 3,
+         "side": "credit",
+         "amount": 54
+        }
+       ]
+      },
+      {
+       "name": "Trade payables",
+       "opening": null,
+       "entries": [
+        {
+         "event": 2,
+         "side": "credit",
+         "amount": 270
+        },
+        {
+         "event": 3,
+         "side": "debit",
+         "amount": 54
+        },
+        {
+         "event": 4,
+         "side": "debit",
+         "amount": 216
+        }
+       ]
+      },
+      {
+       "name": "Cash",
+       "opening": null,
+       "entries": [
+        {
+         "event": 1,
+         "side": "debit",
+         "amount": 690
+        }
+       ]
+      },
+      {
+       "name": "Bank account",
+       "opening": {
+        "side": "debit",
+        "amount": 600
+       },
+       "entries": [
+        {
+         "event": 4,
+         "side": "credit",
+         "amount": 216
+        }
+       ]
+      },
+      {
+       "name": "Cost of goods sold",
+       "opening": null,
+       "entries": [
+        {
+         "event": 1,
+         "side": "debit",
+         "amount": 300
+        }
+       ]
+      },
+      {
+       "name": "Sales revenue",
+       "opening": null,
+       "entries": [
+        {
+         "event": 1,
+         "side": "credit",
+         "amount": 690
+        }
+       ]
+      }
+     ],
+     "questions": [
+      {
+       "prompt": "What is the Gross Profit from Sales?",
+       "format": "for a profit: +1234, for a loss: -1234",
+       "answer": 390
+      },
+      {
+       "prompt": "What is the merchandise account balance at the end of the period?",
+       "format": "only the amount, without spaces or other punctuation marks",
+       "answer": 716
+      }
+     ],
+     "explanation": "Gross profit = sales revenue 690 - cost of goods sold 300 = 390. Goods: 800 - 300 + 270 - 54 = 716. The discount is 20% of 270 = 54; the remaining payable 270 - 54 = 216 is paid from the bank account."
+    },
+    {
+     "id": "m2_q03_03",
+     "type_id": "m2_q03",
+     "kind": "ledger_posting",
+     "points": 6,
+     "unit": "thousand USD",
+     "economic_events": [
+      "The company sold inventory worth 350 thousand USD to its domestic partner for 750 thousand USD in cash.",
+      "Our company purchased inventory worth 450 thousand USD. Payment for the inventory is due in 15 days.",
+      "Our company complained about the quality of the goods upon receipt, so it subsequently requested and received a 10% discount. The invoice was corrected.",
+      "Our company has transferred its entire trade payables from the settlement deposit account. The settlement deposit account debit notification has been received."
+     ],
+     "task": "Record economic events in thousands of USD! Answer the questions! Only write the amount on the appropriate side of the ledger accounts, NOT the event number!",
+     "accounts": [
+      {
+       "name": "Goods",
+       "opening": {
+        "side": "debit",
+        "amount": 800
+       },
+       "entries": [
+        {
+         "event": 1,
+         "side": "credit",
+         "amount": 350
+        },
+        {
+         "event": 2,
+         "side": "debit",
+         "amount": 450
+        },
+        {
+         "event": 3,
+         "side": "credit",
+         "amount": 45
+        }
+       ]
+      },
+      {
+       "name": "Trade payables",
+       "opening": null,
+       "entries": [
+        {
+         "event": 2,
+         "side": "credit",
+         "amount": 450
+        },
+        {
+         "event": 3,
+         "side": "debit",
+         "amount": 45
+        },
+        {
+         "event": 4,
+         "side": "debit",
+         "amount": 405
+        }
+       ]
+      },
+      {
+       "name": "Cash",
+       "opening": null,
+       "entries": [
+        {
+         "event": 1,
+         "side": "debit",
+         "amount": 750
+        }
+       ]
+      },
+      {
+       "name": "Bank account",
+       "opening": {
+        "side": "debit",
+        "amount": 600
+       },
+       "entries": [
+        {
+         "event": 4,
+         "side": "credit",
+         "amount": 405
+        }
+       ]
+      },
+      {
+       "name": "Cost of goods sold",
+       "opening": null,
+       "entries": [
+        {
+         "event": 1,
+         "side": "debit",
+         "amount": 350
+        }
+       ]
+      },
+      {
+       "name": "Sales revenue",
+       "opening": null,
+       "entries": [
+        {
+         "event": 1,
+         "side": "credit",
+         "amount": 750
+        }
+       ]
+      }
+     ],
+     "questions": [
+      {
+       "prompt": "What is the Gross Profit from Sales?",
+       "format": "for a profit: +1234, for a loss: -1234",
+       "answer": 400
+      },
+      {
+       "prompt": "What is the merchandise account balance at the end of the period?",
+       "format": "only the amount, without spaces or other punctuation marks",
+       "answer": 855
+      }
+     ],
+     "explanation": "Gross profit = sales revenue 750 - cost of goods sold 350 = 400. Goods: 800 - 350 + 450 - 45 = 855. The discount is 10% of 450 = 45; the remaining payable 450 - 45 = 405 is paid from the bank account."
+    },
+    {
+     "id": "m2_q03_04",
+     "type_id": "m2_q03",
+     "kind": "ledger_posting",
+     "points": 6,
+     "unit": "thousand USD",
+     "economic_events": [
+      "The company sold inventory worth 210 thousand USD to its domestic partner for 450 thousand USD in cash.",
+      "Our company purchased inventory worth 310 thousand USD. Payment for the inventory is due in 15 days.",
+      "Our company complained about the quality of the goods upon receipt, so it subsequently requested and received a 10% discount. The invoice was corrected.",
+      "Our company has transferred its entire trade payables from the settlement deposit account. The settlement deposit account debit notification has been received."
+     ],
+     "task": "Record economic events in thousands of USD! Answer the questions! Only write the amount on the appropriate side of the ledger accounts, NOT the event number!",
+     "accounts": [
+      {
+       "name": "Goods",
+       "opening": {
+        "side": "debit",
+        "amount": 800
+       },
+       "entries": [
+        {
+         "event": 1,
+         "side": "credit",
+         "amount": 210
+        },
+        {
+         "event": 2,
+         "side": "debit",
+         "amount": 310
+        },
+        {
+         "event": 3,
+         "side": "credit",
+         "amount": 31
+        }
+       ]
+      },
+      {
+       "name": "Trade payables",
+       "opening": null,
+       "entries": [
+        {
+         "event": 2,
+         "side": "credit",
+         "amount": 310
+        },
+        {
+         "event": 3,
+         "side": "debit",
+         "amount": 31
+        },
+        {
+         "event": 4,
+         "side": "debit",
+         "amount": 279
+        }
+       ]
+      },
+      {
+       "name": "Cash",
+       "opening": null,
+       "entries": [
+        {
+         "event": 1,
+         "side": "debit",
+         "amount": 450
+        }
+       ]
+      },
+      {
+       "name": "Bank account",
+       "opening": {
+        "side": "debit",
+        "amount": 900
+       },
+       "entries": [
+        {
+         "event": 4,
+         "side": "credit",
+         "amount": 279
+        }
+       ]
+      },
+      {
+       "name": "Cost of goods sold",
+       "opening": null,
+       "entries": [
+        {
+         "event": 1,
+         "side": "debit",
+         "amount": 210
+        }
+       ]
+      },
+      {
+       "name": "Sales revenue",
+       "opening": null,
+       "entries": [
+        {
+         "event": 1,
+         "side": "credit",
+         "amount": 450
+        }
+       ]
+      }
+     ],
+     "questions": [
+      {
+       "prompt": "What is the Gross Profit from Sales?",
+       "format": "for a profit: +1234, for a loss: -1234",
+       "answer": 240
+      },
+      {
+       "prompt": "What is the merchandise account balance at the end of the period?",
+       "format": "only the amount, without spaces or other punctuation marks",
+       "answer": 869
+      }
+     ],
+     "explanation": "Gross profit = sales revenue 450 - cost of goods sold 210 = 240. Goods: 800 - 210 + 310 - 31 = 869. The discount is 10% of 310 = 31; the remaining payable 310 - 31 = 279 is paid from the bank account."
+    }
+   ]
+  },
+  {
+   "type_id": "m2_q04",
+   "title": "Credit (debit) turnover of Accounts receivable",
+   "kind": "mcq",
+   "tasks": [
+    {
+     "id": "m2_q04_01",
+     "type_id": "m2_q04",
+     "kind": "mcq",
+     "points": 2,
+     "prompt": "At Birchwood Supplies, you know the following information about the period in question:\n• Beginning balance of Accounts receivable is 2,200 Th USD,\n• 400 Th USD was received into the bank account for a previous sale,\n• Inventory worth 3,900 Th USD was invoiced for 5,500 Th USD, with a payment deadline of 10 days,\n• A customer paid in cash for a previous sale of 300 Th USD.\nHow much is the credit turnover of Accounts receivable on the period-end general ledger statement?",
+     "options": [
+      "7,000 Th USD",
+      "700 Th USD",
+      "5,500 Th USD",
+      "7,700 Th USD"
+     ],
+     "correct": 1,
+     "calc": "400+300",
+     "explanation": "The credit side shows the decreases: 400 + 300 = 700 Th USD. The sale (5,500) is a debit; the closing balance is 7,000."
+    },
+    {
+     "id": "m2_q04_02",
+     "type_id": "m2_q04",
+     "kind": "mcq",
+     "points": 2,
+     "prompt": "At Granite Hill, you know the following information about the period in question:\n• Beginning balance of Accounts receivable is 1,400 Th USD,\n• 500 Th USD was received into the bank account for a previous sale,\n• Inventory worth 3,700 Th USD was invoiced for 5,500 Th USD, with a payment deadline of 15 days,\n• A customer paid in cash for a previous sale of 400 Th USD.\nHow much is the credit turnover of Accounts receivable on the period-end general ledger statement?",
+     "options": [
+      "5,500 Th USD",
+      "900 Th USD",
+      "6,000 Th USD",
+      "6,900 Th USD"
+     ],
+     "correct": 1,
+     "calc": "500+400",
+     "explanation": "The credit side shows the decreases: 500 + 400 = 900 Th USD. The sale (5,500) is a debit; the closing balance is 6,000."
+    },
+    {
+     "id": "m2_q04_03",
+     "type_id": "m2_q04",
+     "kind": "mcq",
+     "points": 2,
+     "prompt": "At Granite Hill, you know the following information about the period in question:\n• Beginning balance of Accounts receivable is 1,800 Th USD,\n• 100 Th USD was received into the bank account for a previous sale,\n• Inventory worth 2,600 Th USD was invoiced for 4,400 Th USD, with a payment deadline of 5 days,\n• A customer paid in cash for a previous sale of 1,000 Th USD.\nHow much is the credit turnover of Accounts receivable on the period-end general ledger statement?",
+     "options": [
+      "4,400 Th USD",
+      "5,100 Th USD",
+      "6,200 Th USD",
+      "1,100 Th USD"
+     ],
+     "correct": 3,
+     "calc": "100+1000",
+     "explanation": "The credit side shows the decreases: 100 + 1,000 = 1,100 Th USD. The sale (4,400) is a debit; the closing balance is 5,100."
+    },
+    {
+     "id": "m2_q04_04",
+     "type_id": "m2_q04",
+     "kind": "mcq",
+     "points": 2,
+     "prompt": "At Riverbend Trading, you know the following information about the period in question:\n• Beginning balance of Accounts receivable is 2,200 Th USD,\n• 200 Th USD was received into the bank account for a previous sale,\n• Inventory worth 2,300 Th USD was invoiced for 4,300 Th USD, with a payment deadline of 15 days,\n• A customer paid in cash for a previous sale of 600 Th USD.\nHow much is the credit turnover of Accounts receivable on the period-end general ledger statement?",
+     "options": [
+      "6,500 Th USD",
+      "4,300 Th USD",
+      "800 Th USD",
+      "5,700 Th USD"
+     ],
+     "correct": 2,
+     "calc": "200+600",
+     "explanation": "The credit side shows the decreases: 200 + 600 = 800 Th USD. The sale (4,300) is a debit; the closing balance is 5,700."
+    },
+    {
+     "id": "m2_q04_05",
+     "type_id": "m2_q04",
+     "kind": "mcq",
+     "points": 2,
+     "prompt": "At Birchwood Supplies, you know the following information about the period in question:\n• Beginning balance of Accounts receivable is 2,100 Th USD,\n• 300 Th USD was received into the bank account for a previous sale,\n• Inventory worth 1,700 Th USD was invoiced for 2,800 Th USD, with a payment deadline of 8 days,\n• A customer paid in cash for a previous sale of 900 Th USD.\nHow much is the credit turnover of Accounts receivable on the period-end general ledger statement?",
+     "options": [
+      "3,700 Th USD",
+      "1,200 Th USD",
+      "2,800 Th USD",
+      "4,900 Th USD"
+     ],
+     "correct": 1,
+     "calc": "300+900",
+     "explanation": "The credit side shows the decreases: 300 + 900 = 1,200 Th USD. The sale (2,800) is a debit; the closing balance is 3,700."
+    }
+   ]
+  },
+  {
+   "type_id": "m2_q05",
+   "title": "Operating profit of a manufacturer (financial items left out)",
+   "kind": "mcq",
+   "tasks": [
+    {
+     "id": "m2_q05_01",
+     "type_id": "m2_q05",
+     "kind": "mcq",
+     "points": 2,
+     "prompt": "A manufacturing company achieved 350 thUSD in revenue during the year. Its material-type expenses were 30 thUSD, personnel-type expenses 50 thUSD, and depreciation 30 thUSD. The company paid 110 thUSD in interest, and had 60 thUSD in other expenses and 130 thUSD in other income. Determine the operating profit!",
+     "options": [
+      "310",
+      "370",
+      "280",
+      "200"
+     ],
+     "correct": 0,
+     "calc": "350-30-50-30-60+130",
+     "explanation": "Operating profit = 350 - 30 - 50 - 30 - 60 + 130 = 310 thUSD. The interest paid is a financial item, so it is not part of the operating profit."
+    },
+    {
+     "id": "m2_q05_02",
+     "type_id": "m2_q05",
+     "kind": "mcq",
+     "points": 2,
+     "prompt": "A manufacturing company achieved 580 thUSD in revenue during the year. Its material-type expenses were 100 thUSD, personnel-type expenses 50 thUSD, and depreciation 20 thUSD. The company paid 110 thUSD in interest, and had 70 thUSD in other expenses and 70 thUSD in other income. Determine the operating profit!",
+     "options": [
+      "410",
+      "480",
+      "300",
+      "390"
+     ],
+     "correct": 0,
+     "calc": "580-100-50-20-70+70",
+     "explanation": "Operating profit = 580 - 100 - 50 - 20 - 70 + 70 = 410 thUSD. The interest paid is a financial item, so it is not part of the operating profit."
+    },
+    {
+     "id": "m2_q05_03",
+     "type_id": "m2_q05",
+     "kind": "mcq",
+     "points": 2,
+     "prompt": "A manufacturing company achieved 610 thUSD in revenue during the year. Its material-type expenses were 130 thUSD, personnel-type expenses 40 thUSD, and depreciation 50 thUSD. The company paid 80 thUSD in interest, and had 60 thUSD in other expenses and 110 thUSD in other income. Determine the operating profit!",
+     "options": [
+      "360",
+      "440",
+      "500",
+      "390"
+     ],
+     "correct": 1,
+     "calc": "610-130-40-50-60+110",
+     "explanation": "Operating profit = 610 - 130 - 40 - 50 - 60 + 110 = 440 thUSD. The interest paid is a financial item, so it is not part of the operating profit."
+    },
+    {
+     "id": "m2_q05_04",
+     "type_id": "m2_q05",
+     "kind": "mcq",
+     "points": 2,
+     "prompt": "A manufacturing company achieved 610 thUSD in revenue during the year. Its material-type expenses were 130 thUSD, personnel-type expenses 50 thUSD, and depreciation 30 thUSD. The company received 120 thUSD in interest, and had 60 thUSD in other expenses and 70 thUSD in other income. Determine the operating profit!",
+     "options": [
+      "410",
+      "380",
+      "530",
+      "470"
+     ],
+     "correct": 0,
+     "calc": "610-130-50-30-60+70",
+     "explanation": "Operating profit = 610 - 130 - 50 - 30 - 60 + 70 = 410 thUSD. The interest received is a financial item, so it is not part of the operating profit."
+    },
+    {
+     "id": "m2_q05_05",
+     "type_id": "m2_q05",
+     "kind": "mcq",
+     "points": 2,
+     "prompt": "A manufacturing company achieved 630 thUSD in revenue during the year. Its material-type expenses were 120 thUSD, personnel-type expenses 100 thUSD, and depreciation 10 thUSD. The company received 30 thUSD in interest, and had 20 thUSD in other expenses and 60 thUSD in other income. Determine the operating profit!",
+     "options": [
+      "460",
+      "430",
+      "440",
+      "470"
+     ],
+     "correct": 2,
+     "calc": "630-120-100-10-20+60",
+     "explanation": "Operating profit = 630 - 120 - 100 - 10 - 20 + 60 = 440 thUSD. The interest received is a financial item, so it is not part of the operating profit."
+    }
+   ]
+  },
+  {
+   "type_id": "m2_q06",
+   "title": "Gross profit of a sale with an advance",
+   "kind": "mcq",
+   "tasks": [
+    {
+     "id": "m2_q06_01",
+     "type_id": "m2_q06",
+     "kind": "mcq",
+     "points": 2,
+     "prompt": "A business has a sales price of 450 USD, for this transaction the buyer previously gave an advance of 200 USD, and the purchase price of the goods was 250 USD. What is the business's gross profit?",
+     "options": [
+      "0",
+      "400",
+      "200",
+      "250"
+     ],
+     "correct": 2,
+     "calc": "450-250",
+     "explanation": "Gross profit = sales price - purchase price = 450 - 250 = 200 USD. The advance of 200 USD only decides when the money arrived."
+    },
+    {
+     "id": "m2_q06_02",
+     "type_id": "m2_q06",
+     "kind": "mcq",
+     "points": 2,
+     "prompt": "A business has a sales price of 550 USD, for this transaction the buyer previously gave an advance of 250 USD, and the purchase price of the goods was 150 USD. What is the business's gross profit?",
+     "options": [
+      "-150",
+      "150",
+      "400",
+      "300"
+     ],
+     "correct": 2,
+     "calc": "550-150",
+     "explanation": "Gross profit = sales price - purchase price = 550 - 150 = 400 USD. The advance of 250 USD only decides when the money arrived."
+    },
+    {
+     "id": "m2_q06_03",
+     "type_id": "m2_q06",
+     "kind": "mcq",
+     "points": 2,
+     "prompt": "A business has a sales price of 500 USD, for this transaction the buyer previously gave an advance of 100 USD, and the purchase price of the goods was 200 USD. What is the business's gross profit?",
+     "options": [
+      "400",
+      "300",
+      "-200",
+      "200"
+     ],
+     "correct": 1,
+     "calc": "500-200",
+     "explanation": "Gross profit = sales price - purchase price = 500 - 200 = 300 USD. The advance of 100 USD only decides when the money arrived."
+    },
+    {
+     "id": "m2_q06_04",
+     "type_id": "m2_q06",
+     "kind": "mcq",
+     "points": 2,
+     "prompt": "A business has a sales price of 1050 USD, for this transaction the buyer previously gave an advance of 250 USD, and the purchase price of the goods was 900 USD. What is the business's gross profit?",
+     "options": [
+      "-100",
+      "150",
+      "400",
+      "800"
+     ],
+     "correct": 1,
+     "calc": "1050-900",
+     "explanation": "Gross profit = sales price - purchase price = 1050 - 900 = 150 USD. The advance of 250 USD only decides when the money arrived."
+    },
+    {
+     "id": "m2_q06_05",
+     "type_id": "m2_q06",
+     "kind": "mcq",
+     "points": 2,
+     "prompt": "A business has a sales price of 900 USD, for this transaction the buyer previously gave an advance of 350 USD, and the purchase price of the goods was 300 USD. What is the business's gross profit?",
+     "options": [
+      "-250",
+      "600",
+      "950",
+      "550"
+     ],
+     "correct": 1,
+     "calc": "900-300",
+     "explanation": "Gross profit = sales price - purchase price = 900 - 300 = 600 USD. The advance of 350 USD only decides when the money arrived."
+    }
+   ]
+  },
+  {
+   "type_id": "m2_q07",
+   "title": "Debit and credit of a transaction",
+   "kind": "mcq",
+   "tasks": [
+    {
+     "id": "m2_q07_01",
+     "type_id": "m2_q07",
+     "kind": "mcq",
+     "points": 1,
+     "prompt": "Paying a supplier's invoice from the bank account would result in which of the following?",
+     "options": [
+      "A debit to both trade payables and bank account.",
+      "A debit to bank account and a credit to trade payables.",
+      "A debit to trade payables and a credit to bank account.",
+      "A debit to trade payables and a credit to goods."
+     ],
+     "correct": 2,
+     "explanation": "The liability decreases (debit) and the bank balance decreases (credit)."
+    },
+    {
+     "id": "m2_q07_02",
+     "type_id": "m2_q07",
+     "kind": "mcq",
+     "points": 1,
+     "prompt": "Purchasing goods on credit would result in which of the following?",
+     "options": [
+      "A debit to goods and a credit to trade payables.",
+      "A debit to goods and a credit to cash.",
+      "A debit to trade payables and a credit to goods.",
+      "A credit to both goods and trade payables."
+     ],
+     "correct": 0,
+     "explanation": "The inventory increases (debit) and the liability increases (credit)."
+    },
+    {
+     "id": "m2_q07_03",
+     "type_id": "m2_q07",
+     "kind": "mcq",
+     "points": 1,
+     "prompt": "The owners investing cash in the company would result in which of the following?",
+     "options": [
+      "A debit to contributed capital and a credit to cash.",
+      "A debit to cash and a credit to bank loan.",
+      "A debit to cash and a credit to contributed capital.",
+      "A debit to both cash and contributed capital."
+     ],
+     "correct": 2,
+     "explanation": "Cash increases (debit) and the owners' capital increases (credit)."
+    },
+    {
+     "id": "m2_q07_04",
+     "type_id": "m2_q07",
+     "kind": "mcq",
+     "points": 1,
+     "prompt": "Repaying a bank loan from cash would result in which of the following?",
+     "options": [
+      "A debit to cash and a credit to bank loan.",
+      "A credit to both bank loan and cash.",
+      "A debit to bank loan and a credit to cash.",
+      "A debit to bank loan and a credit to contributed capital."
+     ],
+     "correct": 2,
+     "explanation": "The liability decreases (debit) and cash decreases (credit)."
+    }
+   ]
+  },
+  {
+   "type_id": "m2_q08",
+   "title": "Accounting records: definitions",
+   "kind": "mcq",
+   "tasks": [
+    {
+     "id": "m2_q08_01",
+     "type_id": "m2_q08",
+     "kind": "mcq",
+     "points": 1,
+     "prompt": "A chronological record of all transactions of a company is called a(n):",
+     "options": [
+      "trial balance",
+      "balance sheet",
+      "journal",
+      "account"
+     ],
+     "correct": 2,
+     "explanation": "The journal records the transactions in the order in which they happen."
+    },
+    {
+     "id": "m2_q08_02",
+     "type_id": "m2_q08",
+     "kind": "mcq",
+     "points": 1,
+     "prompt": "A list of all account balances at a point in time, used to check that total debits equal total credits, is called a(n):",
+     "options": [
+      "income statement",
+      "journal",
+      "trial balance",
+      "ledger"
+     ],
+     "correct": 2,
+     "explanation": "The trial balance lists the balances of all accounts."
+    },
+    {
+     "id": "m2_q08_03",
+     "type_id": "m2_q08",
+     "kind": "mcq",
+     "points": 1,
+     "prompt": "The collection of all the accounts of a company is called the:",
+     "options": [
+      "trial balance",
+      "journal",
+      "ledger",
+      "balance sheet"
+     ],
+     "correct": 2,
+     "explanation": "The ledger contains all the accounts."
+    },
+    {
+     "id": "m2_q08_04",
+     "type_id": "m2_q08",
+     "kind": "mcq",
+     "points": 1,
+     "prompt": "The process of transferring the amounts from the journal to the accounts is called:",
+     "options": [
+      "closing",
+      "reconciling",
+      "posting",
+      "adjusting"
+     ],
+     "correct": 2,
+     "explanation": "Posting moves the journal entries into the ledger accounts."
+    }
+   ]
+  },
+  {
+   "type_id": "m2_q09",
+   "title": "Trial balance and financial statements",
+   "kind": "mcq",
+   "tasks": [
+    {
+     "id": "m2_q09_01",
+     "type_id": "m2_q09",
+     "kind": "mcq",
+     "points": 1,
+     "prompt": "The adjusted trial balance is prepared after:",
+     "options": [
+      "the adjusting entries have been posted to the ledger.",
+      "the first transaction is recorded.",
+      "the post-closing trial balance is prepared.",
+      "the financial statements are issued."
+     ],
+     "correct": 0,
+     "explanation": "Adjusting entries come first; the financial statements are then prepared from the adjusted trial balance."
+    },
+    {
+     "id": "m2_q09_02",
+     "type_id": "m2_q09",
+     "kind": "mcq",
+     "points": 1,
+     "prompt": "Adjusting entries are made:",
+     "options": [
+      "every time a transaction occurs.",
+      "at the end of the accounting period before the financial statements are prepared.",
+      "only at the beginning of the period.",
+      "after the financial statements are issued."
+     ],
+     "correct": 1,
+     "explanation": "They bring the accounts up to date before the statements are prepared."
+    },
+    {
+     "id": "m2_q09_03",
+     "type_id": "m2_q09",
+     "kind": "mcq",
+     "points": 1,
+     "prompt": "Which financial statement is prepared first?",
+     "options": [
+      "Income statement",
+      "Statement of changes in equity",
+      "Balance sheet",
+      "Statement of cash flows"
+     ],
+     "correct": 0,
+     "explanation": "The profit from the income statement is needed for the equity and then for the balance sheet."
+    },
+    {
+     "id": "m2_q09_04",
+     "type_id": "m2_q09",
+     "kind": "mcq",
+     "points": 1,
+     "prompt": "The trial balance is used to check that:",
+     "options": [
+      "revenues exceed expenses.",
+      "assets exceed liabilities.",
+      "all transactions were recorded.",
+      "total debits equal total credits."
+     ],
+     "correct": 3,
+     "explanation": "A balanced trial balance only proves that debits equal credits."
+    }
+   ]
+  },
+  {
+   "type_id": "m2_q10",
+   "title": "Classification: what does not belong",
+   "kind": "mcq",
+   "tasks": [
+    {
+     "id": "m2_q10_01",
+     "type_id": "m2_q10",
+     "kind": "mcq",
+     "points": 1,
+     "prompt": "Liabilities do not include:",
+     "options": [
+      "Taxes payable",
+      "Long-term bank loan",
+      "Trade payables",
+      "Accounts receivable"
+     ],
+     "correct": 3,
+     "explanation": "Accounts receivable are assets."
+    },
+    {
+     "id": "m2_q10_02",
+     "type_id": "m2_q10",
+     "kind": "mcq",
+     "points": 1,
+     "prompt": "Stockholders' equity does not include:",
+     "options": [
+      "Contributed capital",
+      "Profit after tax for the year",
+      "Retained earnings",
+      "Bank loan"
+     ],
+     "correct": 3,
+     "explanation": "A bank loan is a liability."
+    },
+    {
+     "id": "m2_q10_03",
+     "type_id": "m2_q10",
+     "kind": "mcq",
+     "points": 1,
+     "prompt": "Current assets do not include:",
+     "options": [
+      "Machinery",
+      "Cash in bank",
+      "Inventories",
+      "Accounts receivable"
+     ],
+     "correct": 0,
+     "explanation": "Machinery is a non-current (fixed) tangible asset."
+    },
+    {
+     "id": "m2_q10_04",
+     "type_id": "m2_q10",
+     "kind": "mcq",
+     "points": 1,
+     "prompt": "Non-current assets do not include:",
+     "options": [
+      "Raw materials",
+      "Buildings",
+      "Patents",
+      "Long-term loans given"
+     ],
+     "correct": 0,
+     "explanation": "Raw materials are inventories, which are current assets."
+    }
+   ]
+  },
+  {
+   "type_id": "m2_q11",
+   "title": "What changes the operating profit",
+   "kind": "mcq",
+   "tasks": [
+    {
+     "id": "m2_q11_01",
+     "type_id": "m2_q11",
+     "kind": "mcq",
+     "points": 1,
+     "prompt": "The operating profit is increased by:",
+     "options": [
+      "Gain on sale of equipment",
+      "Gain on sale of bonds",
+      "Interest received on loans granted",
+      "Dividends received"
+     ],
+     "correct": 0,
+     "explanation": "The gain on the sale of equipment is other income; the other items are financial income."
+    },
+    {
+     "id": "m2_q11_02",
+     "type_id": "m2_q11",
+     "kind": "mcq",
+     "points": 1,
+     "prompt": "The profit from financial transactions is decreased by:",
+     "options": [
+      "Interest paid on loans",
+      "Paid default interest",
+      "Depreciation expense",
+      "Loss on sale of equipment"
+     ],
+     "correct": 0,
+     "explanation": "Interest paid on loans is a financial expense; the other items are operating expenses."
+    },
+    {
+     "id": "m2_q11_03",
+     "type_id": "m2_q11",
+     "kind": "mcq",
+     "points": 1,
+     "prompt": "The operating profit is decreased by:",
+     "options": [
+      "Depreciation expense",
+      "Interest received on deposits",
+      "Interest paid on loans",
+      "Loss on sale of bonds"
+     ],
+     "correct": 0,
+     "explanation": "Depreciation is an operating expense; the other items belong to the financial transactions."
+    },
+    {
+     "id": "m2_q11_04",
+     "type_id": "m2_q11",
+     "kind": "mcq",
+     "points": 1,
+     "prompt": "The profit from financial transactions is increased by:",
+     "options": [
+      "Received default interest",
+      "Gain on sale of equipment",
+      "Capitalised own output",
+      "Interest received on long-term loans granted"
+     ],
+     "correct": 3,
+     "explanation": "Interest received is financial income; the other items belong to the operating profit."
+    }
+   ]
+  },
+  {
+   "type_id": "m2_q12",
+   "title": "Collection of receivables",
+   "kind": "mcq",
+   "tasks": [
+    {
+     "id": "m2_q12_01",
+     "type_id": "m2_q12",
+     "kind": "mcq",
+     "points": 1,
+     "prompt": "Which of the following slows down the collection of receivables?",
+     "options": [
+      "Extending payment deadlines",
+      "Sending reminders to overdue customers",
+      "Offering early payment discounts",
+      "Requiring advance payments"
+     ],
+     "correct": 0,
+     "explanation": "A longer payment deadline means the customers pay later."
+    },
+    {
+     "id": "m2_q12_02",
+     "type_id": "m2_q12",
+     "kind": "mcq",
+     "points": 1,
+     "prompt": "Which of the following measures reduces the risk of bad debts?",
+     "options": [
+      "Issuing invoices as late as possible",
+      "Selling to all customers on credit without limits",
+      "Checking the creditworthiness of customers before selling on credit",
+      "Extending payment deadlines"
+     ],
+     "correct": 2,
+     "explanation": "Checking the customers keeps unreliable payers away."
+    },
+    {
+     "id": "m2_q12_03",
+     "type_id": "m2_q12",
+     "kind": "mcq",
+     "points": 1,
+     "prompt": "Why does a company grant a cash discount to its customers?",
+     "options": [
+      "To encourage customers to pay earlier",
+      "To delay the delivery",
+      "To reduce the taxes payable",
+      "To increase the sales price"
+     ],
+     "correct": 0,
+     "explanation": "The discount is the reward for early payment."
+    },
+    {
+     "id": "m2_q12_04",
+     "type_id": "m2_q12",
+     "kind": "mcq",
+     "points": 1,
+     "prompt": "Which action speeds up the cash inflow from customers?",
+     "options": [
+      "Selling more on credit",
+      "Requiring advance payments from customers",
+      "Issuing invoices later",
+      "Extending the payment deadline"
+     ],
+     "correct": 1,
+     "explanation": "An advance brings the money in before the delivery."
+    }
+   ]
+  },
+  {
+   "type_id": "m2_q13",
+   "title": "Cash budget",
+   "kind": "mcq",
+   "tasks": [
+    {
+     "id": "m2_q13_01",
+     "type_id": "m2_q13",
+     "kind": "mcq",
+     "points": 1,
+     "prompt": "What does a cash budget show?",
+     "options": [
+      "Planned cash inflows and outflows for a future period",
+      "The value of non-current assets",
+      "The profit of the previous year",
+      "The amount of tax payable to the authorities"
+     ],
+     "correct": 0,
+     "explanation": "A cash budget plans the cash movements."
+    },
+    {
+     "id": "m2_q13_02",
+     "type_id": "m2_q13",
+     "kind": "mcq",
+     "points": 1,
+     "prompt": "Which of the following is a cash inflow in a cash budget?",
+     "options": [
+      "Collection from customers",
+      "Purchase of equipment",
+      "Repayment of a bank loan",
+      "Payment of salaries"
+     ],
+     "correct": 0,
+     "explanation": "Money received from customers is an inflow."
+    },
+    {
+     "id": "m2_q13_03",
+     "type_id": "m2_q13",
+     "kind": "mcq",
+     "points": 1,
+     "prompt": "Which of the following is NOT included in a cash budget?",
+     "options": [
+      "Loan repayments",
+      "Depreciation expense",
+      "Payments to suppliers",
+      "Cash sales"
+     ],
+     "correct": 1,
+     "explanation": "Depreciation is not a cash movement."
+    },
+    {
+     "id": "m2_q13_04",
+     "type_id": "m2_q13",
+     "kind": "mcq",
+     "points": 1,
+     "prompt": "Who mainly uses a cash budget?",
+     "options": [
+      "Auditors, to certify the balance sheet",
+      "Investors, only to calculate dividends",
+      "Management, to plan liquidity",
+      "The tax authority, to assess VAT"
+     ],
+     "correct": 2,
+     "explanation": "The cash budget is an internal planning tool."
+    }
+   ]
+  }
+ ]
+}

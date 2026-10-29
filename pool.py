@@ -3,6 +3,7 @@
 Files are read once at startup. Every task is validated; invalid ones are skipped
 (with a log message) so one bad entry cannot break the site. Pools are English/USD only.
 """
+import copy
 import json
 import random
 from pathlib import Path
@@ -12,6 +13,7 @@ import exam
 BASE_DIR = Path(__file__).resolve().parent
 TASKS_PATH = BASE_DIR / "tasks_pool.json"              # balance_sheet
 TERMINOLOGY_PATH = BASE_DIR / "terminology_pool.json"  # terminology
+MIDTERM_PATHS = (BASE_DIR / "midterm1_tasks.json", BASE_DIR / "midterm2_tasks.json")   # practice tasks modelled on the real midterms
 CURRENCY = "thousand USD"          # amounts are shown in thousands, like the real exam (350, 120, 520 ...), not as 350,000
 AMOUNT_DIVISOR = 1000              # the pool file stores whole dollars; they are scaled once when the pool is loaded
 
@@ -93,11 +95,41 @@ def _scale_amounts(t: dict) -> dict:
     return out
 
 
+def _valid_midterm_sheet(t: dict) -> bool:
+    try:
+        exam.normalize_balance_sheet(copy.deepcopy(t["midterm_raw"]), "compile")
+        return True
+    except Exception:
+        return False
+
+
+def _load_midterm_tasks() -> dict[str, list[dict]]:
+    """midterm1_tasks.json / midterm2_tasks.json (made by scripts/build_midterm_tasks.py): the multiple-choice questions join the
+    terminology pool and the 'compile the balance sheet' tasks join the balance sheet pool. Other kinds need a table renderer and are skipped."""
+    out: dict[str, list[dict]] = {"balance_sheet": [], "terminology": []}
+    for path in MIDTERM_PATHS:
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+        except Exception as e:
+            print(f"[pool] cannot read {path.name}: {e}")
+            continue
+        for group in data.get("types", []):
+            for t in group.get("tasks", []):
+                if t.get("kind") == "mcq":
+                    out["terminology"].append({
+                        "id": t["id"], "question": t["prompt"], "options": t["options"], "correct_answer": t["options"][t["correct"]],
+                        "explanation": t.get("explanation", ""), "points": t.get("points", 1)})
+                elif t.get("kind") == "balance_sheet" and t.get("variant") == "compile":
+                    out["balance_sheet"].append({"id": t["id"], "midterm_raw": {k: v for k, v in t.items() if k not in ("id", "type_id", "kind", "points", "variant")}})
+    return out
+
+
 def _load() -> dict[str, list[dict]]:
     sources = (
         (TASKS_PATH, "balance_sheet", _valid_balance_sheet),
         (TERMINOLOGY_PATH, "terminology", _valid_terminology),
     )
+    midterm = _load_midterm_tasks()
     files: dict[Path, dict] = {}
     pool: dict[str, list[dict]] = {}
     for path, topic, check in sources:
@@ -108,10 +140,14 @@ def _load() -> dict[str, list[dict]]:
                 print(f"[pool] cannot read {path.name}: {e}")
                 files[path] = {}
         good, seen = [], set()
-        for t in files[path].get(topic, []):
-            if topic == "balance_sheet" and isinstance(t, dict):
+        for t in files[path].get(topic, []) + midterm[topic]:
+            if topic == "balance_sheet" and isinstance(t, dict) and "midterm_raw" not in t:
                 t = _scale_amounts(t)
-            if isinstance(t, dict) and t.get("id") not in seen and "id" in t and check(t):
+            if isinstance(t, dict) and "midterm_raw" in t:
+                check_t = _valid_midterm_sheet
+            else:
+                check_t = check
+            if isinstance(t, dict) and t.get("id") not in seen and "id" in t and check_t(t):
                 good.append(t)
                 seen.add(t["id"])
             else:
@@ -220,6 +256,10 @@ def _finish(t: dict, variant: str, built: tuple[dict, str, str, str]) -> dict:
 
 
 def _balance_sheet_task(t: dict) -> dict:
+    if "midterm_raw" in t:     # a ready "compile" task from the midterm files: same format the AI generator produces
+        task = exam.normalize_balance_sheet(copy.deepcopy(t["midterm_raw"]), "compile")
+        task["id"] = t["id"]
+        return task
     variant = random.choices([v for v, _ in BS_VARIANTS], [w for _, w in BS_VARIANTS])[0]
     task = None
     if variant == "compile":

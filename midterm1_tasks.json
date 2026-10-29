@@ -1,0 +1,3444 @@
+{
+ "source": "midterm1",
+ "note": "Practice tasks modelled on midterm 1. Tables: balance_sheet (same format as exam.normalize_balance_sheet, variant compile), income_statement, event_impact. mcq = exam.normalize_question format.",
+ "seed": 20261029,
+ "currency": "th USD",
+ "types": [
+  {
+   "type_id": "m1_q01",
+   "title": "Accounting equation: the missing amount",
+   "kind": "mcq",
+   "tasks": [
+    {
+     "id": "m1_q01_01",
+     "type_id": "m1_q01",
+     "kind": "mcq",
+     "points": 2,
+     "prompt": "Use the accounting equation to calculate the missing amount!\nAt the end of the current accounting period, account balances were as follows: Cash: 4,500$; Tangible assets: 7,500$; Retained earnings: -1,500$; Contributed capital: 5,000$. Long-term liabilities at the end of the period were:",
+     "options": [
+      "7000",
+      "5500",
+      "8500",
+      "15500"
+     ],
+     "correct": 2,
+     "calc": "12000-5000-(-1500)",
+     "explanation": "Equity = 5,000 + (-1,500) = 3,500; Liabilities = Assets - Equity = 12,000 - 3,500 = 8,500."
+    },
+    {
+     "id": "m1_q01_02",
+     "type_id": "m1_q01",
+     "kind": "mcq",
+     "points": 2,
+     "prompt": "Use the accounting equation to calculate the missing amount!\nAt the end of the current accounting period, account balances were as follows: Tangible assets: 2,000$; Inventories: 1,500$; Retained earnings: -2,000$; Long-term liabilities: 4,500$; Contributed capital: 5,000$. Cash at the end of the period was:",
+     "options": [
+      "6000",
+      "8000",
+      "4000",
+      "7500"
+     ],
+     "correct": 2,
+     "calc": "4500+5000+(-2000)-2000-1500",
+     "explanation": "Assets = Liabilities + Equity = 4,500 + 3,000 = 7,500; Cash = 7,500 - 3,500 = 4,000."
+    },
+    {
+     "id": "m1_q01_03",
+     "type_id": "m1_q01",
+     "kind": "mcq",
+     "points": 2,
+     "prompt": "Use the accounting equation to calculate the missing amount!\nAt the end of the current accounting period, account balances were as follows: Cash: 3,500$; Tangible assets: 3,500$; Inventories: 3,000$; Retained earnings: 2,000$; Long-term liabilities: 5,000$. Contributed capital for the period was:",
+     "options": [
+      "5000",
+      "3000",
+      "13000",
+      "7000"
+     ],
+     "correct": 1,
+     "calc": "10000-5000-(2000)",
+     "explanation": "Equity = Assets - Liabilities = 10,000 - 5,000 = 5,000; Contributed capital = Equity - Retained earnings = 5,000 - (2,000) = 3,000."
+    },
+    {
+     "id": "m1_q01_04",
+     "type_id": "m1_q01",
+     "kind": "mcq",
+     "points": 2,
+     "prompt": "Use the accounting equation to calculate the missing amount!\nAt the end of the current accounting period, account balances were as follows: Cash: 7,000$; Tangible assets: 6,000$; Inventories: 3,000$; Retained earnings: -3,000$; Long-term liabilities: 3,500$. Contributed capital for the period was:",
+     "options": [
+      "12500",
+      "9500",
+      "15500",
+      "22500"
+     ],
+     "correct": 2,
+     "calc": "16000-3500-(-3000)",
+     "explanation": "Equity = Assets - Liabilities = 16,000 - 3,500 = 12,500; Contributed capital = Equity - Retained earnings = 12,500 - (-3,000) = 15,500."
+    },
+    {
+     "id": "m1_q01_05",
+     "type_id": "m1_q01",
+     "kind": "mcq",
+     "points": 2,
+     "prompt": "Use the accounting equation to calculate the missing amount!\nAt the end of the current accounting period, account balances were as follows: Cash: 7,000$; Tangible assets: 6,000$; Retained earnings: 1,000$; Long-term liabilities: 10,000$. Contributed capital for the period was:",
+     "options": [
+      "2000",
+      "22000",
+      "4000",
+      "3000"
+     ],
+     "correct": 0,
+     "calc": "13000-10000-(1000)",
+     "explanation": "Equity = Assets - Liabilities = 13,000 - 10,000 = 3,000; Contributed capital = Equity - Retained earnings = 3,000 - (1,000) = 2,000."
+    }
+   ]
+  },
+  {
+   "type_id": "m1_q02",
+   "title": "Operating profit from a short list of items",
+   "kind": "mcq",
+   "tasks": [
+    {
+     "id": "m1_q02_01",
+     "type_id": "m1_q02",
+     "kind": "mcq",
+     "points": 2,
+     "prompt": "The company sells its product for 109,000 USD, used raw materials 10,000 USD, salaries and wages expense 7,000 USD, depreciation expense 3,000 USD and other income 3,000 USD. The operating profit:",
+     "options": [
+      "20,000 USD",
+      "89,000 USD",
+      "112,000 USD",
+      "92,000 USD"
+     ],
+     "correct": 3,
+     "calc": "109000-10000-7000-3000+3000",
+     "explanation": "Operating profit = revenue - material expenses - personnel expenses - depreciation + other income = 109,000 - 10,000 - 7,000 - 3,000 + 3,000 = 92,000 USD."
+    },
+    {
+     "id": "m1_q02_02",
+     "type_id": "m1_q02",
+     "kind": "mcq",
+     "points": 2,
+     "prompt": "The company sells its product for 119,000 USD, used raw materials 15,000 USD, salaries and wages expense 19,000 USD, depreciation expense 3,000 USD and other income 1,000 USD. The operating profit:",
+     "options": [
+      "83,000 USD",
+      "81,000 USD",
+      "82,000 USD",
+      "120,000 USD"
+     ],
+     "correct": 0,
+     "calc": "119000-15000-19000-3000+1000",
+     "explanation": "Operating profit = revenue - material expenses - personnel expenses - depreciation + other income = 119,000 - 15,000 - 19,000 - 3,000 + 1,000 = 83,000 USD."
+    },
+    {
+     "id": "m1_q02_03",
+     "type_id": "m1_q02",
+     "kind": "mcq",
+     "points": 2,
+     "prompt": "The company sells its product for 34,000 USD, used raw materials 5,000 USD, salaries and wages expense 5,000 USD, depreciation expense 3,000 USD and other expenses 3,000 USD. The operating profit:",
+     "options": [
+      "13,000 USD",
+      "31,000 USD",
+      "21,000 USD",
+      "18,000 USD"
+     ],
+     "correct": 3,
+     "calc": "34000-5000-5000-3000-3000",
+     "explanation": "Operating profit = revenue - material expenses - personnel expenses - depreciation - other expenses = 34,000 - 5,000 - 5,000 - 3,000 - 3,000 = 18,000 USD."
+    },
+    {
+     "id": "m1_q02_04",
+     "type_id": "m1_q02",
+     "kind": "mcq",
+     "points": 2,
+     "prompt": "The company sells its product for 79,000 USD, used raw materials 15,000 USD, salaries and wages expense 22,000 USD, depreciation expense 5,000 USD and other income 5,000 USD. The operating profit:",
+     "options": [
+      "84,000 USD",
+      "37,000 USD",
+      "42,000 USD",
+      "32,000 USD"
+     ],
+     "correct": 2,
+     "calc": "79000-15000-22000-5000+5000",
+     "explanation": "Operating profit = revenue - material expenses - personnel expenses - depreciation + other income = 79,000 - 15,000 - 22,000 - 5,000 + 5,000 = 42,000 USD."
+    },
+    {
+     "id": "m1_q02_05",
+     "type_id": "m1_q02",
+     "kind": "mcq",
+     "points": 2,
+     "prompt": "The company sells its product for 78,000 USD, used raw materials 3,000 USD, salaries and wages expense 5,000 USD, depreciation expense 6,000 USD and other income 6,000 USD. The operating profit:",
+     "options": [
+      "70,000 USD",
+      "64,000 USD",
+      "84,000 USD",
+      "58,000 USD"
+     ],
+     "correct": 0,
+     "calc": "78000-3000-5000-6000+6000",
+     "explanation": "Operating profit = revenue - material expenses - personnel expenses - depreciation + other income = 78,000 - 3,000 - 5,000 - 6,000 + 6,000 = 70,000 USD."
+    }
+   ]
+  },
+  {
+   "type_id": "m1_q03",
+   "title": "Balance sheet value of purchased materials after a return",
+   "kind": "mcq",
+   "tasks": [
+    {
+     "id": "m1_q03_01",
+     "type_id": "m1_q03",
+     "kind": "mcq",
+     "points": 2,
+     "prompt": "The following economic events occurred at the company during the reporting period.\nThe company purchased spare parts worth 700 Th USD with a 14-day payment term.\nBecause of damage during the delivery, 15% of the spare parts were returned to the supplier.\nDetermine the balance sheet value of the spare parts after these events.",
+     "options": [
+      "700 Th USD",
+      "595 Th USD",
+      "805 Th USD",
+      "490 Th USD"
+     ],
+     "correct": 1,
+     "calc": "700-700*0.15",
+     "explanation": "The purchase on credit increases the spare parts to 700 Th USD; the 15% return takes 105 Th USD back, so the balance sheet value is 700 - 105 = 595 Th USD. The payment term does not change the value."
+    },
+    {
+     "id": "m1_q03_02",
+     "type_id": "m1_q03",
+     "kind": "mcq",
+     "points": 2,
+     "prompt": "The following economic events occurred at the company during the reporting period.\nThe company purchased raw materials worth 1,900 Th USD with a 14-day payment term.\nBecause of damage during the delivery, 15% of the raw materials were returned to the supplier.\nDetermine the balance sheet value of the raw materials after these events.",
+     "options": [
+      "1 330 Th USD",
+      "1 900 Th USD",
+      "2 185 Th USD",
+      "1 615 Th USD"
+     ],
+     "correct": 3,
+     "calc": "1900-1900*0.15",
+     "explanation": "The purchase on credit increases the raw materials to 1,900 Th USD; the 15% return takes 285 Th USD back, so the balance sheet value is 1,900 - 285 = 1,615 Th USD. The payment term does not change the value."
+    },
+    {
+     "id": "m1_q03_03",
+     "type_id": "m1_q03",
+     "kind": "mcq",
+     "points": 2,
+     "prompt": "The following economic events occurred at the company during the reporting period.\nThe company purchased goods worth 2,400 Th USD with a 30-day payment term.\nBecause of a wrong specification, 20% of the goods were returned to the supplier.\nDetermine the balance sheet value of the goods after these events.",
+     "options": [
+      "2 400 Th USD",
+      "2 880 Th USD",
+      "1 440 Th USD",
+      "1 920 Th USD"
+     ],
+     "correct": 3,
+     "calc": "2400-2400*0.2",
+     "explanation": "The purchase on credit increases the goods to 2,400 Th USD; the 20% return takes 480 Th USD back, so the balance sheet value is 2,400 - 480 = 1,920 Th USD. The payment term does not change the value."
+    },
+    {
+     "id": "m1_q03_04",
+     "type_id": "m1_q03",
+     "kind": "mcq",
+     "points": 2,
+     "prompt": "The following economic events occurred at the company during the reporting period.\nThe company purchased spare parts worth 1,100 Th USD with a 15-day payment term.\nBecause of damage during the delivery, 10% of the spare parts were returned to the supplier.\nDetermine the balance sheet value of the spare parts after these events.",
+     "options": [
+      "880 Th USD",
+      "990 Th USD",
+      "1 100 Th USD",
+      "1 210 Th USD"
+     ],
+     "correct": 1,
+     "calc": "1100-1100*0.1",
+     "explanation": "The purchase on credit increases the spare parts to 1,100 Th USD; the 10% return takes 110 Th USD back, so the balance sheet value is 1,100 - 110 = 990 Th USD. The payment term does not change the value."
+    },
+    {
+     "id": "m1_q03_05",
+     "type_id": "m1_q03",
+     "kind": "mcq",
+     "points": 2,
+     "prompt": "The following economic events occurred at the company during the reporting period.\nThe company purchased spare parts worth 600 Th USD with a 8-day payment term.\nBecause of a wrong specification, 15% of the spare parts were returned to the supplier.\nDetermine the balance sheet value of the spare parts after these events.",
+     "options": [
+      "690 Th USD",
+      "420 Th USD",
+      "510 Th USD",
+      "600 Th USD"
+     ],
+     "correct": 2,
+     "calc": "600-600*0.15",
+     "explanation": "The purchase on credit increases the spare parts to 600 Th USD; the 15% return takes 90 Th USD back, so the balance sheet value is 600 - 90 = 510 Th USD. The payment term does not change the value."
+    }
+   ]
+  },
+  {
+   "type_id": "m1_q04",
+   "title": "Compile the balance sheet from a list of items",
+   "kind": "balance_sheet",
+   "tasks": [
+    {
+     "id": "m1_q04_01",
+     "type_id": "m1_q04",
+     "kind": "balance_sheet",
+     "points": 8,
+     "variant": "compile",
+     "task_title": "Compile the Balance Sheet",
+     "company_name": "Goldcrust Bakery",
+     "unit": "thousand USD",
+     "columns": [
+      "Amount"
+     ],
+     "description": "About the balance sheet value items of a bakery firm you know the following:\nTask: Based on the data provided, compile the company's balance sheet for 31 December 20XX! You don't have to summarize, but each balance sheet group can include multiple items.\nEnter a value without space and other punctuation! For example: 1234\nIf there is a negative value, mark it this way: -100 (No space!)\nIf the amount is zero, mark it this way: 0",
+     "accounts": [
+      {
+       "name": "Debt due to purchase of goods (45 days payment deadline)",
+       "amount": 85,
+       "row": "III. Current liabilities"
+      },
+      {
+       "name": "Provision for expected warranty claims",
+       "amount": 20,
+       "row": "E. Provisions"
+      },
+      {
+       "name": "Bank loan borrowed for 8 years",
+       "amount": 160,
+       "row": "II. Long term liabilities"
+      },
+      {
+       "name": "Shares of a listed company bought for trading",
+       "amount": 35,
+       "row": "III. Securities"
+      },
+      {
+       "name": "VAT payable to the tax authority",
+       "amount": 145,
+       "row": "III. Current liabilities"
+      },
+      {
+       "name": "Finished goods waiting for sale",
+       "amount": 175,
+       "row": "I. Inventories"
+      },
+      {
+       "name": "Packaging materials in the warehouse",
+       "amount": 115,
+       "row": "I. Inventories"
+      },
+      {
+       "name": "Licence for using a recipe database",
+       "amount": 115,
+       "row": "I. Intangible assets"
+      },
+      {
+       "name": "Profits retained from earlier years",
+       "amount": 120,
+       "row": "IV. Retained earnings"
+      },
+      {
+       "name": "Cash in the company's bank account",
+       "amount": 95,
+       "row": "IV. Liquid assets"
+      },
+      {
+       "name": "After-tax profit earned this year",
+       "amount": 80,
+       "row": "VII. Profit after tax for the year"
+      },
+      {
+       "name": "Capital provided to the company by the owners",
+       "amount": 340,
+       "row": "I. Contributed capital"
+      },
+      {
+       "name": "Display shelves and counters in the shop",
+       "amount": 305,
+       "row": "II. Tangible assets"
+      },
+      {
+       "name": "Cash held in the till",
+       "amount": 110,
+       "row": "IV. Liquid assets"
+      }
+     ],
+     "sides": [
+      {
+       "title": "Assets",
+       "groups": [
+        {
+         "title": "A. Non-current assets",
+         "rows": [
+          {
+           "label": "I. Intangible assets",
+           "blank": true,
+           "values": [
+            115
+           ]
+          },
+          {
+           "label": "II. Tangible assets",
+           "blank": true,
+           "values": [
+            305
+           ]
+          },
+          {
+           "label": "III. Financial investments",
+           "blank": true,
+           "values": [
+            0
+           ]
+          }
+         ],
+         "subtotal": {
+          "label": "Total non-current assets",
+          "mode": "hidden"
+         }
+        },
+        {
+         "title": "B. Current assets",
+         "rows": [
+          {
+           "label": "I. Inventories",
+           "blank": true,
+           "values": [
+            290
+           ]
+          },
+          {
+           "label": "II. Accounts receivables",
+           "blank": true,
+           "values": [
+            0
+           ]
+          },
+          {
+           "label": "III. Securities",
+           "blank": true,
+           "values": [
+            35
+           ]
+          },
+          {
+           "label": "IV. Liquid assets",
+           "blank": true,
+           "values": [
+            205
+           ]
+          }
+         ],
+         "subtotal": {
+          "label": "Total current assets",
+          "mode": "hidden"
+         }
+        },
+        {
+         "title": "",
+         "rows": [
+          {
+           "label": "C. Prepaid expenses and accrued income",
+           "blank": true,
+           "values": [
+            0
+           ]
+          }
+         ]
+        }
+       ],
+       "total": {
+        "label": "TOTAL ASSETS",
+        "mode": "hidden"
+       }
+      },
+      {
+       "title": "Equity and liabilities",
+       "groups": [
+        {
+         "title": "D. Stockholders' equity",
+         "rows": [
+          {
+           "label": "I. Contributed capital",
+           "blank": true,
+           "values": [
+            340
+           ]
+          },
+          {
+           "label": "IV. Retained earnings",
+           "blank": true,
+           "values": [
+            120
+           ]
+          },
+          {
+           "label": "VII. Profit after tax for the year",
+           "blank": true,
+           "values": [
+            80
+           ]
+          }
+         ],
+         "subtotal": {
+          "label": "Total stockholders' equity",
+          "mode": "hidden"
+         }
+        },
+        {
+         "title": "",
+         "rows": [
+          {
+           "label": "E. Provisions",
+           "blank": true,
+           "values": [
+            20
+           ]
+          }
+         ]
+        },
+        {
+         "title": "F. Liabilities",
+         "rows": [
+          {
+           "label": "II. Long term liabilities",
+           "blank": true,
+           "values": [
+            160
+           ]
+          },
+          {
+           "label": "III. Current liabilities",
+           "blank": true,
+           "values": [
+            230
+           ]
+          }
+         ],
+         "subtotal": {
+          "label": "Total liabilities",
+          "mode": "hidden"
+         }
+        },
+        {
+         "title": "",
+         "rows": [
+          {
+           "label": "G. Accrued expenses and deferred income",
+           "blank": true,
+           "values": [
+            0
+           ]
+          }
+         ]
+        }
+       ],
+       "total": {
+        "label": "TOTAL EQUITY AND LIABILITIES",
+        "mode": "hidden"
+       }
+      }
+     ],
+     "hint": "Decide for every item whether it is a non-current asset, a current asset, equity or a liability (long-term or current), then add up the items of the same line. A line without items is 0.",
+     "explanation": "I. Intangible assets: 115 = 115. II. Tangible assets: 305 = 305. I. Inventories: 175 + 115 = 290. III. Securities: 35 = 35. IV. Liquid assets: 95 + 110 = 205. I. Contributed capital: 340 = 340. IV. Retained earnings: 120 = 120. VII. Profit after tax for the year: 80 = 80. E. Provisions: 20 = 20. II. Long term liabilities: 160 = 160. III. Current liabilities: 85 + 145 = 230. Total assets = total equity and liabilities = 950."
+    },
+    {
+     "id": "m1_q04_02",
+     "type_id": "m1_q04",
+     "kind": "balance_sheet",
+     "points": 8,
+     "variant": "compile",
+     "task_title": "Compile the Balance Sheet",
+     "company_name": "Sunmeadow Dairy",
+     "unit": "thousand USD",
+     "columns": [
+      "Amount"
+     ],
+     "description": "About the balance sheet value items of a dairy farm firm you know the following:\nTask: Based on the data provided, compile the company's balance sheet for 31 December 20XX! You don't have to summarize, but each balance sheet group can include multiple items.\nEnter a value without space and other punctuation! For example: 1234\nIf there is a negative value, mark it this way: -100 (No space!)\nIf the amount is zero, mark it this way: 0",
+     "accounts": [
+      {
+       "name": "Provision for expected warranty claims",
+       "amount": 40,
+       "row": "E. Provisions"
+      },
+      {
+       "name": "After-tax profit earned this year",
+       "amount": 50,
+       "row": "VII. Profit after tax for the year"
+      },
+      {
+       "name": "Share capital paid in by the founders",
+       "amount": 280,
+       "row": "I. Contributed capital"
+      },
+      {
+       "name": "Treasury bills bought as a short-term investment",
+       "amount": 55,
+       "row": "III. Securities"
+      },
+      {
+       "name": "Social security contributions payable",
+       "amount": 110,
+       "row": "III. Current liabilities"
+      },
+      {
+       "name": "Machinery used in the production",
+       "amount": 300,
+       "row": "II. Tangible assets"
+      },
+      {
+       "name": "Rent for the next quarter paid in advance",
+       "amount": 15,
+       "row": "C. Prepaid expenses and accrued income"
+      },
+      {
+       "name": "Packaging materials in the warehouse",
+       "amount": 170,
+       "row": "I. Inventories"
+      },
+      {
+       "name": "Development loan borrowed for 12 years",
+       "amount": 120,
+       "row": "II. Long term liabilities"
+      },
+      {
+       "name": "Office building owned by the company",
+       "amount": 265,
+       "row": "II. Tangible assets"
+      },
+      {
+       "name": "Debt due to purchase of goods (45 days payment deadline)",
+       "amount": 50,
+       "row": "III. Current liabilities"
+      },
+      {
+       "name": "Accumulated profit from years before the current year",
+       "amount": 115,
+       "row": "IV. Retained earnings"
+      },
+      {
+       "name": "Cash held in the till",
+       "amount": 145,
+       "row": "IV. Liquid assets"
+      },
+      {
+       "name": "Investment loan to be repaid in 6 years",
+       "amount": 185,
+       "row": "II. Long term liabilities"
+      }
+     ],
+     "sides": [
+      {
+       "title": "Assets",
+       "groups": [
+        {
+         "title": "A. Non-current assets",
+         "rows": [
+          {
+           "label": "I. Intangible assets",
+           "blank": true,
+           "values": [
+            0
+           ]
+          },
+          {
+           "label": "II. Tangible assets",
+           "blank": true,
+           "values": [
+            565
+           ]
+          },
+          {
+           "label": "III. Financial investments",
+           "blank": true,
+           "values": [
+            0
+           ]
+          }
+         ],
+         "subtotal": {
+          "label": "Total non-current assets",
+          "mode": "hidden"
+         }
+        },
+        {
+         "title": "B. Current assets",
+         "rows": [
+          {
+           "label": "I. Inventories",
+           "blank": true,
+           "values": [
+            170
+           ]
+          },
+          {
+           "label": "II. Accounts receivables",
+           "blank": true,
+           "values": [
+            0
+           ]
+          },
+          {
+           "label": "III. Securities",
+           "blank": true,
+           "values": [
+            55
+           ]
+          },
+          {
+           "label": "IV. Liquid assets",
+           "blank": true,
+           "values": [
+            145
+           ]
+          }
+         ],
+         "subtotal": {
+          "label": "Total current assets",
+          "mode": "hidden"
+         }
+        },
+        {
+         "title": "",
+         "rows": [
+          {
+           "label": "C. Prepaid expenses and accrued income",
+           "blank": true,
+           "values": [
+            15
+           ]
+          }
+         ]
+        }
+       ],
+       "total": {
+        "label": "TOTAL ASSETS",
+        "mode": "hidden"
+       }
+      },
+      {
+       "title": "Equity and liabilities",
+       "groups": [
+        {
+         "title": "D. Stockholders' equity",
+         "rows": [
+          {
+           "label": "I. Contributed capital",
+           "blank": true,
+           "values": [
+            280
+           ]
+          },
+          {
+           "label": "IV. Retained earnings",
+           "blank": true,
+           "values": [
+            115
+           ]
+          },
+          {
+           "label": "VII. Profit after tax for the year",
+           "blank": true,
+           "values": [
+            50
+           ]
+          }
+         ],
+         "subtotal": {
+          "label": "Total stockholders' equity",
+          "mode": "hidden"
+         }
+        },
+        {
+         "title": "",
+         "rows": [
+          {
+           "label": "E. Provisions",
+           "blank": true,
+           "values": [
+            40
+           ]
+          }
+         ]
+        },
+        {
+         "title": "F. Liabilities",
+         "rows": [
+          {
+           "label": "II. Long term liabilities",
+           "blank": true,
+           "values": [
+            305
+           ]
+          },
+          {
+           "label": "III. Current liabilities",
+           "blank": true,
+           "values": [
+            160
+           ]
+          }
+         ],
+         "subtotal": {
+          "label": "Total liabilities",
+          "mode": "hidden"
+         }
+        },
+        {
+         "title": "",
+         "rows": [
+          {
+           "label": "G. Accrued expenses and deferred income",
+           "blank": true,
+           "values": [
+            0
+           ]
+          }
+         ]
+        }
+       ],
+       "total": {
+        "label": "TOTAL EQUITY AND LIABILITIES",
+        "mode": "hidden"
+       }
+      }
+     ],
+     "hint": "Decide for every item whether it is a non-current asset, a current asset, equity or a liability (long-term or current), then add up the items of the same line. A line without items is 0.",
+     "explanation": "II. Tangible assets: 300 + 265 = 565. I. Inventories: 170 = 170. III. Securities: 55 = 55. IV. Liquid assets: 145 = 145. C. Prepaid expenses and accrued income: 15 = 15. I. Contributed capital: 280 = 280. IV. Retained earnings: 115 = 115. VII. Profit after tax for the year: 50 = 50. E. Provisions: 40 = 40. II. Long term liabilities: 120 + 185 = 305. III. Current liabilities: 110 + 50 = 160. Total assets = total equity and liabilities = 950."
+    },
+    {
+     "id": "m1_q04_03",
+     "type_id": "m1_q04",
+     "kind": "balance_sheet",
+     "points": 8,
+     "variant": "compile",
+     "task_title": "Compile the Balance Sheet",
+     "company_name": "Little Fox Toys",
+     "unit": "thousand USD",
+     "columns": [
+      "Amount"
+     ],
+     "description": "About the balance sheet value items of a toy manufacturer firm you know the following:\nTask: Based on the data provided, compile the company's balance sheet for 31 December 20XX! You don't have to summarize, but each balance sheet group can include multiple items.\nEnter a value without space and other punctuation! For example: 1234\nIf there is a negative value, mark it this way: -100 (No space!)\nIf the amount is zero, mark it this way: 0",
+     "accounts": [
+      {
+       "name": "Short-term loan to be repaid within 6 months",
+       "amount": 150,
+       "row": "III. Current liabilities"
+      },
+      {
+       "name": "Profits retained from earlier years",
+       "amount": 100,
+       "row": "IV. Retained earnings"
+      },
+      {
+       "name": "Rent received in advance for the next period",
+       "amount": 40,
+       "row": "G. Accrued expenses and deferred income"
+      },
+      {
+       "name": "Goods bought for resale",
+       "amount": 80,
+       "row": "I. Inventories"
+      },
+      {
+       "name": "Cash in the company's bank account",
+       "amount": 185,
+       "row": "IV. Liquid assets"
+      },
+      {
+       "name": "Treasury bills bought as a short-term investment",
+       "amount": 90,
+       "row": "III. Securities"
+      },
+      {
+       "name": "Cash held in the till",
+       "amount": 105,
+       "row": "IV. Liquid assets"
+      },
+      {
+       "name": "Capital provided to the company by the owners",
+       "amount": 225,
+       "row": "I. Contributed capital"
+      },
+      {
+       "name": "Display shelves and counters in the shop",
+       "amount": 195,
+       "row": "II. Tangible assets"
+      },
+      {
+       "name": "Development loan borrowed for 12 years",
+       "amount": 140,
+       "row": "II. Long term liabilities"
+      },
+      {
+       "name": "Profit after tax of the current year",
+       "amount": 40,
+       "row": "VII. Profit after tax for the year"
+      },
+      {
+       "name": "Packaging materials in the warehouse",
+       "amount": 170,
+       "row": "I. Inventories"
+      },
+      {
+       "name": "Investment loan to be repaid in 6 years",
+       "amount": 105,
+       "row": "II. Long term liabilities"
+      },
+      {
+       "name": "Provision for expected warranty claims",
+       "amount": 25,
+       "row": "E. Provisions"
+      }
+     ],
+     "sides": [
+      {
+       "title": "Assets",
+       "groups": [
+        {
+         "title": "A. Non-current assets",
+         "rows": [
+          {
+           "label": "I. Intangible assets",
+           "blank": true,
+           "values": [
+            0
+           ]
+          },
+          {
+           "label": "II. Tangible assets",
+           "blank": true,
+           "values": [
+            195
+           ]
+          },
+          {
+           "label": "III. Financial investments",
+           "blank": true,
+           "values": [
+            0
+           ]
+          }
+         ],
+         "subtotal": {
+          "label": "Total non-current assets",
+          "mode": "hidden"
+         }
+        },
+        {
+         "title": "B. Current assets",
+         "rows": [
+          {
+           "label": "I. Inventories",
+           "blank": true,
+           "values": [
+            250
+           ]
+          },
+          {
+           "label": "II. Accounts receivables",
+           "blank": true,
+           "values": [
+            0
+           ]
+          },
+          {
+           "label": "III. Securities",
+           "blank": true,
+           "values": [
+            90
+           ]
+          },
+          {
+           "label": "IV. Liquid assets",
+           "blank": true,
+           "values": [
+            290
+           ]
+          }
+         ],
+         "subtotal": {
+          "label": "Total current assets",
+          "mode": "hidden"
+         }
+        },
+        {
+         "title": "",
+         "rows": [
+          {
+           "label": "C. Prepaid expenses and accrued income",
+           "blank": true,
+           "values": [
+            0
+           ]
+          }
+         ]
+        }
+       ],
+       "total": {
+        "label": "TOTAL ASSETS",
+        "mode": "hidden"
+       }
+      },
+      {
+       "title": "Equity and liabilities",
+       "groups": [
+        {
+         "title": "D. Stockholders' equity",
+         "rows": [
+          {
+           "label": "I. Contributed capital",
+           "blank": true,
+           "values": [
+            225
+           ]
+          },
+          {
+           "label": "IV. Retained earnings",
+           "blank": true,
+           "values": [
+            100
+           ]
+          },
+          {
+           "label": "VII. Profit after tax for the year",
+           "blank": true,
+           "values": [
+            40
+           ]
+          }
+         ],
+         "subtotal": {
+          "label": "Total stockholders' equity",
+          "mode": "hidden"
+         }
+        },
+        {
+         "title": "",
+         "rows": [
+          {
+           "label": "E. Provisions",
+           "blank": true,
+           "values": [
+            25
+           ]
+          }
+         ]
+        },
+        {
+         "title": "F. Liabilities",
+         "rows": [
+          {
+           "label": "II. Long term liabilities",
+           "blank": true,
+           "values": [
+            245
+           ]
+          },
+          {
+           "label": "III. Current liabilities",
+           "blank": true,
+           "values": [
+            150
+           ]
+          }
+         ],
+         "subtotal": {
+          "label": "Total liabilities",
+          "mode": "hidden"
+         }
+        },
+        {
+         "title": "",
+         "rows": [
+          {
+           "label": "G. Accrued expenses and deferred income",
+           "blank": true,
+           "values": [
+            40
+           ]
+          }
+         ]
+        }
+       ],
+       "total": {
+        "label": "TOTAL EQUITY AND LIABILITIES",
+        "mode": "hidden"
+       }
+      }
+     ],
+     "hint": "Decide for every item whether it is a non-current asset, a current asset, equity or a liability (long-term or current), then add up the items of the same line. A line without items is 0.",
+     "explanation": "II. Tangible assets: 195 = 195. I. Inventories: 80 + 170 = 250. III. Securities: 90 = 90. IV. Liquid assets: 185 + 105 = 290. I. Contributed capital: 225 = 225. IV. Retained earnings: 100 = 100. VII. Profit after tax for the year: 40 = 40. E. Provisions: 25 = 25. II. Long term liabilities: 140 + 105 = 245. III. Current liabilities: 150 = 150. G. Accrued expenses and deferred income: 40 = 40. Total assets = total equity and liabilities = 825."
+    },
+    {
+     "id": "m1_q04_04",
+     "type_id": "m1_q04",
+     "kind": "balance_sheet",
+     "points": 8,
+     "variant": "compile",
+     "task_title": "Compile the Balance Sheet",
+     "company_name": "Harbor View Hotel",
+     "unit": "thousand USD",
+     "columns": [
+      "Amount"
+     ],
+     "description": "About the balance sheet value items of a hotel firm you know the following:\nTask: Based on the data provided, compile the company's balance sheet for 31 December 20XX! You don't have to summarize, but each balance sheet group can include multiple items.\nEnter a value without space and other punctuation! For example: 1234\nIf there is a negative value, mark it this way: -100 (No space!)\nIf the amount is zero, mark it this way: 0",
+     "accounts": [
+      {
+       "name": "Provision for expected warranty claims",
+       "amount": 45,
+       "row": "E. Provisions"
+      },
+      {
+       "name": "Bank loan borrowed for 8 years",
+       "amount": 115,
+       "row": "II. Long term liabilities"
+      },
+      {
+       "name": "Receivable from a customer for services provided",
+       "amount": 100,
+       "row": "II. Accounts receivables"
+      },
+      {
+       "name": "After-tax profit earned this year",
+       "amount": 80,
+       "row": "VII. Profit after tax for the year"
+      },
+      {
+       "name": "VAT payable to the tax authority",
+       "amount": 120,
+       "row": "III. Current liabilities"
+      },
+      {
+       "name": "Machinery used in the production",
+       "amount": 295,
+       "row": "II. Tangible assets"
+      },
+      {
+       "name": "Share capital paid in by the founders",
+       "amount": 400,
+       "row": "I. Contributed capital"
+      },
+      {
+       "name": "Shares of a listed company bought for trading",
+       "amount": 80,
+       "row": "III. Securities"
+      },
+      {
+       "name": "Work in progress on the shop floor",
+       "amount": 195,
+       "row": "I. Inventories"
+      },
+      {
+       "name": "Raw materials for production",
+       "amount": 90,
+       "row": "I. Inventories"
+      },
+      {
+       "name": "Cash in the company's bank account",
+       "amount": 85,
+       "row": "IV. Liquid assets"
+      },
+      {
+       "name": "Office building owned by the company",
+       "amount": 300,
+       "row": "II. Tangible assets"
+      },
+      {
+       "name": "Profits retained from earlier years",
+       "amount": 240,
+       "row": "IV. Retained earnings"
+      },
+      {
+       "name": "Social security contributions payable",
+       "amount": 145,
+       "row": "III. Current liabilities"
+      }
+     ],
+     "sides": [
+      {
+       "title": "Assets",
+       "groups": [
+        {
+         "title": "A. Non-current assets",
+         "rows": [
+          {
+           "label": "I. Intangible assets",
+           "blank": true,
+           "values": [
+            0
+           ]
+          },
+          {
+           "label": "II. Tangible assets",
+           "blank": true,
+           "values": [
+            595
+           ]
+          },
+          {
+           "label": "III. Financial investments",
+           "blank": true,
+           "values": [
+            0
+           ]
+          }
+         ],
+         "subtotal": {
+          "label": "Total non-current assets",
+          "mode": "hidden"
+         }
+        },
+        {
+         "title": "B. Current assets",
+         "rows": [
+          {
+           "label": "I. Inventories",
+           "blank": true,
+           "values": [
+            285
+           ]
+          },
+          {
+           "label": "II. Accounts receivables",
+           "blank": true,
+           "values": [
+            100
+           ]
+          },
+          {
+           "label": "III. Securities",
+           "blank": true,
+           "values": [
+            80
+           ]
+          },
+          {
+           "label": "IV. Liquid assets",
+           "blank": true,
+           "values": [
+            85
+           ]
+          }
+         ],
+         "subtotal": {
+          "label": "Total current assets",
+          "mode": "hidden"
+         }
+        },
+        {
+         "title": "",
+         "rows": [
+          {
+           "label": "C. Prepaid expenses and accrued income",
+           "blank": true,
+           "values": [
+            0
+           ]
+          }
+         ]
+        }
+       ],
+       "total": {
+        "label": "TOTAL ASSETS",
+        "mode": "hidden"
+       }
+      },
+      {
+       "title": "Equity and liabilities",
+       "groups": [
+        {
+         "title": "D. Stockholders' equity",
+         "rows": [
+          {
+           "label": "I. Contributed capital",
+           "blank": true,
+           "values": [
+            400
+           ]
+          },
+          {
+           "label": "IV. Retained earnings",
+           "blank": true,
+           "values": [
+            240
+           ]
+          },
+          {
+           "label": "VII. Profit after tax for the year",
+           "blank": true,
+           "values": [
+            80
+           ]
+          }
+         ],
+         "subtotal": {
+          "label": "Total stockholders' equity",
+          "mode": "hidden"
+         }
+        },
+        {
+         "title": "",
+         "rows": [
+          {
+           "label": "E. Provisions",
+           "blank": true,
+           "values": [
+            45
+           ]
+          }
+         ]
+        },
+        {
+         "title": "F. Liabilities",
+         "rows": [
+          {
+           "label": "II. Long term liabilities",
+           "blank": true,
+           "values": [
+            115
+           ]
+          },
+          {
+           "label": "III. Current liabilities",
+           "blank": true,
+           "values": [
+            265
+           ]
+          }
+         ],
+         "subtotal": {
+          "label": "Total liabilities",
+          "mode": "hidden"
+         }
+        },
+        {
+         "title": "",
+         "rows": [
+          {
+           "label": "G. Accrued expenses and deferred income",
+           "blank": true,
+           "values": [
+            0
+           ]
+          }
+         ]
+        }
+       ],
+       "total": {
+        "label": "TOTAL EQUITY AND LIABILITIES",
+        "mode": "hidden"
+       }
+      }
+     ],
+     "hint": "Decide for every item whether it is a non-current asset, a current asset, equity or a liability (long-term or current), then add up the items of the same line. A line without items is 0.",
+     "explanation": "II. Tangible assets: 295 + 300 = 595. I. Inventories: 195 + 90 = 285. II. Accounts receivables: 100 = 100. III. Securities: 80 = 80. IV. Liquid assets: 85 = 85. I. Contributed capital: 400 = 400. IV. Retained earnings: 240 = 240. VII. Profit after tax for the year: 80 = 80. E. Provisions: 45 = 45. II. Long term liabilities: 115 = 115. III. Current liabilities: 120 + 145 = 265. Total assets = total equity and liabilities = 1145."
+    },
+    {
+     "id": "m1_q04_05",
+     "type_id": "m1_q04",
+     "kind": "balance_sheet",
+     "points": 8,
+     "variant": "compile",
+     "task_title": "Compile the Balance Sheet",
+     "company_name": "Harbor View Hotel",
+     "unit": "thousand USD",
+     "columns": [
+      "Amount"
+     ],
+     "description": "About the balance sheet value items of a hotel firm you know the following:\nTask: Based on the data provided, compile the company's balance sheet for 31 December 20XX! You don't have to summarize, but each balance sheet group can include multiple items.\nEnter a value without space and other punctuation! For example: 1234\nIf there is a negative value, mark it this way: -100 (No space!)\nIf the amount is zero, mark it this way: 0",
+     "accounts": [
+      {
+       "name": "Profits retained from earlier years",
+       "amount": 65,
+       "row": "IV. Retained earnings"
+      },
+      {
+       "name": "Machinery used in the production",
+       "amount": 130,
+       "row": "II. Tangible assets"
+      },
+      {
+       "name": "Packaging materials in the warehouse",
+       "amount": 190,
+       "row": "I. Inventories"
+      },
+      {
+       "name": "Finished goods waiting for sale",
+       "amount": 125,
+       "row": "I. Inventories"
+      },
+      {
+       "name": "Shares of a listed company bought for trading",
+       "amount": 65,
+       "row": "III. Securities"
+      },
+      {
+       "name": "VAT payable to the tax authority",
+       "amount": 100,
+       "row": "III. Current liabilities"
+      },
+      {
+       "name": "Money on the settlement deposit account",
+       "amount": 195,
+       "row": "IV. Liquid assets"
+      },
+      {
+       "name": "Share capital paid in by the founders",
+       "amount": 335,
+       "row": "I. Contributed capital"
+      },
+      {
+       "name": "Cash held in the till",
+       "amount": 135,
+       "row": "IV. Liquid assets"
+      },
+      {
+       "name": "Bank loan borrowed for 8 years",
+       "amount": 110,
+       "row": "II. Long term liabilities"
+      },
+      {
+       "name": "Insurance fee paid in advance for the next period",
+       "amount": 10,
+       "row": "C. Prepaid expenses and accrued income"
+      },
+      {
+       "name": "Debt due to purchase of goods (45 days payment deadline)",
+       "amount": 135,
+       "row": "III. Current liabilities"
+      },
+      {
+       "name": "Profit after tax of the current year",
+       "amount": 65,
+       "row": "VII. Profit after tax for the year"
+      },
+      {
+       "name": "Rent received in advance for the next period",
+       "amount": 40,
+       "row": "G. Accrued expenses and deferred income"
+      }
+     ],
+     "sides": [
+      {
+       "title": "Assets",
+       "groups": [
+        {
+         "title": "A. Non-current assets",
+         "rows": [
+          {
+           "label": "I. Intangible assets",
+           "blank": true,
+           "values": [
+            0
+           ]
+          },
+          {
+           "label": "II. Tangible assets",
+           "blank": true,
+           "values": [
+            130
+           ]
+          },
+          {
+           "label": "III. Financial investments",
+           "blank": true,
+           "values": [
+            0
+           ]
+          }
+         ],
+         "subtotal": {
+          "label": "Total non-current assets",
+          "mode": "hidden"
+         }
+        },
+        {
+         "title": "B. Current assets",
+         "rows": [
+          {
+           "label": "I. Inventories",
+           "blank": true,
+           "values": [
+            315
+           ]
+          },
+          {
+           "label": "II. Accounts receivables",
+           "blank": true,
+           "values": [
+            0
+           ]
+          },
+          {
+           "label": "III. Securities",
+           "blank": true,
+           "values": [
+            65
+           ]
+          },
+          {
+           "label": "IV. Liquid assets",
+           "blank": true,
+           "values": [
+            330
+           ]
+          }
+         ],
+         "subtotal": {
+          "label": "Total current assets",
+          "mode": "hidden"
+         }
+        },
+        {
+         "title": "",
+         "rows": [
+          {
+           "label": "C. Prepaid expenses and accrued income",
+           "blank": true,
+           "values": [
+            10
+           ]
+          }
+         ]
+        }
+       ],
+       "total": {
+        "label": "TOTAL ASSETS",
+        "mode": "hidden"
+       }
+      },
+      {
+       "title": "Equity and liabilities",
+       "groups": [
+        {
+         "title": "D. Stockholders' equity",
+         "rows": [
+          {
+           "label": "I. Contributed capital",
+           "blank": true,
+           "values": [
+            335
+           ]
+          },
+          {
+           "label": "IV. Retained earnings",
+           "blank": true,
+           "values": [
+            65
+           ]
+          },
+          {
+           "label": "VII. Profit after tax for the year",
+           "blank": true,
+           "values": [
+            65
+           ]
+          }
+         ],
+         "subtotal": {
+          "label": "Total stockholders' equity",
+          "mode": "hidden"
+         }
+        },
+        {
+         "title": "",
+         "rows": [
+          {
+           "label": "E. Provisions",
+           "blank": true,
+           "values": [
+            0
+           ]
+          }
+         ]
+        },
+        {
+         "title": "F. Liabilities",
+         "rows": [
+          {
+           "label": "II. Long term liabilities",
+           "blank": true,
+           "values": [
+            110
+           ]
+          },
+          {
+           "label": "III. Current liabilities",
+           "blank": true,
+           "values": [
+            235
+           ]
+          }
+         ],
+         "subtotal": {
+          "label": "Total liabilities",
+          "mode": "hidden"
+         }
+        },
+        {
+         "title": "",
+         "rows": [
+          {
+           "label": "G. Accrued expenses and deferred income",
+           "blank": true,
+           "values": [
+            40
+           ]
+          }
+         ]
+        }
+       ],
+       "total": {
+        "label": "TOTAL EQUITY AND LIABILITIES",
+        "mode": "hidden"
+       }
+      }
+     ],
+     "hint": "Decide for every item whether it is a non-current asset, a current asset, equity or a liability (long-term or current), then add up the items of the same line. A line without items is 0.",
+     "explanation": "II. Tangible assets: 130 = 130. I. Inventories: 190 + 125 = 315. III. Securities: 65 = 65. IV. Liquid assets: 195 + 135 = 330. C. Prepaid expenses and accrued income: 10 = 10. I. Contributed capital: 335 = 335. IV. Retained earnings: 65 = 65. VII. Profit after tax for the year: 65 = 65. II. Long term liabilities: 110 = 110. III. Current liabilities: 100 + 135 = 235. G. Accrued expenses and deferred income: 40 = 40. Total assets = total equity and liabilities = 850."
+    }
+   ]
+  },
+  {
+   "type_id": "m1_q05",
+   "title": "Compile the income statement (nature of expense method)",
+   "kind": "income_statement",
+   "tasks": [
+    {
+     "id": "m1_q05_01",
+     "type_id": "m1_q05",
+     "kind": "income_statement",
+     "points": 4,
+     "unit": "thUSD",
+     "company": "\"Foxglove Retail\" Ltd.",
+     "description": "To compile the income statement of \"Foxglove Retail\" Ltd., we have the following information (data in thousands of USD - thUSD):",
+     "information": [
+      {
+       "heading": "Sold goods to domestic customers",
+       "lines": [
+        {
+         "label": "net selling price",
+         "amount": 7000
+        },
+        {
+         "label": "cost of goods sold",
+         "amount": 3900
+        }
+       ]
+      },
+      {
+       "lines": [
+        {
+         "label": "Paid interest on current loans",
+         "amount": 300
+        }
+       ]
+      },
+      {
+       "lines": [
+        {
+         "label": "Interest received on long-term loans granted",
+         "amount": 300
+        }
+       ]
+      },
+      {
+       "heading": "Value of the resources used in the current period according to their cost types",
+       "lines": [
+        {
+         "label": "Material cost",
+         "amount": 900
+        },
+        {
+         "label": "Cost of services used",
+         "amount": 800
+        },
+        {
+         "label": "Payroll (Cost of wages and salaries)",
+         "amount": 900
+        },
+        {
+         "label": "Social security",
+         "amount": 200
+        }
+       ]
+      }
+     ],
+     "instruction": "Compile the Profit and Loss Statement",
+     "answer_format": [
+      "Enter a value without space and other punctuation! For example: 1234567",
+      "If there is a negative value, mark it this way: -1234 (No space!)",
+      "Do not mark positive values with + sign!"
+     ],
+     "rows": [
+      {
+       "no": "I.",
+       "label": "Total net sales (Revenue)",
+       "answer": 7000,
+       "bold": false
+      },
+      {
+       "no": "II.",
+       "label": "Capitalised own output",
+       "answer": null,
+       "bold": false
+      },
+      {
+       "no": "III.",
+       "label": "Other income",
+       "answer": null,
+       "bold": false
+      },
+      {
+       "no": "IV.",
+       "label": "Material type expenses",
+       "answer": 1700,
+       "bold": false
+      },
+      {
+       "no": "V.",
+       "label": "Employee benefits expense",
+       "answer": 1100,
+       "bold": false
+      },
+      {
+       "no": "VI.",
+       "label": "Depreciation",
+       "answer": null,
+       "bold": false
+      },
+      {
+       "no": "VII.",
+       "label": "Other expenses",
+       "answer": null,
+       "bold": false
+      },
+      {
+       "no": "A",
+       "label": "Operating profit/loss",
+       "answer": 4200,
+       "bold": true
+      },
+      {
+       "no": "VIII.",
+       "label": "Financial income",
+       "answer": 300,
+       "bold": false
+      },
+      {
+       "no": "IX.",
+       "label": "Financial expense",
+       "answer": 300,
+       "bold": false
+      },
+      {
+       "no": "B",
+       "label": "Profit/Loss from financial transactions",
+       "answer": 0,
+       "bold": true
+      },
+      {
+       "no": "C",
+       "label": "Profit or loss before tax",
+       "answer": 4200,
+       "bold": true
+      }
+     ],
+     "explanation": "Revenue 7000; the cost of goods sold (3900) is not used by the nature of expense method. Material type expenses = 900 + 800 = 1700; employee benefits = 900 + 200 = 1100. Operating profit = 7000 - 1700 - 1100 = 4200. Financial result = 300 - 300 = 0. Profit before tax = 4200 + (0) = 4200."
+    },
+    {
+     "id": "m1_q05_02",
+     "type_id": "m1_q05",
+     "kind": "income_statement",
+     "points": 4,
+     "unit": "thUSD",
+     "company": "\"Union Street Cafe\" Ltd.",
+     "description": "To compile the income statement of \"Union Street Cafe\" Ltd., we have the following information (data in thousands of USD - thUSD):",
+     "information": [
+      {
+       "heading": "Sold goods to domestic customers",
+       "lines": [
+        {
+         "label": "net selling price",
+         "amount": 11000
+        },
+        {
+         "label": "cost of goods sold",
+         "amount": 6100
+        }
+       ]
+      },
+      {
+       "lines": [
+        {
+         "label": "Paid interest on current loans",
+         "amount": 100
+        }
+       ]
+      },
+      {
+       "lines": [
+        {
+         "label": "Interest received on long-term loans granted",
+         "amount": 100
+        }
+       ]
+      },
+      {
+       "heading": "Value of the resources used in the current period according to their cost types",
+       "lines": [
+        {
+         "label": "Material cost",
+         "amount": 1200
+        },
+        {
+         "label": "Cost of services used",
+         "amount": 600
+        },
+        {
+         "label": "Payroll (Cost of wages and salaries)",
+         "amount": 1400
+        },
+        {
+         "label": "Social security",
+         "amount": 350
+        }
+       ]
+      }
+     ],
+     "instruction": "Compile the Profit and Loss Statement",
+     "answer_format": [
+      "Enter a value without space and other punctuation! For example: 1234567",
+      "If there is a negative value, mark it this way: -1234 (No space!)",
+      "Do not mark positive values with + sign!"
+     ],
+     "rows": [
+      {
+       "no": "I.",
+       "label": "Total net sales (Revenue)",
+       "answer": 11000,
+       "bold": false
+      },
+      {
+       "no": "II.",
+       "label": "Capitalised own output",
+       "answer": null,
+       "bold": false
+      },
+      {
+       "no": "III.",
+       "label": "Other income",
+       "answer": null,
+       "bold": false
+      },
+      {
+       "no": "IV.",
+       "label": "Material type expenses",
+       "answer": 1800,
+       "bold": false
+      },
+      {
+       "no": "V.",
+       "label": "Employee benefits expense",
+       "answer": 1750,
+       "bold": false
+      },
+      {
+       "no": "VI.",
+       "label": "Depreciation",
+       "answer": null,
+       "bold": false
+      },
+      {
+       "no": "VII.",
+       "label": "Other expenses",
+       "answer": null,
+       "bold": false
+      },
+      {
+       "no": "A",
+       "label": "Operating profit/loss",
+       "answer": 7450,
+       "bold": true
+      },
+      {
+       "no": "VIII.",
+       "label": "Financial income",
+       "answer": 100,
+       "bold": false
+      },
+      {
+       "no": "IX.",
+       "label": "Financial expense",
+       "answer": 100,
+       "bold": false
+      },
+      {
+       "no": "B",
+       "label": "Profit/Loss from financial transactions",
+       "answer": 0,
+       "bold": true
+      },
+      {
+       "no": "C",
+       "label": "Profit or loss before tax",
+       "answer": 7450,
+       "bold": true
+      }
+     ],
+     "explanation": "Revenue 11000; the cost of goods sold (6100) is not used by the nature of expense method. Material type expenses = 1200 + 600 = 1800; employee benefits = 1400 + 350 = 1750. Operating profit = 11000 - 1800 - 1750 = 7450. Financial result = 100 - 100 = 0. Profit before tax = 7450 + (0) = 7450."
+    },
+    {
+     "id": "m1_q05_03",
+     "type_id": "m1_q05",
+     "kind": "income_statement",
+     "points": 4,
+     "unit": "thUSD",
+     "company": "\"Cedar Point Trading\" Ltd.",
+     "description": "To compile the income statement of \"Cedar Point Trading\" Ltd., we have the following information (data in thousands of USD - thUSD):",
+     "information": [
+      {
+       "heading": "Sold goods to domestic customers",
+       "lines": [
+        {
+         "label": "net selling price",
+         "amount": 8500
+        },
+        {
+         "label": "cost of goods sold",
+         "amount": 3800
+        }
+       ]
+      },
+      {
+       "lines": [
+        {
+         "label": "Paid interest on current loans",
+         "amount": 400
+        }
+       ]
+      },
+      {
+       "lines": [
+        {
+         "label": "Interest received on long-term loans granted",
+         "amount": 300
+        }
+       ]
+      },
+      {
+       "heading": "Value of the resources used in the current period according to their cost types",
+       "lines": [
+        {
+         "label": "Material cost",
+         "amount": 600
+        },
+        {
+         "label": "Cost of services used",
+         "amount": 800
+        },
+        {
+         "label": "Depreciation",
+         "amount": 600
+        },
+        {
+         "label": "Payroll (Cost of wages and salaries)",
+         "amount": 1500
+        },
+        {
+         "label": "Social security",
+         "amount": 400
+        }
+       ]
+      }
+     ],
+     "instruction": "Compile the Profit and Loss Statement",
+     "answer_format": [
+      "Enter a value without space and other punctuation! For example: 1234567",
+      "If there is a negative value, mark it this way: -1234 (No space!)",
+      "Do not mark positive values with + sign!"
+     ],
+     "rows": [
+      {
+       "no": "I.",
+       "label": "Total net sales (Revenue)",
+       "answer": 8500,
+       "bold": false
+      },
+      {
+       "no": "II.",
+       "label": "Capitalised own output",
+       "answer": null,
+       "bold": false
+      },
+      {
+       "no": "III.",
+       "label": "Other income",
+       "answer": null,
+       "bold": false
+      },
+      {
+       "no": "IV.",
+       "label": "Material type expenses",
+       "answer": 1400,
+       "bold": false
+      },
+      {
+       "no": "V.",
+       "label": "Employee benefits expense",
+       "answer": 1900,
+       "bold": false
+      },
+      {
+       "no": "VI.",
+       "label": "Depreciation",
+       "answer": 600,
+       "bold": false
+      },
+      {
+       "no": "VII.",
+       "label": "Other expenses",
+       "answer": null,
+       "bold": false
+      },
+      {
+       "no": "A",
+       "label": "Operating profit/loss",
+       "answer": 4600,
+       "bold": true
+      },
+      {
+       "no": "VIII.",
+       "label": "Financial income",
+       "answer": 300,
+       "bold": false
+      },
+      {
+       "no": "IX.",
+       "label": "Financial expense",
+       "answer": 400,
+       "bold": false
+      },
+      {
+       "no": "B",
+       "label": "Profit/Loss from financial transactions",
+       "answer": -100,
+       "bold": true
+      },
+      {
+       "no": "C",
+       "label": "Profit or loss before tax",
+       "answer": 4500,
+       "bold": true
+      }
+     ],
+     "explanation": "Revenue 8500; the cost of goods sold (3800) is not used by the nature of expense method. Material type expenses = 600 + 800 = 1400; employee benefits = 1500 + 400 = 1900; depreciation 600. Operating profit = 8500 - 1400 - 1900 - 600 = 4600. Financial result = 300 - 400 = -100. Profit before tax = 4600 + (-100) = 4500."
+    },
+    {
+     "id": "m1_q05_04",
+     "type_id": "m1_q05",
+     "kind": "income_statement",
+     "points": 4,
+     "unit": "thUSD",
+     "company": "\"Ivory Peak Systems\" Ltd.",
+     "description": "To compile the income statement of \"Ivory Peak Systems\" Ltd., we have the following information (data in thousands of USD - thUSD):",
+     "information": [
+      {
+       "heading": "Sold goods to domestic customers",
+       "lines": [
+        {
+         "label": "net selling price",
+         "amount": 8000
+        },
+        {
+         "label": "cost of goods sold",
+         "amount": 3600
+        }
+       ]
+      },
+      {
+       "lines": [
+        {
+         "label": "Default interest received from a customer",
+         "amount": 200
+        }
+       ]
+      },
+      {
+       "lines": [
+        {
+         "label": "Paid interest on current loans",
+         "amount": 400
+        }
+       ]
+      },
+      {
+       "lines": [
+        {
+         "label": "Interest received on long-term loans granted",
+         "amount": 100
+        }
+       ]
+      },
+      {
+       "heading": "Value of the resources used in the current period according to their cost types",
+       "lines": [
+        {
+         "label": "Material cost",
+         "amount": 400
+        },
+        {
+         "label": "Cost of services used",
+         "amount": 400
+        },
+        {
+         "label": "Payroll (Cost of wages and salaries)",
+         "amount": 1200
+        },
+        {
+         "label": "Social security",
+         "amount": 300
+        }
+       ]
+      }
+     ],
+     "instruction": "Compile the Profit and Loss Statement",
+     "answer_format": [
+      "Enter a value without space and other punctuation! For example: 1234567",
+      "If there is a negative value, mark it this way: -1234 (No space!)",
+      "Do not mark positive values with + sign!"
+     ],
+     "rows": [
+      {
+       "no": "I.",
+       "label": "Total net sales (Revenue)",
+       "answer": 8000,
+       "bold": false
+      },
+      {
+       "no": "II.",
+       "label": "Capitalised own output",
+       "answer": null,
+       "bold": false
+      },
+      {
+       "no": "III.",
+       "label": "Other income",
+       "answer": 200,
+       "bold": false
+      },
+      {
+       "no": "IV.",
+       "label": "Material type expenses",
+       "answer": 800,
+       "bold": false
+      },
+      {
+       "no": "V.",
+       "label": "Employee benefits expense",
+       "answer": 1500,
+       "bold": false
+      },
+      {
+       "no": "VI.",
+       "label": "Depreciation",
+       "answer": null,
+       "bold": false
+      },
+      {
+       "no": "VII.",
+       "label": "Other expenses",
+       "answer": null,
+       "bold": false
+      },
+      {
+       "no": "A",
+       "label": "Operating profit/loss",
+       "answer": 5900,
+       "bold": true
+      },
+      {
+       "no": "VIII.",
+       "label": "Financial income",
+       "answer": 100,
+       "bold": false
+      },
+      {
+       "no": "IX.",
+       "label": "Financial expense",
+       "answer": 400,
+       "bold": false
+      },
+      {
+       "no": "B",
+       "label": "Profit/Loss from financial transactions",
+       "answer": -300,
+       "bold": true
+      },
+      {
+       "no": "C",
+       "label": "Profit or loss before tax",
+       "answer": 5600,
+       "bold": true
+      }
+     ],
+     "explanation": "Revenue 8000; the cost of goods sold (3600) is not used by the nature of expense method. Material type expenses = 400 + 400 = 800; employee benefits = 1200 + 300 = 1500; other income 200. Operating profit = 8000 + 200 - 800 - 1500 = 5900. Financial result = 100 - 400 = -300. Profit before tax = 5900 + (-300) = 5600."
+    }
+   ]
+  },
+  {
+   "type_id": "m1_q06",
+   "title": "Impact of two economic events on the balance sheet and the income statement",
+   "kind": "event_impact",
+   "tasks": [
+    {
+     "id": "m1_q06_01",
+     "type_id": "m1_q06",
+     "kind": "event_impact",
+     "points": 8,
+     "company": "Ivory Peak Systems",
+     "unit": "th USD",
+     "instructions": [
+      "If there is no change, indicate this with a zero: 0",
+      "In the \"closing\" column, use the minus sign ONLY to indicate negative values, written directly in front of the sum, DO NOT use a plus sign here. If the value is zero, indicate it with a zero, like this: 0",
+      "Select the impact of the events affecting the profit or loss (only where there is such) on income, costs/expenses from the drop-down list! If none are affected, select the \"Not affected by the event!\" marking and enter zero!"
+     ],
+     "description": "Take note of the following information regarding the economic transactions of \"Ivory Peak Systems\" Ltd. during the reporting period.",
+     "opening_balance_sheet": {
+      "assets": [
+       {
+        "label": "Goods",
+        "amount": 200
+       },
+       {
+        "label": "Trade receivables",
+        "amount": 100
+       },
+       {
+        "label": "Cash at bank",
+        "amount": 300
+       }
+      ],
+      "equity_and_liabilities": [
+       {
+        "label": "Subscribed capital",
+        "amount": 250
+       },
+       {
+        "label": "Profit after tax",
+        "amount": 0
+       },
+       {
+        "label": "Short-term loan",
+        "amount": 200
+       },
+       {
+        "label": "Trade payables",
+        "amount": 150
+       }
+      ],
+      "total_assets": 600,
+      "total_equity_and_liabilities": 600
+     },
+     "income_statement_options": [
+      "Net sales revenue",
+      "Other income",
+      "Financial income",
+      "Material type expense",
+      "Personnel type expense",
+      "Depreciation",
+      "Other expense",
+      "Financial expense",
+      "Not affected by the event!"
+     ],
+     "events": [
+      {
+       "no": 1,
+       "text": "The company settled 30 th USD of its trade payables from the bank account.",
+       "balance_sheet": {
+        "assets": [
+         {
+          "label": "Goods",
+          "change": 0,
+          "closing": 200,
+          "given": true
+         },
+         {
+          "label": "Trade receivables",
+          "change": 0,
+          "closing": 100,
+          "given": false
+         },
+         {
+          "label": "Cash at bank",
+          "change": -30,
+          "closing": 270,
+          "given": false
+         }
+        ],
+        "equity_and_liabilities": [
+         {
+          "label": "Subscribed capital",
+          "change": 0,
+          "closing": 250,
+          "given": true
+         },
+         {
+          "label": "Profit after tax",
+          "change": 0,
+          "closing": 0,
+          "given": true
+         },
+         {
+          "label": "Short-term loan",
+          "change": 0,
+          "closing": 200,
+          "given": true
+         },
+         {
+          "label": "Trade payables",
+          "change": -30,
+          "closing": 120,
+          "given": false
+         }
+        ],
+        "total_assets": {
+         "change": -30,
+         "closing": 570
+        },
+        "total_equity_and_liabilities": {
+         "change": -30,
+         "closing": 570
+        }
+       },
+       "income_statement": {
+        "income": {
+         "item": "Not affected by the event!",
+         "change": 0,
+         "closing": 0
+        },
+        "expense_cost": {
+         "item": "Not affected by the event!",
+         "change": 0,
+         "closing": 0
+        },
+        "profit_or_loss": {
+         "change": 0,
+         "closing": 0
+        }
+       },
+       "explanation": "Cash at bank -30. Trade payables -30. Only the balance sheet changes; the profit is not affected."
+      },
+      {
+       "no": 2,
+       "text": "The company purchased goods worth 70 th USD from a supplier with a 15-day payment deadline.",
+       "balance_sheet": {
+        "assets": [
+         {
+          "label": "Goods",
+          "change": 70,
+          "closing": 270,
+          "given": false
+         },
+         {
+          "label": "Trade receivables",
+          "change": 0,
+          "closing": 100,
+          "given": true
+         },
+         {
+          "label": "Cash at bank",
+          "change": 0,
+          "closing": 270,
+          "given": true
+         }
+        ],
+        "equity_and_liabilities": [
+         {
+          "label": "Subscribed capital",
+          "change": 0,
+          "closing": 250,
+          "given": true
+         },
+         {
+          "label": "Profit after tax",
+          "change": 0,
+          "closing": 0,
+          "given": true
+         },
+         {
+          "label": "Short-term loan",
+          "change": 0,
+          "closing": 200,
+          "given": true
+         },
+         {
+          "label": "Trade payables",
+          "change": 70,
+          "closing": 190,
+          "given": false
+         }
+        ],
+        "total_assets": {
+         "change": 70,
+         "closing": 640
+        },
+        "total_equity_and_liabilities": {
+         "change": 70,
+         "closing": 640
+        }
+       },
+       "income_statement": {
+        "income": {
+         "item": "Not affected by the event!",
+         "change": 0,
+         "closing": 0
+        },
+        "expense_cost": {
+         "item": "Not affected by the event!",
+         "change": 0,
+         "closing": 0
+        },
+        "profit_or_loss": {
+         "change": 0,
+         "closing": 0
+        }
+       },
+       "explanation": "Goods +70. Trade payables +70. Only the balance sheet changes; the profit is not affected."
+      }
+     ]
+    },
+    {
+     "id": "m1_q06_02",
+     "type_id": "m1_q06",
+     "kind": "event_impact",
+     "points": 8,
+     "company": "Foxglove Retail",
+     "unit": "th USD",
+     "instructions": [
+      "If there is no change, indicate this with a zero: 0",
+      "In the \"closing\" column, use the minus sign ONLY to indicate negative values, written directly in front of the sum, DO NOT use a plus sign here. If the value is zero, indicate it with a zero, like this: 0",
+      "Select the impact of the events affecting the profit or loss (only where there is such) on income, costs/expenses from the drop-down list! If none are affected, select the \"Not affected by the event!\" marking and enter zero!"
+     ],
+     "description": "Take note of the following information regarding the economic transactions of \"Foxglove Retail\" Ltd. during the reporting period.",
+     "opening_balance_sheet": {
+      "assets": [
+       {
+        "label": "Goods",
+        "amount": 50
+       },
+       {
+        "label": "Trade receivables",
+        "amount": 100
+       },
+       {
+        "label": "Cash at bank",
+        "amount": 250
+       }
+      ],
+      "equity_and_liabilities": [
+       {
+        "label": "Subscribed capital",
+        "amount": 300
+       },
+       {
+        "label": "Profit after tax",
+        "amount": 0
+       },
+       {
+        "label": "Short-term loan",
+        "amount": 100
+       }
+      ],
+      "total_assets": 400,
+      "total_equity_and_liabilities": 400
+     },
+     "income_statement_options": [
+      "Net sales revenue",
+      "Other income",
+      "Financial income",
+      "Material type expense",
+      "Personnel type expense",
+      "Depreciation",
+      "Other expense",
+      "Financial expense",
+      "Not affected by the event!"
+     ],
+     "events": [
+      {
+       "no": 1,
+       "text": "The company received a short-term bank loan of 60 th USD into its bank account.",
+       "balance_sheet": {
+        "assets": [
+         {
+          "label": "Goods",
+          "change": 0,
+          "closing": 50,
+          "given": false
+         },
+         {
+          "label": "Trade receivables",
+          "change": 0,
+          "closing": 100,
+          "given": false
+         },
+         {
+          "label": "Cash at bank",
+          "change": 60,
+          "closing": 310,
+          "given": false
+         }
+        ],
+        "equity_and_liabilities": [
+         {
+          "label": "Subscribed capital",
+          "change": 0,
+          "closing": 300,
+          "given": false
+         },
+         {
+          "label": "Profit after tax",
+          "change": 0,
+          "closing": 0,
+          "given": true
+         },
+         {
+          "label": "Short-term loan",
+          "change": 60,
+          "closing": 160,
+          "given": false
+         }
+        ],
+        "total_assets": {
+         "change": 60,
+         "closing": 460
+        },
+        "total_equity_and_liabilities": {
+         "change": 60,
+         "closing": 460
+        }
+       },
+       "income_statement": {
+        "income": {
+         "item": "Not affected by the event!",
+         "change": 0,
+         "closing": 0
+        },
+        "expense_cost": {
+         "item": "Not affected by the event!",
+         "change": 0,
+         "closing": 0
+        },
+        "profit_or_loss": {
+         "change": 0,
+         "closing": 0
+        }
+       },
+       "explanation": "Cash at bank +60. Short-term loan +60. Only the balance sheet changes; the profit is not affected."
+      },
+      {
+       "no": 2,
+       "text": "The company transferred 30 th USD of its short-term loan from the bank account.",
+       "balance_sheet": {
+        "assets": [
+         {
+          "label": "Goods",
+          "change": 0,
+          "closing": 50,
+          "given": true
+         },
+         {
+          "label": "Trade receivables",
+          "change": 0,
+          "closing": 100,
+          "given": true
+         },
+         {
+          "label": "Cash at bank",
+          "change": -30,
+          "closing": 280,
+          "given": false
+         }
+        ],
+        "equity_and_liabilities": [
+         {
+          "label": "Subscribed capital",
+          "change": 0,
+          "closing": 300,
+          "given": true
+         },
+         {
+          "label": "Profit after tax",
+          "change": 0,
+          "closing": 0,
+          "given": true
+         },
+         {
+          "label": "Short-term loan",
+          "change": -30,
+          "closing": 130,
+          "given": false
+         }
+        ],
+        "total_assets": {
+         "change": -30,
+         "closing": 430
+        },
+        "total_equity_and_liabilities": {
+         "change": -30,
+         "closing": 430
+        }
+       },
+       "income_statement": {
+        "income": {
+         "item": "Not affected by the event!",
+         "change": 0,
+         "closing": 0
+        },
+        "expense_cost": {
+         "item": "Not affected by the event!",
+         "change": 0,
+         "closing": 0
+        },
+        "profit_or_loss": {
+         "change": 0,
+         "closing": 0
+        }
+       },
+       "explanation": "Cash at bank -30. Short-term loan -30. Only the balance sheet changes; the profit is not affected."
+      }
+     ]
+    },
+    {
+     "id": "m1_q06_03",
+     "type_id": "m1_q06",
+     "kind": "event_impact",
+     "points": 8,
+     "company": "Lakeshore Textiles",
+     "unit": "th USD",
+     "instructions": [
+      "If there is no change, indicate this with a zero: 0",
+      "In the \"closing\" column, use the minus sign ONLY to indicate negative values, written directly in front of the sum, DO NOT use a plus sign here. If the value is zero, indicate it with a zero, like this: 0",
+      "Select the impact of the events affecting the profit or loss (only where there is such) on income, costs/expenses from the drop-down list! If none are affected, select the \"Not affected by the event!\" marking and enter zero!"
+     ],
+     "description": "Take note of the following information regarding the economic transactions of \"Lakeshore Textiles\" Ltd. during the reporting period.",
+     "opening_balance_sheet": {
+      "assets": [
+       {
+        "label": "Goods",
+        "amount": 100
+       },
+       {
+        "label": "Trade receivables",
+        "amount": 200
+       },
+       {
+        "label": "Cash at bank",
+        "amount": 350
+       }
+      ],
+      "equity_and_liabilities": [
+       {
+        "label": "Subscribed capital",
+        "amount": 450
+       },
+       {
+        "label": "Profit after tax",
+        "amount": 0
+       },
+       {
+        "label": "Short-term loan",
+        "amount": 100
+       },
+       {
+        "label": "Trade payables",
+        "amount": 100
+       }
+      ],
+      "total_assets": 650,
+      "total_equity_and_liabilities": 650
+     },
+     "income_statement_options": [
+      "Net sales revenue",
+      "Other income",
+      "Financial income",
+      "Material type expense",
+      "Personnel type expense",
+      "Depreciation",
+      "Other expense",
+      "Financial expense",
+      "Not affected by the event!"
+     ],
+     "events": [
+      {
+       "no": 1,
+       "text": "The company purchased goods worth 30 th USD from a supplier with a 15-day payment deadline.",
+       "balance_sheet": {
+        "assets": [
+         {
+          "label": "Goods",
+          "change": 30,
+          "closing": 130,
+          "given": false
+         },
+         {
+          "label": "Trade receivables",
+          "change": 0,
+          "closing": 200,
+          "given": false
+         },
+         {
+          "label": "Cash at bank",
+          "change": 0,
+          "closing": 350,
+          "given": false
+         }
+        ],
+        "equity_and_liabilities": [
+         {
+          "label": "Subscribed capital",
+          "change": 0,
+          "closing": 450,
+          "given": true
+         },
+         {
+          "label": "Profit after tax",
+          "change": 0,
+          "closing": 0,
+          "given": true
+         },
+         {
+          "label": "Short-term loan",
+          "change": 0,
+          "closing": 100,
+          "given": true
+         },
+         {
+          "label": "Trade payables",
+          "change": 30,
+          "closing": 130,
+          "given": false
+         }
+        ],
+        "total_assets": {
+         "change": 30,
+         "closing": 680
+        },
+        "total_equity_and_liabilities": {
+         "change": 30,
+         "closing": 680
+        }
+       },
+       "income_statement": {
+        "income": {
+         "item": "Not affected by the event!",
+         "change": 0,
+         "closing": 0
+        },
+        "expense_cost": {
+         "item": "Not affected by the event!",
+         "change": 0,
+         "closing": 0
+        },
+        "profit_or_loss": {
+         "change": 0,
+         "closing": 0
+        }
+       },
+       "explanation": "Goods +30. Trade payables +30. Only the balance sheet changes; the profit is not affected."
+      },
+      {
+       "no": 2,
+       "text": "The company settled 30 th USD of its trade payables from the bank account.",
+       "balance_sheet": {
+        "assets": [
+         {
+          "label": "Goods",
+          "change": 0,
+          "closing": 130,
+          "given": true
+         },
+         {
+          "label": "Trade receivables",
+          "change": 0,
+          "closing": 200,
+          "given": true
+         },
+         {
+          "label": "Cash at bank",
+          "change": -30,
+          "closing": 320,
+          "given": false
+         }
+        ],
+        "equity_and_liabilities": [
+         {
+          "label": "Subscribed capital",
+          "change": 0,
+          "closing": 450,
+          "given": true
+         },
+         {
+          "label": "Profit after tax",
+          "change": 0,
+          "closing": 0,
+          "given": true
+         },
+         {
+          "label": "Short-term loan",
+          "change": 0,
+          "closing": 100,
+          "given": true
+         },
+         {
+          "label": "Trade payables",
+          "change": -30,
+          "closing": 100,
+          "given": false
+         }
+        ],
+        "total_assets": {
+         "change": -30,
+         "closing": 650
+        },
+        "total_equity_and_liabilities": {
+         "change": -30,
+         "closing": 650
+        }
+       },
+       "income_statement": {
+        "income": {
+         "item": "Not affected by the event!",
+         "change": 0,
+         "closing": 0
+        },
+        "expense_cost": {
+         "item": "Not affected by the event!",
+         "change": 0,
+         "closing": 0
+        },
+        "profit_or_loss": {
+         "change": 0,
+         "closing": 0
+        }
+       },
+       "explanation": "Cash at bank -30. Trade payables -30. Only the balance sheet changes; the profit is not affected."
+      }
+     ]
+    },
+    {
+     "id": "m1_q06_04",
+     "type_id": "m1_q06",
+     "kind": "event_impact",
+     "points": 8,
+     "company": "Silverline Print",
+     "unit": "th USD",
+     "instructions": [
+      "If there is no change, indicate this with a zero: 0",
+      "In the \"closing\" column, use the minus sign ONLY to indicate negative values, written directly in front of the sum, DO NOT use a plus sign here. If the value is zero, indicate it with a zero, like this: 0",
+      "Select the impact of the events affecting the profit or loss (only where there is such) on income, costs/expenses from the drop-down list! If none are affected, select the \"Not affected by the event!\" marking and enter zero!"
+     ],
+     "description": "Take note of the following information regarding the economic transactions of \"Silverline Print\" Ltd. during the reporting period.",
+     "opening_balance_sheet": {
+      "assets": [
+       {
+        "label": "Goods",
+        "amount": 100
+       },
+       {
+        "label": "Trade receivables",
+        "amount": 150
+       },
+       {
+        "label": "Cash at bank",
+        "amount": 300
+       }
+      ],
+      "equity_and_liabilities": [
+       {
+        "label": "Subscribed capital",
+        "amount": 400
+       },
+       {
+        "label": "Profit after tax",
+        "amount": 0
+       },
+       {
+        "label": "Short-term loan",
+        "amount": 100
+       },
+       {
+        "label": "Trade payables",
+        "amount": 50
+       }
+      ],
+      "total_assets": 550,
+      "total_equity_and_liabilities": 550
+     },
+     "income_statement_options": [
+      "Net sales revenue",
+      "Other income",
+      "Financial income",
+      "Material type expense",
+      "Personnel type expense",
+      "Depreciation",
+      "Other expense",
+      "Financial expense",
+      "Not affected by the event!"
+     ],
+     "events": [
+      {
+       "no": 1,
+       "text": "The company received default interest of 90 th USD because of the late settlement of trade receivables from the previous period. The interest on late payments was credited to the bank account.",
+       "balance_sheet": {
+        "assets": [
+         {
+          "label": "Goods",
+          "change": 0,
+          "closing": 100,
+          "given": false
+         },
+         {
+          "label": "Trade receivables",
+          "change": 0,
+          "closing": 150,
+          "given": false
+         },
+         {
+          "label": "Cash at bank",
+          "change": 90,
+          "closing": 390,
+          "given": false
+         }
+        ],
+        "equity_and_liabilities": [
+         {
+          "label": "Subscribed capital",
+          "change": 0,
+          "closing": 400,
+          "given": false
+         },
+         {
+          "label": "Profit after tax",
+          "change": 90,
+          "closing": 90,
+          "given": false
+         },
+         {
+          "label": "Short-term loan",
+          "change": 0,
+          "closing": 100,
+          "given": false
+         },
+         {
+          "label": "Trade payables",
+          "change": 0,
+          "closing": 50,
+          "given": true
+         }
+        ],
+        "total_assets": {
+         "change": 90,
+         "closing": 640
+        },
+        "total_equity_and_liabilities": {
+         "change": 90,
+         "closing": 640
+        }
+       },
+       "income_statement": {
+        "income": {
+         "item": "Other income",
+         "change": 90,
+         "closing": 90
+        },
+        "expense_cost": {
+         "item": "Not affected by the event!",
+         "change": 0,
+         "closing": 0
+        },
+        "profit_or_loss": {
+         "change": 90,
+         "closing": 90
+        }
+       },
+       "explanation": "Cash at bank +90. Profit after tax +90. Income 90: Other income."
+      },
+      {
+       "no": 2,
+       "text": "The company purchased goods worth 50 th USD from a supplier with a 15-day payment deadline.",
+       "balance_sheet": {
+        "assets": [
+         {
+          "label": "Goods",
+          "change": 50,
+          "closing": 150,
+          "given": false
+         },
+         {
+          "label": "Trade receivables",
+          "change": 0,
+          "closing": 150,
+          "given": true
+         },
+         {
+          "label": "Cash at bank",
+          "change": 0,
+          "closing": 390,
+          "given": true
+         }
+        ],
+        "equity_and_liabilities": [
+         {
+          "label": "Subscribed capital",
+          "change": 0,
+          "closing": 400,
+          "given": true
+         },
+         {
+          "label": "Profit after tax",
+          "change": 0,
+          "closing": 90,
+          "given": true
+         },
+         {
+          "label": "Short-term loan",
+          "change": 0,
+          "closing": 100,
+          "given": true
+         },
+         {
+          "label": "Trade payables",
+          "change": 50,
+          "closing": 100,
+          "given": false
+         }
+        ],
+        "total_assets": {
+         "change": 50,
+         "closing": 690
+        },
+        "total_equity_and_liabilities": {
+         "change": 50,
+         "closing": 690
+        }
+       },
+       "income_statement": {
+        "income": {
+         "item": "Not affected by the event!",
+         "change": 0,
+         "closing": 90
+        },
+        "expense_cost": {
+         "item": "Not affected by the event!",
+         "change": 0,
+         "closing": 0
+        },
+        "profit_or_loss": {
+         "change": 0,
+         "closing": 90
+        }
+       },
+       "explanation": "Goods +50. Trade payables +50. Only the balance sheet changes; the profit is not affected."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "type_id": "m1_q07",
+   "title": "Which statements show the item",
+   "kind": "mcq",
+   "tasks": [
+    {
+     "id": "m1_q07_01",
+     "type_id": "m1_q07",
+     "kind": "mcq",
+     "points": 2,
+     "prompt": "Net income for the period appears on the:",
+     "options": [
+      "Balance Sheet only.",
+      "Statement of Cash Flows only.",
+      "Income Statement and Statement of Changes in Equity.",
+      "Balance Sheet and Statement of Cash Flows."
+     ],
+     "correct": 2,
+     "explanation": "Net income is the result of the income statement and is added to retained earnings in the statement of changes in equity."
+    },
+    {
+     "id": "m1_q07_02",
+     "type_id": "m1_q07",
+     "kind": "mcq",
+     "points": 2,
+     "prompt": "The ending balance in Contributed Capital appears on the:",
+     "options": [
+      "Balance Sheet only.",
+      "Income Statement only.",
+      "Income Statement and Statement of Cash Flows.",
+      "Balance Sheet and Statement of Changes in Equity."
+     ],
+     "correct": 3,
+     "explanation": "Contributed capital is an equity item: the balance sheet shows its ending balance and the statement of changes in equity shows its movement."
+    },
+    {
+     "id": "m1_q07_03",
+     "type_id": "m1_q07",
+     "kind": "mcq",
+     "points": 2,
+     "prompt": "The ending balance in Accounts Receivable appears on the:",
+     "options": [
+      "Income Statement and Balance Sheet.",
+      "Balance Sheet only.",
+      "Statement of Changes in Equity only.",
+      "Income Statement only."
+     ],
+     "correct": 1,
+     "explanation": "Receivables are assets; only the balance sheet shows their ending balance."
+    },
+    {
+     "id": "m1_q07_04",
+     "type_id": "m1_q07",
+     "kind": "mcq",
+     "points": 2,
+     "prompt": "Sales revenue for the period appears on the:",
+     "options": [
+      "Balance Sheet and Statement of Changes in Equity.",
+      "Statement of Changes in Equity only.",
+      "Balance Sheet only.",
+      "Income Statement only."
+     ],
+     "correct": 3,
+     "explanation": "Revenue is an income statement item; only its result (profit) flows on to equity."
+    }
+   ]
+  },
+  {
+   "type_id": "m1_q08",
+   "title": "Types of business organisations",
+   "kind": "mcq",
+   "tasks": [
+    {
+     "id": "m1_q08_01",
+     "type_id": "m1_q08",
+     "kind": "mcq",
+     "points": 2,
+     "prompt": "A general partnership is made up of:",
+     "options": [
+      "partners.",
+      "sole proprietors.",
+      "debenture holders.",
+      "shareholders."
+     ],
+     "correct": 0,
+     "explanation": "The owners of a partnership are its partners."
+    },
+    {
+     "id": "m1_q08_02",
+     "type_id": "m1_q08",
+     "kind": "mcq",
+     "points": 2,
+     "prompt": "A company limited by shares (Ltd.) is owned by:",
+     "options": [
+      "shareholders.",
+      "creditors.",
+      "sole proprietors.",
+      "partners."
+     ],
+     "correct": 0,
+     "explanation": "The owners of a company limited by shares are the shareholders."
+    },
+    {
+     "id": "m1_q08_03",
+     "type_id": "m1_q08",
+     "kind": "mcq",
+     "points": 2,
+     "prompt": "A sole proprietorship is owned by:",
+     "options": [
+      "one individual.",
+      "the members of a partnership.",
+      "the government.",
+      "shareholders."
+     ],
+     "correct": 0,
+     "explanation": "A sole proprietorship has exactly one owner."
+    },
+    {
+     "id": "m1_q08_04",
+     "type_id": "m1_q08",
+     "kind": "mcq",
+     "points": 2,
+     "prompt": "Which form of business has an owner who is personally liable for all debts of the business?",
+     "options": [
+      "Public limited company",
+      "Sole proprietorship",
+      "Limited-liability partnership",
+      "Corporation"
+     ],
+     "correct": 1,
+     "explanation": "A sole proprietor has unlimited personal liability; in the other forms the liability is limited."
+    }
+   ]
+  },
+  {
+   "type_id": "m1_q09",
+   "title": "Income statement formulas",
+   "kind": "mcq",
+   "tasks": [
+    {
+     "id": "m1_q09_01",
+     "type_id": "m1_q09",
+     "kind": "mcq",
+     "points": 1,
+     "prompt": "Under the function of expense method, operating profit/loss is compiled using:",
+     "options": [
+      "Net sales revenue - material type expenses - personnel type expenses - depreciation + other income - other expenses",
+      "Net sales revenue - direct cost of sales - indirect cost of sales + other income - other expenses",
+      "Financial income - financial expenses",
+      "Net sales revenue - material type expenses - personnel type expenses - depreciation"
+     ],
+     "correct": 1,
+     "explanation": "The function of expense method groups costs by function: direct and indirect cost of sales."
+    },
+    {
+     "id": "m1_q09_02",
+     "type_id": "m1_q09",
+     "kind": "mcq",
+     "points": 1,
+     "prompt": "Which of the following is NOT used when compiling operating profit under the nature of expense method?",
+     "options": [
+      "Personnel type expenses",
+      "Depreciation",
+      "Capitalised own output",
+      "Financial income"
+     ],
+     "correct": 3,
+     "explanation": "Financial income belongs to the profit/loss from financial transactions, below the operating profit."
+    },
+    {
+     "id": "m1_q09_03",
+     "type_id": "m1_q09",
+     "kind": "mcq",
+     "points": 1,
+     "prompt": "Profit/loss from financial transactions is compiled using:",
+     "options": [
+      "Financial income + financial expenses",
+      "Operating profit + financial income",
+      "Net sales revenue - financial expenses",
+      "Financial income - financial expenses"
+     ],
+     "correct": 3,
+     "explanation": "It is the balance of financial income and financial expenses."
+    },
+    {
+     "id": "m1_q09_04",
+     "type_id": "m1_q09",
+     "kind": "mcq",
+     "points": 1,
+     "prompt": "Profit or loss before tax is compiled using:",
+     "options": [
+      "Operating profit - financial income",
+      "Net sales revenue - operating profit",
+      "Operating profit + profit/loss from financial transactions",
+      "Profit/loss from financial transactions - tax expense"
+     ],
+     "correct": 2,
+     "explanation": "Operating profit plus the result of financial transactions gives the profit before tax."
+    }
+   ]
+  },
+  {
+   "type_id": "m1_q10",
+   "title": "Main source of revenue",
+   "kind": "mcq",
+   "tasks": [
+    {
+     "id": "m1_q10_01",
+     "type_id": "m1_q10",
+     "kind": "mcq",
+     "points": 1,
+     "prompt": "For a trading company, revenue comes mainly from selling:",
+     "options": [
+      "Leased assets",
+      "Goods purchased for resale",
+      "Bank services",
+      "Own production inventories/products"
+     ],
+     "correct": 1,
+     "explanation": "A trading company resells goods that it bought."
+    },
+    {
+     "id": "m1_q10_02",
+     "type_id": "m1_q10",
+     "kind": "mcq",
+     "points": 1,
+     "prompt": "For a bank, revenue comes mainly from:",
+     "options": [
+      "Own production inventories/products",
+      "Goods purchased for resale",
+      "Leased buildings",
+      "Interest and fees on financial services"
+     ],
+     "correct": 3,
+     "explanation": "A bank earns its income from financial services."
+    },
+    {
+     "id": "m1_q10_03",
+     "type_id": "m1_q10",
+     "kind": "mcq",
+     "points": 1,
+     "prompt": "For a consulting firm, revenue comes mainly from:",
+     "options": [
+      "Goods purchased for resale",
+      "Services provided to clients",
+      "Interest received",
+      "Own production inventories/products"
+     ],
+     "correct": 1,
+     "explanation": "A service provider sells services."
+    },
+    {
+     "id": "m1_q10_04",
+     "type_id": "m1_q10",
+     "kind": "mcq",
+     "points": 1,
+     "prompt": "For a company that leases out machines, revenue comes mainly from:",
+     "options": [
+      "Bank services",
+      "Taxes",
+      "Own production inventories/products",
+      "Lease payments received"
+     ],
+     "correct": 3,
+     "explanation": "The main activity is leasing, so the lease payments are the revenue."
+    }
+   ]
+  },
+  {
+   "type_id": "m1_q11",
+   "title": "Select the incorrect statement about an economic event",
+   "kind": "mcq",
+   "tasks": [
+    {
+     "id": "m1_q11_01",
+     "type_id": "m1_q11",
+     "kind": "mcq",
+     "points": 1,
+     "prompt": "The company paid its trade payables from its bank account. Select the incorrect statement!",
+     "options": [
+      "The company's balance sheet total increased.",
+      "The company's trade payables decreased.",
+      "The company's liquid assets decreased.",
+      "The economic event does not affect the profit or loss account."
+     ],
+     "correct": 0,
+     "explanation": "Assets and liabilities both decreased, so the balance sheet total decreased."
+    },
+    {
+     "id": "m1_q11_02",
+     "type_id": "m1_q11",
+     "kind": "mcq",
+     "points": 1,
+     "prompt": "The owners paid additional capital into the company's bank account. Select the incorrect statement!",
+     "options": [
+      "The company's liabilities increased.",
+      "The balance sheet total increased.",
+      "The company's liquid assets increased.",
+      "The company's equity increased."
+     ],
+     "correct": 0,
+     "explanation": "Contributed capital is equity, not a liability."
+    },
+    {
+     "id": "m1_q11_03",
+     "type_id": "m1_q11",
+     "kind": "mcq",
+     "points": 1,
+     "prompt": "The company repaid part of its bank loan from its bank account. Select the incorrect statement!",
+     "options": [
+      "The company's liabilities decreased.",
+      "The balance sheet total remained unchanged.",
+      "The company's equity did not change.",
+      "The company's liquid assets decreased."
+     ],
+     "correct": 1,
+     "explanation": "Assets and liabilities both decreased, so the balance sheet total decreased."
+    },
+    {
+     "id": "m1_q11_04",
+     "type_id": "m1_q11",
+     "kind": "mcq",
+     "points": 1,
+     "prompt": "The company received a long-term bank loan into its bank account. Select the incorrect statement!",
+     "options": [
+      "The company's equity increased.",
+      "The company's liquid assets increased.",
+      "The company's long-term liabilities increased.",
+      "The balance sheet total increased."
+     ],
+     "correct": 0,
+     "explanation": "A loan is a liability; equity does not change."
+    }
+   ]
+  },
+  {
+   "type_id": "m1_q12",
+   "title": "Complex economic event",
+   "kind": "mcq",
+   "tasks": [
+    {
+     "id": "m1_q12_01",
+     "type_id": "m1_q12",
+     "kind": "mcq",
+     "points": 1,
+     "prompt": "From the following economic events, select which one qualifies as a complex economic event!",
+     "options": [
+      "Interest on a bank loan was paid from the bank account.",
+      "A supplier invoice was settled by bank transfer.",
+      "Retained earnings were transferred to contributed capital.",
+      "The company withdrew cash from its bank account into the till."
+     ],
+     "correct": 0,
+     "explanation": "A complex event affects both the balance sheet and the income statement; paid interest is an expense."
+    },
+    {
+     "id": "m1_q12_02",
+     "type_id": "m1_q12",
+     "kind": "mcq",
+     "points": 1,
+     "prompt": "From the following economic events, select which one qualifies as a complex economic event!",
+     "options": [
+      "Goods were sold on credit and the invoice was issued.",
+      "The owners increased the contributed capital by a bank transfer.",
+      "A customer paid an outstanding invoice by bank transfer.",
+      "A short-term loan was converted into a long-term loan."
+     ],
+     "correct": 0,
+     "explanation": "The sale creates revenue (income statement) and a receivable (balance sheet)."
+    },
+    {
+     "id": "m1_q12_03",
+     "type_id": "m1_q12",
+     "kind": "mcq",
+     "points": 1,
+     "prompt": "From the following economic events, select which one qualifies as a complex economic event!",
+     "options": [
+      "The company repaid a bank loan from its bank account.",
+      "The company purchased equipment on credit.",
+      "The company received an advance from a customer in cash.",
+      "The company paid salaries to its employees from the bank account."
+     ],
+     "correct": 3,
+     "explanation": "Salaries are an expense: the event changes the balance sheet and the profit."
+    },
+    {
+     "id": "m1_q12_04",
+     "type_id": "m1_q12",
+     "kind": "mcq",
+     "points": 1,
+     "prompt": "From the following economic events, select which one qualifies as a complex economic event!",
+     "options": [
+      "Raw materials were purchased on credit.",
+      "Depreciation of machinery was recorded at year end.",
+      "Cash was deposited into the bank account.",
+      "The owners contributed capital in cash."
+     ],
+     "correct": 1,
+     "explanation": "Depreciation is an expense and decreases the value of the machinery."
+    }
+   ]
+  }
+ ]
+}
