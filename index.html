@@ -190,11 +190,44 @@
   .sheet-row .field-sm { height: 32px; font-size: 13.5px; }
   .items-list > * + * { border-top: 1px solid var(--border); }
   /* task mode: instructions and items stay in view on the left while the answers are typed on the right */
-  #refCol { margin-bottom: 14px; } #refCol > * + * { margin-top: 12px; }
+  .ref-col { margin-bottom: 14px; } .ref-col > * + * { margin-top: 12px; }
   @media (min-width: 1100px) {
-    #taskGrid.split { display: grid; grid-template-columns: minmax(300px, 360px) minmax(0, 1fr); gap: 24px; align-items: start; }
-    #taskGrid.split #refCol { position: sticky; top: 84px; max-height: calc(100vh - 104px); overflow-y: auto; margin-bottom: 0; padding: 0 8px 8px 0; }
+    .task-grid.split { display: grid; grid-template-columns: minmax(300px, 360px) minmax(0, 1fr); gap: 24px; align-items: start; }
+    .task-grid.split .ref-col { position: sticky; top: 84px; max-height: calc(100vh - 104px); overflow-y: auto; margin-bottom: 0; padding: 0 8px 8px 0; }
   }
+
+  /* ============ Mid-term test: a whole paper ============ */
+  .mt-nav { display: flex; flex-wrap: wrap; gap: 6px; margin: 14px 0 18px; }
+  .mt-nav button { width: 36px; height: 34px; font-family: var(--font-num); font-size: 13px; font-weight: 600; color: var(--ink); cursor: pointer; background: var(--paper);
+    border: 2px solid var(--ink); border-radius: var(--radius); transition: background .1s; }
+  .mt-nav button:hover { background: color-mix(in srgb, var(--mark) 45%, var(--paper)); }
+  .mt-nav button.done { background: var(--paper-2); box-shadow: inset 0 -4px 0 var(--ink); }
+  .mt-nav button.cur { background: var(--mark); color: #1B1A17; box-shadow: 3px 3px 0 var(--shadow); }
+  .mt-nav button.ok { border-color: var(--green); color: var(--green); } .mt-nav button.mid { border-style: dashed; } .mt-nav button.bad { border-color: var(--red); color: var(--red); }
+  .mt-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  .mt-table th { padding: 4px 8px; font-family: var(--font-stamp); font-size: 11.5px; font-weight: 400; letter-spacing: .1em; text-transform: uppercase; text-align: right; color: var(--ink-soft); border-bottom: 2px solid var(--ink); }
+  .mt-table td { padding: 5px 8px; vertical-align: middle; text-align: right; border-bottom: 1px solid color-mix(in srgb, var(--ink) 14%, transparent); }
+  .mt-table th:first-child, .mt-table td:first-child { text-align: left; }
+  .mt-table td.txt, .mt-table th.txt { text-align: left; }
+  .mt-table td.num, .mt-table td .num { font-family: var(--font-num); font-variant-numeric: slashed-zero tabular-nums; font-feature-settings: "zero" 1; }
+  .mt-table tr.strong td { font-weight: 700; border-top: 1px solid var(--ink); }
+  .mt-table td.vl, .mt-table th.vl { border-left: 6px double var(--ink); }
+  #mtBody .card { overflow-x: auto; }                       /* wide tables scroll inside their card; the page itself never scrolls sideways */
+  .mt-table .field-sm { min-width: 5.2rem; }
+  .mt-table select.field-sm { min-width: 9rem; font-size: 13px; }
+  .mt-info { font-size: 14px; } .mt-info .row { display: flex; justify-content: space-between; gap: 16px; padding: 1px 0; }
+  .mt-info .row span:last-child { font-family: var(--font-num); font-variant-numeric: slashed-zero tabular-nums; }
+  .mt-info .head { margin-top: 8px; font-weight: 600; }
+  .t-account { background: var(--paper); border: 2px solid var(--ink); border-radius: var(--radius); }
+  .t-account h4 { padding: 4px 10px; font-family: var(--font-stamp); font-size: 12.5px; letter-spacing: .08em; text-transform: uppercase; text-align: center; border-bottom: 2px solid var(--ink); }
+  .t-account .cols { display: grid; grid-template-columns: 1fr 1fr; }
+  .t-account .cols > div { padding: 6px 8px; min-height: 44px; } .t-account .cols > div + div { border-left: 2px solid var(--ink); }
+  .t-account .cap { font-family: var(--font-stamp); font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-soft); margin-bottom: 3px; }
+  .t-account .amt { font-family: var(--font-num); font-variant-numeric: slashed-zero tabular-nums; font-size: 13.5px; text-align: right; }
+  .t-account .field-sm { margin-top: 4px; min-width: 0; }
+  .mt-sub { margin-top: 20px; font-family: var(--font-head); font-weight: 700; font-size: 19px; }
+  .mt-q { font-family: var(--font-head); font-weight: 700; }
+  .mt-clock { font-family: var(--font-num); font-size: 15px; font-weight: 600; font-variant-numeric: slashed-zero tabular-nums; }
   @media (max-width: 1499px) { #sheetBox .sheet-two.wide-needed { grid-template-columns: minmax(0, 1fr); } }
   @media (min-width: 640px) { .sheet-row { grid-template-columns: minmax(0, 1fr) repeat(var(--n, 1), minmax(5.5rem, 8.5rem)); } }
   .sheet-head { padding: 0 0 .55rem; border-bottom: 2px solid var(--ink); }
@@ -529,6 +562,12 @@
           <p>Learn the words so you can nod confidently in meetings.</p>
           <span class="go">Start the quiz</span>
         </button>
+        <button data-midterm class="feature md:col-span-2">
+          <span class="tab">Ledger A-03</span>
+          <h3>Mid-term test</h3>
+          <p style="max-width: 46ch">A whole paper, start to finish, in the real exam's order and points. The answers wait until you hand it in.</p>
+          <span class="go">Take a seat</span>
+        </button>
       </div>
     </div>
   </div>
@@ -549,6 +588,7 @@
       <span class="nav-label eyebrow">Practice</span>
       <button data-topic="balance_sheet" class="nav-item mode-btn"><span class="ico" data-icon="table"></span>Balance Sheet</button>
       <button data-topic="terminology" class="nav-item mode-btn"><span class="ico" data-icon="book"></span>Terminology</button>
+      <button type="button" id="midtermBtn" data-midterm class="nav-item"><span class="ico" data-icon="clipboard"></span>Mid-term test</button>
 
       <span class="nav-label eyebrow">The Ledger</span>
       <button type="button" id="ratingBtn" data-rating class="nav-item"><span class="ico" data-icon="trophy"></span>The Ledger</button>
@@ -593,6 +633,31 @@
         <div id="ratingList" class="mt-4 space-y-2"></div>
       </section>
 
+      <!-- Mid-term test: choose a paper, sit it question by question, hand it in, see the marks -->
+      <section id="midterm" class="hidden fade-in">
+        <div id="mtMenu">
+          <p class="eyebrow">Practice paper</p>
+          <h2 class="serif mt-2 text-[32px] sm:text-4xl leading-tight">Mid-term test</h2>
+          <p class="mt-2 text-sm t-soft max-w-xl">A whole paper in the order and point values of the real exam. Answers stay hidden until you hand the paper in. It does not change your Score.</p>
+          <div id="mtPapers" class="mt-8 grid md:grid-cols-2 gap-8 max-w-3xl"></div>
+        </div>
+        <div id="mtPaper" class="hidden">
+          <div class="flex flex-wrap items-baseline justify-between gap-3">
+            <div><p id="mtKicker" class="eyebrow"></p><h2 id="mtTitle" class="serif mt-1 text-[28px] sm:text-[34px] leading-tight"></h2></div>
+            <div class="flex items-center gap-3"><span id="mtClock" class="mt-clock"></span><button type="button" id="mtQuit" class="btn btn-quiet btn-sm">Quit paper</button></div>
+          </div>
+          <div id="mtNav" class="mt-nav" role="tablist" aria-label="Questions"></div>
+          <div id="mtBody"></div>
+          <div class="mt-6 flex flex-wrap items-center gap-2.5">
+            <button type="button" id="mtPrev" class="btn btn-ghost btn-lg">Previous</button>
+            <button type="button" id="mtNext" class="btn btn-primary btn-lg">Next</button>
+            <button type="button" id="mtFinish" class="btn btn-accent btn-lg ml-auto">Hand in the paper</button>
+          </div>
+          <p id="mtError" class="hidden note note-bad mt-4"></p>
+        </div>
+        <div id="mtResult" class="hidden"></div>
+      </section>
+
       <section id="task" class="hidden fade-in">
         <p id="company" class="eyebrow"></p>
         <div class="mt-2 flex flex-wrap items-baseline gap-x-4 gap-y-1">
@@ -601,8 +666,8 @@
         </div>
 
         <!-- Balance sheet tasks on wide screens: the instructions and the items stay in view (left) while the answers are typed (right) -->
-        <div id="taskGrid" class="mt-4">
-        <aside id="refCol">
+        <div id="taskGrid" class="task-grid mt-4">
+        <aside id="refCol" class="ref-col">
           <div id="description" class="card p-4 text-[14px] leading-relaxed t-ink whitespace-pre-wrap"></div>
           <div id="itemsBox"></div>
         </aside>
@@ -871,6 +936,7 @@ const ICONS = {
   edit: '<path d="M4 20h4L19 9a2.1 2.1 0 0 0-3-3L5 17z"/><path d="M14 7l3 3"/>',
   xsocial: '<path fill="currentColor" stroke="none" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>',
   moon: '<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/>',
+  clipboard: '<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4h6v3H9zM9 12h6M9 16h4"/>',
   gift: '<rect x="3" y="8" width="18" height="4" rx="1"/><path d="M5 12v8h14v-8M12 8v12M12 8C10 8 8 7 8 5.5S9.5 3 12 8c2.5-5 4-3.5 4-2.5S14 8 12 8z"/>',
   trophy: '<path d="M8 4h8v5a4 4 0 0 1-8 0z"/><path d="M8 6H5a1 1 0 0 0-1 1 4 4 0 0 0 4 4M16 6h3a1 1 0 0 1 1 1 4 4 0 0 1-4 4M12 13v4M8 21h8M10 17h4"/>',
   lock: '<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
@@ -945,9 +1011,11 @@ window.addEventListener("popstate", (e) => {
   if (target !== currentView) showView(target);
 });
 
-function panel(which) {             // "loading" | "error" | "task" | "rating"
-  for (const id of ["loading", "error", "task", "rating"]) $(id).classList.toggle("hidden", id !== which);
+function panel(which) {             // "loading" | "error" | "task" | "rating" | "midterm"
+  if (currentPanel === "midterm" && which !== "midterm") mtSave();        // keep what was typed in the open question of a paper
+  for (const id of ["loading", "error", "task", "rating", "midterm"]) $(id).classList.toggle("hidden", id !== which);
   $("ratingBtn").classList.toggle("active", which === "rating");
+  $("midtermBtn").classList.toggle("active", which === "midterm");
   currentPanel = which;
   updateProRow();
 }
@@ -983,7 +1051,7 @@ function proPref() {
 const wantPro = () => !!(session && session.is_pro && proPref());
 function updateProRow() {
   const row = $("proRow");
-  row.classList.toggle("hidden", !session || currentPanel === "rating");
+  row.classList.toggle("hidden", !session || currentPanel === "rating" || currentPanel === "midterm");
   if (!session) return;
   const sw = $("proSwitch"), locked = !session.is_pro, on = wantPro();
   sw.setAttribute("aria-checked", on ? "true" : "false");
@@ -1097,12 +1165,11 @@ function itemsCard() {
   return card;
 }
 
-function renderSheet() {
-  const box = $("sheetBox");
+function renderSheet(box = $("sheetBox"), itemsBox = $("itemsBox")) {
   box.replaceChildren();
   sheetCells = [];
   const ncol = task.columns.length;
-  if (task.items && task.items.length) $("itemsBox").append(itemsCard());
+  if (task.items && task.items.length) itemsBox.append(itemsCard());
   const card = el("div", "card p-4");
   card.style.setProperty("--n", ncol);
   const head = el("div", "flex items-baseline justify-between gap-3");
@@ -1185,8 +1252,7 @@ function applySheetResult(res) {
 // ================= tests: single answer, select all, true/false, numeric =================
 const KIND_NOTE = { multi: "Select all that apply", tf: "True or false", numeric: "Numeric answer" };
 
-function renderTest() {
-  const box = $("testBox");
+function renderTest(box = $("testBox"), quiet = false) {     // quiet: one question inside a paper, whose header already says the number and the points
   box.replaceChildren();
   testItems = [];
   task.questions.forEach((q, i) => {
@@ -1198,7 +1264,8 @@ function renderTest() {
     const pts = q.points || 1;
     tags.append(el("span", "badge", pts + (pts > 1 ? " points" : " point")));
     top.append(tags);
-    card.append(top, el("p", "mt-2 text-[15px] leading-relaxed t-ink", q.prompt));
+    if (quiet) card.append(el("p", "text-[15px] leading-relaxed t-ink whitespace-pre-wrap", q.prompt));
+    else card.append(top, el("p", "mt-2 text-[15px] leading-relaxed t-ink", q.prompt));
     const item = { q, card, inputs: [], labels: [], note: el("p", "hidden note mt-3") };
     if (q.kind === "numeric") {
       const row = el("div", "mt-3 flex items-center gap-3");
@@ -1273,6 +1340,374 @@ function collectAnswers() {
   }
   return { answers, any };
 }
+
+// ================= Mid-term test: a whole paper, handed in at the end =================
+let paper = null, paperIdx = 0, paperAnswers = [], paperResult = null, paperFields = {}, paperClock = null, paperStart = 0;
+const fmtPts = (x) => String(+Number(x).toFixed(2));
+const mtTd = (c, cls = "") => { const td = el("td", cls); if (c instanceof Node) td.append(c); else td.textContent = c == null ? "" : c; return td; };
+const mtTr = (cells, cls = "") => { const tr = el("tr", cls); cells.forEach((c) => tr.append(c instanceof HTMLTableCellElement ? c : mtTd(c))); return tr; };
+const mtHead = (labels) => { const tr = el("tr"); labels.forEach((l, i) => tr.append(el("th", i === 0 ? "txt" : "", l))); const th = el("thead"); th.append(tr); return th; };
+const mtSavedAny = (a) => Object.values(a || {}).some((v) => (Array.isArray(v) ? v.length : v !== null && v !== undefined && String(v).trim() !== ""));
+
+function mtPane(name) { ["mtMenu", "mtPaper", "mtResult"].forEach((id) => $(id).classList.toggle("hidden", id !== name)); }
+
+async function showMidterm() {
+  view("trainer");
+  document.querySelectorAll(".mode-btn").forEach((b) => b.classList.remove("active"));
+  panel("midterm");
+  if (paper && paperResult) return mtShowResult();
+  if (paper) { mtPane("mtPaper"); $("mtBody").replaceChildren(); return mtShow(paperIdx); }       // a paper is in progress: sit down where you left off (the saved answers are filled back in)
+  mtPane("mtMenu");
+  const box = $("mtPapers");
+  box.replaceChildren(el("p", "text-sm t-faint", "Loading…"));
+  try {
+    const r = await fetch(API + "/api/midterm", { cache: "no-store" });
+    if (!r.ok) throw new Error();
+    const d = await r.json();
+    box.replaceChildren(...d.papers.map((p) => {
+      const b = el("button", "feature");
+      b.type = "button";
+      b.append(el("span", "tab", "Paper " + p.n), el("h3", "", p.title), el("p", "", `${p.questions} questions · ${p.points} points. A fresh variant of every question each time.`), el("span", "go", "Take a seat"));
+      b.onclick = () => mtStart(p.n, b);
+      return b;
+    }));
+  } catch {
+    box.replaceChildren(el("p", "note note-bad", "The server dropped the pen. Try again."));
+  }
+}
+
+async function mtStart(n, btn) {
+  if (btn) btn.disabled = true;
+  try {
+    const r = await fetch(`${API}/api/midterm/${n}`, { cache: "no-store" });
+    if (!r.ok) throw new Error((await r.json().catch(() => ({}))).detail || "Could not prepare the paper.");
+    paper = await r.json();
+  } catch (e) {
+    if (btn) btn.disabled = false;
+    $("mtPapers").prepend(el("p", "note note-bad mb-4 col-span-full", e.message === "Failed to fetch" ? "The server dropped the pen. Try again." : e.message));
+    return;
+  }
+  paperIdx = 0; paperAnswers = paper.questions.map(() => ({})); paperResult = null; paperStart = Date.now();
+  $("mtError").classList.add("hidden");
+  clearInterval(paperClock);
+  const tick = () => { const s = Math.floor((Date.now() - paperStart) / 1000); $("mtClock").textContent = `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`; };
+  tick(); paperClock = setInterval(tick, 1000);
+  mtPane("mtPaper");
+  mtShow(0);
+}
+
+function mtCollect() {
+  const q = paper.questions[paperIdx];
+  if (q.kind === "test" || q.kind === "balance_sheet") { task = q.task; return collectAnswers().answers; }
+  const a = {};
+  Object.entries(paperFields).forEach(([id, f]) => (a[id] = f.input.value));
+  return a;
+}
+function mtSave() { if (paper && !paperResult && $("mtBody").childElementCount) paperAnswers[paperIdx] = mtCollect(); }
+
+function mtNav() {
+  const nav = $("mtNav");
+  nav.replaceChildren(...paper.questions.map((q, i) => {
+    const b = el("button", "", String(q.no));
+    b.type = "button";
+    b.title = `Question ${q.no}: ${q.title} (${q.points} ${q.points === 1 ? "point" : "points"})`;
+    if (paperResult) { const r = paperResult.questions[i]; b.classList.add(r.points >= r.max ? "ok" : r.points > 0 ? "mid" : "bad"); }
+    else if (mtSavedAny(paperAnswers[i])) b.classList.add("done");
+    if (i === paperIdx) b.classList.add("cur");
+    b.onclick = () => mtShow(i);
+    return b;
+  }));
+}
+
+function mtShow(i) {
+  mtSave();
+  paperIdx = i;
+  const q = paper.questions[i], body = $("mtBody"), saved = paperAnswers[i] || {};
+  body.replaceChildren();
+  paperFields = {};
+  $("mtKicker").textContent = paperResult ? "Marked paper" : "Mid-term practice paper";
+  $("mtTitle").textContent = paper.title;
+  const head = el("div", "flex flex-wrap items-baseline justify-between gap-3");
+  head.append(el("h3", "mt-q text-[22px] leading-snug", `${q.no}. ${q.title}`), el("span", "badge", `${q.points} ${q.points === 1 ? "point" : "points"} · question ${q.no} of ${paper.questions.length}`));
+  body.append(head);
+  MT_RENDER[q.kind](q, body, saved);
+  if (paperResult) mtApplyResult(q, paperResult.questions[i]);
+  mtNav();
+  $("mtPrev").disabled = i === 0;
+  $("mtNext").classList.toggle("hidden", i === paper.questions.length - 1);
+  $("mtFinish").textContent = paperResult ? "Back to the results" : "Hand in the paper";
+  window.scrollTo({ top: 0 });
+}
+
+// ---- field helpers
+function mtInput(id, saved) {
+  const wrap = el("div"), input = el("input", "field field-sm num");
+  input.type = "text"; input.inputMode = "decimal"; input.autocomplete = "off"; input.placeholder = "?";
+  if (saved[id] != null) input.value = saved[id];
+  wrap.append(input);
+  paperFields[id] = { input, wrap };
+  return wrap;
+}
+function mtSelect(id, options, saved) {
+  const wrap = el("div"), s = el("select", "field field-sm");
+  s.append(new Option("Select…", ""));
+  options.forEach((o) => s.append(new Option(o, o)));
+  if (saved[id]) s.value = saved[id];
+  wrap.append(s);
+  paperFields[id] = { input: s, wrap };
+  return wrap;
+}
+const mtLayout = (body) => {                       // instructions on the left (they stay in view), answers on the right
+  const grid = el("div", "task-grid split mt-3"), ref = el("aside", "ref-col"), main = el("div");
+  grid.append(ref, main);
+  body.append(grid);
+  return { ref, main };
+};
+const mtTable = (labels) => { const t = el("table", "mt-table"); t.append(mtHead(labels)); const tb = el("tbody"); t.append(tb); return { t, tb }; };
+
+const MT_RENDER = {
+  balance_sheet(q, body, saved) {
+    task = q.task;
+    const { ref, main } = mtLayout(body);
+    if (task.description) ref.append(el("div", "card p-4 text-[14px] leading-relaxed t-ink whitespace-pre-wrap", task.description));
+    const itemsBox = el("div");
+    ref.append(itemsBox);
+    renderSheet(main, itemsBox);
+    sheetCells.forEach((c) => { if (saved[c.id] != null) c.input.value = saved[c.id]; });
+  },
+
+  test(q, body, saved) {
+    task = q.task;
+    const box = el("div", "mt-3 space-y-3");
+    body.append(box);
+    renderTest(box, true);
+    testItems.forEach((it) => {
+      const v = saved[it.q.id];
+      if (v === null || v === undefined) return;
+      if (it.q.kind === "numeric") it.inputs[0].value = v;
+      else if (it.q.kind === "multi") (v || []).forEach((k) => { if (it.inputs[k]) it.inputs[k].checked = true; });
+      else if (it.q.kind === "tf") it.inputs[v === "true" ? 0 : 1].checked = true;
+      else if (it.inputs[v]) it.inputs[v].checked = true;
+    });
+  },
+
+  income_statement(q, body, saved) {
+    const b = q.body, { ref, main } = mtLayout(body);
+    const info = el("div", "card p-4");
+    info.append(el("p", "text-[14px] t-ink", b.description));
+    const list = el("div", "mt-info mt-2");
+    b.information.forEach((g) => {
+      if (g.heading) list.append(el("div", "head", g.heading));
+      g.lines.forEach((l) => { const r = el("div", "row"); r.append(el("span", "", l.label), el("span", "", fmt(l.amount))); list.append(r); });
+    });
+    info.append(list, el("p", "mt-3 text-[14px] font-semibold", b.instruction));
+    b.answer_format.forEach((t) => info.append(el("p", "text-xs t-faint mt-1", t)));
+    ref.append(info);
+    const card = el("div", "card p-4"), { t, tb } = mtTable(["Income statement" + (b.unit ? " (" + b.unit + ")" : ""), "Answer"]);
+    b.rows.forEach((r) => {
+      const label = el("td", "txt"); label.append(el("span", "t-faint", r.no + " "), el("span", r.bold ? "font-semibold" : "", r.label));
+      tb.append(mtTr([label, r.id ? mtInput(r.id, saved) : "–"], r.bold ? "strong" : ""));
+    });
+    card.append(t);
+    main.append(card);
+  },
+
+  event_impact(q, body, saved) {
+    const b = q.body, { ref, main } = mtLayout(body);
+    const intro = el("div", "card p-4");
+    intro.append(el("p", "text-[14px] t-ink", b.description));
+    b.instructions.forEach((t) => intro.append(el("p", "text-xs t-faint mt-2", t)));
+    const open = el("div", "card p-4"), grid = el("div", "grid gap-4");
+    open.append(el("h4", "text-[15px] font-semibold", "Opening balance sheet" + (b.unit ? " (" + b.unit + ")" : "")), grid);
+    [["Assets", b.opening.assets, b.opening.total_assets], ["Equity and liabilities", b.opening.equity_and_liabilities, b.opening.total_equity_and_liabilities]].forEach(([title, lines, total]) => {
+      const { t, tb } = mtTable([title, ""]);
+      lines.forEach((l) => tb.append(mtTr([l.label, el("span", "num", fmt(l.amount))])));
+      tb.append(mtTr(["Total", el("span", "num", fmt(total))], "strong"));
+      grid.append(t);
+    });
+    ref.append(intro, open);
+    b.events.forEach((ev) => {
+      const card = el("div", "card p-4 mb-4");
+      card.append(el("h4", "text-[16px] font-semibold", "Event " + ev.no), el("p", "mt-1 text-[14px] t-ink", ev.text));
+      const sides = el("div", "mt-3 grid md:grid-cols-2 gap-5");
+      [["Assets", ev.assets, "ta"], ["Equity and liabilities", ev.equity_and_liabilities, "tl"]].forEach(([title, lines, tag]) => {
+        const { t, tb } = mtTable([title, "Change", "Closing"]);
+        lines.forEach((l) => tb.append(l.given ? mtTr([l.label, el("span", "num", fmt(l.change)), el("span", "num", fmt(l.closing))]) : mtTr([l.label, mtInput(l.cid, saved), mtInput(l.zid, saved)])));
+        tb.append(mtTr(["Total", mtInput(ev.totals[tag].cid, saved), mtInput(ev.totals[tag].zid, saved)], "strong"));
+        sides.append(t);
+      });
+      card.append(sides);
+      const { t, tb } = mtTable(["Income statement", "Item", "Change", "Closing"]);
+      [["Income", ev.statement.i], ["Expense / cost", ev.statement.x]].forEach(([label, s]) => tb.append(mtTr([label, mtSelect(s.sid, b.options, saved), mtInput(s.cid, saved), mtInput(s.zid, saved)])));
+      tb.append(mtTr(["Profit or loss", "", mtInput(ev.statement.p.cid, saved), mtInput(ev.statement.p.zid, saved)], "strong"));
+      t.classList.add("mt-5");
+      card.append(el("div", "mt-4"), t);
+      main.append(card);
+    });
+  },
+
+  journal(q, body, saved) {
+    const b = q.body, card = el("div", "card p-4 mt-3");
+    card.append(el("p", "text-[14px] t-ink mb-3", b.description + " Choose the account to debit and the account to credit for every transaction."));
+    const { t, tb } = mtTable(["No. / transaction", "Debit", "Credit", "Amount"]);
+    b.entries.forEach((e) => {
+      const txt = el("td", "txt"); txt.append(el("span", "t-faint", e.no + ". "), el("span", "", e.text));
+      tb.append(mtTr([txt, mtSelect(e.did, b.options, saved), mtSelect(e.cid, b.options, saved), el("span", "num", fmt(e.amount))]));
+    });
+    card.append(t);
+    body.append(card);
+  },
+
+  trial_balance(q, body, saved) {
+    const b = q.body, { ref, main } = mtLayout(body);
+    const intro = el("div", "card p-4");
+    intro.append(el("p", "text-[14px] t-ink", b.description), el("p", "text-xs t-faint mt-2", "Enter values without spaces; negative values with -; if the amount is zero write 0." + (b.unit ? " Unit: " + b.unit + "." : "")));
+    const ledger = el("div", "grid gap-3");
+    b.ledger.forEach((a) => {
+      const box = el("div", "t-account"), cols = el("div", "cols"), d = el("div"), c = el("div");
+      d.append(el("div", "cap", "Debit")); c.append(el("div", "cap", "Credit"));
+      a.debit.forEach((v) => d.append(el("div", "amt", fmt(v)))); a.credit.forEach((v) => c.append(el("div", "amt", fmt(v))));
+      cols.append(d, c);
+      box.append(el("h4", "", a.account), cols);
+      ledger.append(box);
+    });
+    ref.append(intro, ledger);
+    const card = el("div", "card p-4"), { t, tb } = mtTable(["Trial balance", "Debit", "Credit"]);
+    b.rows.forEach((r) => tb.append(r.asked ? mtTr([r.account, mtInput(r.did, saved), mtInput(r.cid, saved)]) : mtTr([r.account, el("span", "num", fmt(r.debit)), el("span", "num", fmt(r.credit))])));
+    tb.append(mtTr(["Balance sheet accounts total", mtInput(b.totals.bs.did, saved), mtInput(b.totals.bs.cid, saved)], "strong"));
+    tb.append(mtTr(["Profit & loss accounts total", mtInput(b.totals.pl.did, saved), mtInput(b.totals.pl.cid, saved)], "strong"));
+    card.append(t);
+    const cb = el("div", "card p-4 mt-4");
+    cb.append(el("h4", "text-[15px] font-semibold mb-2", "Closing balance sheet"));
+    const two = el("div", "grid md:grid-cols-2 gap-5");
+    [["Assets", b.closing.assets], ["Equity and liabilities", b.closing.equity_and_liabilities]].forEach(([title, lines]) => {
+      const x = mtTable([title, ""]);
+      lines.forEach((l, i) => x.tb.append(mtTr([l.label, mtInput(l.id, saved)], i === lines.length - 1 ? "strong" : "")));
+      two.append(x.t);
+    });
+    cb.append(two);
+    main.append(card, cb);
+  },
+
+  ledger_posting(q, body, saved) {
+    const b = q.body, { ref, main } = mtLayout(body);
+    const intro = el("div", "card p-4"), ol = el("ol", "mt-2 space-y-2 text-[14px] t-ink");
+    b.events.forEach((e, i) => { const li = el("li", "flex gap-2"); li.append(el("span", "t-faint num", i + 1 + "."), el("span", "", e)); ol.append(li); });
+    intro.append(el("p", "text-[14px] font-semibold", b.task), ol);
+    ref.append(intro);
+    const grid = el("div", "grid sm:grid-cols-2 gap-4");
+    b.accounts.forEach((a) => {
+      const box = el("div", "t-account"), cols = el("div", "cols"), d = el("div"), c = el("div");
+      d.append(el("div", "cap", "Debit")); c.append(el("div", "cap", "Credit"));
+      if (a.opening) (a.opening.side === "debit" ? d : c).append(el("div", "amt t-faint", "open " + fmt(a.opening.amount)));
+      a.did.forEach((id) => d.append(mtInput(id, saved))); a.cid.forEach((id) => c.append(mtInput(id, saved)));
+      cols.append(d, c);
+      box.append(el("h4", "", a.name), cols);
+      grid.append(box);
+    });
+    main.append(el("p", "text-xs t-faint mb-3", "Write only the amount on the right side of each account, not the event number. Leave a box empty if nothing goes there."), grid);
+    const qs = el("div", "card p-4 mt-4 space-y-3");
+    b.questions.forEach((x) => { const row = el("div", "flex flex-wrap items-center gap-3"); const lab = el("div", "flex-1 min-w-[14rem]"); lab.append(el("p", "text-[14px] t-ink", x.prompt), el("p", "text-xs t-faint", x.format)); row.append(lab, mtInput(x.id, saved)); qs.append(row); });
+    main.append(qs);
+  },
+};
+
+// ---- marks
+function mtMarkField(fid, f) {
+  const ent = paperFields[fid];
+  if (ent) {
+    ent.input.classList.add(f.correct ? "ok" : "bad");
+    if (!f.correct) ent.wrap.append(el("div", "expected", "Correct: " + (typeof f.expected === "number" ? fmt(f.expected) : f.expected)));
+    return;
+  }
+  if (f.ids) {                                    // one side of a ledger account: the amounts in any order
+    f.ids.forEach((id) => paperFields[id] && paperFields[id].input.classList.add(f.correct ? "ok" : "bad"));
+    const last = paperFields[f.ids[f.ids.length - 1]];
+    if (!f.correct && last) last.wrap.append(el("div", "expected", "Correct: " + (f.expected.length ? f.expected.map(fmt).join(", ") : "nothing here")));
+  }
+}
+
+function mtApplyResult(q, r) {
+  if (!r) return;
+  const d = r.detail || {};
+  if (q.kind === "balance_sheet") { task = q.task; applySheetResult({ cells: d.cells }); }
+  else if (q.kind === "test") { task = q.task; applyTestResult({ questions: d.questions }); }
+  else Object.entries(d.fields || {}).forEach(([fid, f]) => mtMarkField(fid, f));
+  const tone = r.points >= r.max ? "note-ok" : r.points > 0 ? "note-warn" : "note-bad";
+  const strip = el("div", "note mt-5 " + tone);
+  strip.append(el("b", "", `${fmtPts(r.points)} / ${r.max} ${r.max === 1 ? "point" : "points"}.`), document.createTextNode(d.explanation ? " " + d.explanation : ""));
+  $("mtBody").append(strip);
+  $("mtBody").querySelectorAll("input, select").forEach((x) => (x.disabled = true));
+}
+
+// ---- handing in
+async function mtFinish() {
+  if (paperResult) return mtShowResult();
+  mtSave();
+  const blank = paperAnswers.filter((a) => !mtSavedAny(a)).length;
+  if (blank && !confirm(`${blank} of ${paper.questions.length} questions have no answer yet. Hand in the paper anyway?`)) return;
+  const btn = $("mtFinish"), err = $("mtError");
+  err.classList.add("hidden");
+  btn.disabled = true;
+  try {
+    const r = await fetch(API + "/api/midterm/grade", {
+      method: "POST", headers: { "Content-Type": "application/json", ...authHeader() },
+      body: JSON.stringify({ items: paper.questions.map((q, i) => ({ token: q.token, answers: paperAnswers[i] })) }),
+    });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(typeof d.detail === "string" ? d.detail : "Could not mark the paper.");
+    paperResult = d;
+    paperResult.spent = Math.floor((Date.now() - paperStart) / 1000);
+    clearInterval(paperClock);
+    mtShowResult();
+  } catch (e) {
+    err.textContent = e.message === "Failed to fetch" ? "The server dropped the pen. Try again." : e.message;
+    err.classList.remove("hidden");
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function mtShowResult() {
+  mtPane("mtResult");
+  const box = $("mtResult"), res = paperResult, pct = res.max ? Math.round((100 * res.points) / res.max) : 0;
+  const spent = res.spent || 0;
+  box.replaceChildren();
+  const head = el("div", "flex flex-wrap items-center justify-between gap-4");
+  const left = el("div");
+  left.append(el("p", "eyebrow", paper.title + " · marked"), el("h2", "serif mt-1 text-[32px] sm:text-4xl leading-tight", `${fmtPts(res.points)} / ${res.max} points`),
+    el("p", "mt-1 text-sm t-soft", `${pct}% · time ${Math.floor(spent / 60)} min ${spent % 60} s`));
+  head.append(left, stampEl("Paper marked", "probation"));
+  const card = el("div", "card p-4 mt-6"), { t, tb } = mtTable(["Question", "Points"]);
+  paper.questions.forEach((q, i) => {
+    const r = res.questions[i], tone = r.points >= r.max ? "ok" : r.points > 0 ? "mid" : "bad";
+    const link = el("button", "text-left underline underline-offset-2 link-hover", `${q.no}. ${q.title}`);
+    link.type = "button"; link.onclick = () => { mtPane("mtPaper"); mtShow(i); };
+    const td = el("td", "txt"); td.append(link);
+    tb.append(mtTr([td, el("span", "pill pill-" + tone, `${fmtPts(r.points)} / ${r.max}`)]));
+  });
+  card.append(t);
+  const actions = el("div", "mt-6 flex flex-wrap gap-2.5");
+  const review = el("button", "btn btn-primary btn-lg", "Review the answers"); review.type = "button"; review.onclick = () => { mtPane("mtPaper"); mtShow(0); };
+  const again = el("button", "btn btn-ghost btn-lg", "Another paper"); again.type = "button"; again.onclick = () => { paper = null; paperResult = null; showMidterm(); };
+  actions.append(review, again);
+  box.append(head, card, actions);
+  window.scrollTo({ top: 0 });
+}
+
+function mtQuit() {
+  if (paper && !paperResult && !confirm("Quit this paper? Your answers will be lost.")) return;
+  clearInterval(paperClock);
+  paper = null; paperResult = null;
+  showMidterm();
+}
+
+document.querySelectorAll("[data-midterm]").forEach((b) => (b.onclick = showMidterm));
+$("mtPrev").onclick = () => paperIdx > 0 && mtShow(paperIdx - 1);
+$("mtNext").onclick = () => paperIdx < paper.questions.length - 1 && mtShow(paperIdx + 1);
+$("mtFinish").onclick = mtFinish;
+$("mtQuit").onclick = mtQuit;
+
 
 // ---------- result card + archive saving ----------
 function showResult(res) {

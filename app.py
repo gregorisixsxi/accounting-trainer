@@ -27,6 +27,7 @@ import twitter_auth
 import grading
 import rating
 import pool
+import midterm
 from generator import TOPIC_PROMPTS, generate_task_from_claude
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -72,7 +73,7 @@ def bucket_for(path: str) -> str | None:
         return None if topic in pool.POOL_TOPICS and path != "/api/generate/pro" else "generate"
     if path in AUTH_RATE_LIMITED_PATHS:
         return "auth"
-    if path == "/api/check":
+    if path in ("/api/check", "/api/midterm/grade"):
         return "check"
     return None
 
@@ -522,6 +523,42 @@ def check_answers(body: CheckRequest, user: dict | None = Depends(optional_user)
     result.pop("review", None)
     result.pop("answered", None)
     return {**result, "archived": archived, "rating": rating_info, "signed_in": bool(user)}
+
+
+# ---------------- mid-term test: a whole practice paper, marked when it is handed in ----------------
+class PaperItem(BaseModel):
+    token: str = Field(max_length=60000)
+    answers: dict = Field(default_factory=dict)
+
+
+class PaperSubmit(BaseModel):
+    items: list[PaperItem] = Field(max_length=30)
+
+
+@app.get("/api/midterm")
+def midterm_papers():
+    return {"papers": midterm.overview()}
+
+
+@app.get("/api/midterm/{n}")
+def midterm_start(n: int):
+    paper = midterm.build(n)
+    if paper is None:
+        raise HTTPException(status_code=404, detail="There is no such midterm.")
+    return paper
+
+
+@app.post("/api/midterm/grade")
+def midterm_grade(body: PaperSubmit, user: dict | None = Depends(optional_user)):
+    """Marks the whole paper at once; the answers are revealed only now. A paper can be handed in once (like /api/check: first one wins).
+    The Score (rating) is not affected by the mid-term test."""
+    try:
+        result = midterm.grade_paper([i.model_dump() for i in body.items])
+    except grading.TokenError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    if not db.claim_task("paper:" + result["exam_id"], user["id"] if user else None):
+        raise HTTPException(status_code=409, detail="This paper has already been handed in. Start a new one.")
+    return result
 
 
 @app.get("/api/archive")
