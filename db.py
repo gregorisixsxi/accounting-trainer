@@ -94,6 +94,54 @@ def init() -> None:
         )
         c.execute("CREATE INDEX IF NOT EXISTS idx_archive_user ON archive(user_id, id DESC)")
         c.execute(
+            """CREATE TABLE IF NOT EXISTS ai_usage (          -- what the AI features cost: calls and tokens per user, day and feature
+                   user_id       INTEGER NOT NULL,
+                   day           TEXT NOT NULL,
+                   feature       TEXT NOT NULL,            -- explain | chat | plan | generate
+                   calls         INTEGER NOT NULL DEFAULT 0,
+                   input_tokens  INTEGER NOT NULL DEFAULT 0,
+                   output_tokens INTEGER NOT NULL DEFAULT 0,
+                   PRIMARY KEY (user_id, day, feature)
+               )"""
+        )
+        c.execute("CREATE INDEX IF NOT EXISTS idx_ai_usage_day ON ai_usage(day)")
+        c.execute(
+            """CREATE TABLE IF NOT EXISTS skill_stats (        -- accuracy per question type: drives the practice plan
+                   user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                   skill      TEXT NOT NULL,
+                   title      TEXT NOT NULL DEFAULT '',
+                   attempts   INTEGER NOT NULL DEFAULT 0,
+                   points     REAL NOT NULL DEFAULT 0,
+                   max_points REAL NOT NULL DEFAULT 0,
+                   updated_at TEXT NOT NULL,
+                   PRIMARY KEY (user_id, skill)
+               )"""
+        )
+        c.execute(
+            """CREATE TABLE IF NOT EXISTS mistakes (           -- the mistake notebook; box/due are the spaced-repetition state
+                   id         INTEGER PRIMARY KEY AUTOINCREMENT,
+                   user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                   skill      TEXT NOT NULL,
+                   title      TEXT NOT NULL DEFAULT '',
+                   label      TEXT NOT NULL,
+                   yours      TEXT NOT NULL DEFAULT '',
+                   expected   TEXT NOT NULL DEFAULT '',
+                   box        INTEGER NOT NULL DEFAULT 0,
+                   due        TEXT NOT NULL,
+                   created_at TEXT NOT NULL,
+                   UNIQUE (user_id, skill, label, expected)
+               )"""
+        )
+        c.execute("CREATE INDEX IF NOT EXISTS idx_mistakes_user ON mistakes(user_id, due)")
+        c.execute(
+            """CREATE TABLE IF NOT EXISTS paper_usage (        -- mid-term papers started per day (free accounts have a daily limit)
+                   owner TEXT NOT NULL,                      -- 'u:<user id>' or 'ip:<address>'
+                   day   TEXT NOT NULL,
+                   count INTEGER NOT NULL DEFAULT 0,
+                   PRIMARY KEY (owner, day)
+               )"""
+        )
+        c.execute(
             """CREATE TABLE IF NOT EXISTS solved_items (
                    user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
                    item_id    TEXT NOT NULL,            -- stable id of a pool task / question: "<topic>:<id>" (AI tasks: "pro:<key>")
@@ -441,6 +489,181 @@ def refund_pro_quota(user_id: int) -> None:
     with connect() as c:
         c.execute("UPDATE pro_usage SET count = MAX(count - 1, 0) WHERE user_id = ? AND day = ?", (user_id, _today()))
         c.execute("DELETE FROM pro_usage WHERE day < date('now', '-7 days')")
+
+
+# ---------- AI usage and budget (see ai_budget.py) ----------
+def ai_usage_today(user_id: int | None = None) -> dict:
+    """{feature: {calls, tokens}} for one user, or summed over everybody when user_id is None."""
+    with connect() as c:
+        if user_id is None:
+            rows = c.execute("SELECT feature, SUM(calls) AS calls, SUM(input_tokens + output_tokens) AS tokens FROM ai_usage WHERE day = ? GROUP BY feature", (_today(),)).fetchall()
+        else:
+            rows = c.execute("SELECT feature, calls, input_tokens + output_tokens AS tokens FROM ai_usage WHERE user_id = ? AND day = ?", (user_id, _today())).fetchall()
+    return {r["feature"]: {"calls": r["calls"] or 0, "tokens": r["tokens"] or 0} for r in rows}
+
+
+def ai_reserve(user_id: int, feature: str, max_calls: int, max_user_tokens: int, max_global_tokens: int) -> str | None:
+    """Atomically takes one call of a feature. Returns None when allowed, else the reason: 'feature' | 'user_tokens' | 'global'."""
+    with connect() as c:
+        c.execute("BEGIN IMMEDIATE")
+        total = c.execute("SELECT COALESCE(SUM(input_tokens + output_tokens), 0) AS t FROM ai_usage WHERE day = ?", (_today(),)).fetchone()["t"]
+        if total >= max_global_tokens:
+            return "global"
+        mine = c.execute("SELECT COALESCE(SUM(input_tokens + output_tokens), 0) AS t FROM ai_usage WHERE user_id = ? AND day = ?", (user_id, _today())).fetchone()["t"]
+        if mine >= max_user_tokens:
+            return "user_tokens"
+        c.execute("INSERT OR IGNORE INTO ai_usage (user_id, day, feature) VALUES (?, ?, ?)", (user_id, _today(), feature))
+        calls = c.execute("SELECT calls FROM ai_usage WHERE user_id = ? AND day = ? AND feature = ?", (user_id, _today(), feature)).fetchone()["calls"]
+        if calls >= max_calls:
+            return "feature"
+        c.execute("UPDATE ai_usage SET calls = calls + 1 WHERE user_id = ? AND day = ? AND feature = ?", (user_id, _today(), feature))
+        return None
+
+
+def ai_over_budget(user_id: int, max_user_tokens: int, max_global_tokens: int) -> str | None:
+    """None while there is budget left today, else 'global' or 'user_tokens' (used by the AI task generator, which has its own call quota)."""
+    with connect() as c:
+        total = c.execute("SELECT COALESCE(SUM(input_tokens + output_tokens), 0) AS t FROM ai_usage WHERE day = ?", (_today(),)).fetchone()["t"]
+        mine = c.execute("SELECT COALESCE(SUM(input_tokens + output_tokens), 0) AS t FROM ai_usage WHERE user_id = ? AND day = ?", (user_id, _today())).fetchone()["t"]
+    return "global" if total >= max_global_tokens else "user_tokens" if mine >= max_user_tokens else None
+
+
+def ai_refund(user_id: int, feature: str) -> None:
+    with connect() as c:
+        c.execute("UPDATE ai_usage SET calls = MAX(calls - 1, 0) WHERE user_id = ? AND day = ? AND feature = ?", (user_id, _today(), feature))
+        c.execute("DELETE FROM ai_usage WHERE day < date('now', '-30 days')")
+
+
+def ai_record(user_id: int, feature: str, input_tokens: int, output_tokens: int, count_call: bool = False) -> None:
+    """Adds the tokens a finished call really used (count_call: also counts the call, for features that are not reserved first)."""
+    with connect() as c:
+        c.execute("INSERT OR IGNORE INTO ai_usage (user_id, day, feature) VALUES (?, ?, ?)", (user_id, _today(), feature))
+        c.execute(
+            "UPDATE ai_usage SET input_tokens = input_tokens + ?, output_tokens = output_tokens + ?, calls = calls + ? WHERE user_id = ? AND day = ? AND feature = ?",
+            (int(input_tokens), int(output_tokens), 1 if count_call else 0, user_id, _today(), feature),
+        )
+
+
+def ai_usage_report(limit: int = 10) -> dict:
+    """Today's totals per feature and the biggest users, for the admin."""
+    with connect() as c:
+        feats = c.execute("SELECT feature, SUM(calls) AS calls, SUM(input_tokens) AS i, SUM(output_tokens) AS o FROM ai_usage WHERE day = ? GROUP BY feature", (_today(),)).fetchall()
+        top = c.execute(
+            "SELECT u.username, SUM(a.calls) AS calls, SUM(a.input_tokens + a.output_tokens) AS tokens FROM ai_usage a JOIN users u ON u.id = a.user_id "
+            "WHERE a.day = ? GROUP BY a.user_id ORDER BY tokens DESC LIMIT ?", (_today(), limit)).fetchall()
+    return {"day": _today(), "features": {r["feature"]: {"calls": r["calls"], "input_tokens": r["i"], "output_tokens": r["o"]} for r in feats},
+            "top_users": [{"user": r["username"], "calls": r["calls"], "tokens": r["tokens"]} for r in top]}
+
+
+# ---------- skills, mistake notebook, spaced repetition ----------
+LEITNER_DAYS = [0, 1, 3, 7, 14, 30]       # days until a mistake comes back after it was answered right from box 0..5
+MISTAKES_LIMIT = 500
+
+
+def record_skill(user_id: int, skill: str, title: str, points: float, max_points: float) -> None:
+    now = iso(now_utc())
+    with connect() as c:
+        c.execute(
+            """INSERT INTO skill_stats (user_id, skill, title, attempts, points, max_points, updated_at) VALUES (?, ?, ?, 1, ?, ?, ?)
+               ON CONFLICT(user_id, skill) DO UPDATE SET attempts = attempts + 1, points = points + excluded.points,
+                   max_points = max_points + excluded.max_points, title = excluded.title, updated_at = excluded.updated_at""",
+            (user_id, skill[:60], title[:120], float(points), float(max_points), now),
+        )
+
+
+def get_skills(user_id: int) -> list[dict]:
+    with connect() as c:
+        rows = c.execute("SELECT skill, title, attempts, points, max_points, updated_at FROM skill_stats WHERE user_id = ?", (user_id,)).fetchall()
+    return [{"skill": r["skill"], "title": r["title"], "attempts": r["attempts"], "points": r["points"], "max_points": r["max_points"],
+             "accuracy": round(100 * r["points"] / r["max_points"]) if r["max_points"] else None, "updated_at": r["updated_at"]} for r in rows]
+
+
+def add_mistakes(user_id: int, skill: str, title: str, items: list[dict]) -> int:
+    """Stores the wrong answers of a checked task (same item again: the newest answer, back to box 0, due now)."""
+    wrong = [i for i in items if not i.get("correct")][:40]
+    if not wrong:
+        return 0
+    now = iso(now_utc())
+    with connect() as c:
+        c.execute("BEGIN IMMEDIATE")
+        for i in wrong:
+            c.execute(
+                """INSERT INTO mistakes (user_id, skill, title, label, yours, expected, box, due, created_at) VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?)
+                   ON CONFLICT(user_id, skill, label, expected) DO UPDATE SET yours = excluded.yours, box = 0, due = excluded.due""",
+                (user_id, skill[:60], title[:120], str(i["label"])[:300], str(i.get("yours", ""))[:200], str(i.get("expected", ""))[:300], now, now),
+            )
+        c.execute("DELETE FROM mistakes WHERE user_id = ? AND id NOT IN (SELECT id FROM mistakes WHERE user_id = ? ORDER BY id DESC LIMIT ?)", (user_id, user_id, MISTAKES_LIMIT))
+    return len(wrong)
+
+
+def _mistake(r) -> dict:
+    return {"id": r["id"], "skill": r["skill"], "title": r["title"], "label": r["label"], "yours": r["yours"], "expected": r["expected"],
+            "box": r["box"], "due": r["due"], "created_at": r["created_at"]}
+
+
+def list_mistakes(user_id: int, skill: str | None = None, limit: int = 50, offset: int = 0) -> tuple[list[dict], int]:
+    where, params = "user_id = ?", [user_id]
+    if skill:
+        where += " AND skill = ?"
+        params.append(skill)
+    with connect() as c:
+        total = c.execute(f"SELECT COUNT(*) AS n FROM mistakes WHERE {where}", params).fetchone()["n"]
+        rows = c.execute(f"SELECT * FROM mistakes WHERE {where} ORDER BY id DESC LIMIT ? OFFSET ?", params + [limit, offset]).fetchall()
+    return [_mistake(r) for r in rows], total
+
+
+def due_mistakes(user_id: int, limit: int = 10) -> tuple[list[dict], int]:
+    now = iso(now_utc())
+    with connect() as c:
+        total = c.execute("SELECT COUNT(*) AS n FROM mistakes WHERE user_id = ? AND due <= ?", (user_id, now)).fetchone()["n"]
+        rows = c.execute("SELECT * FROM mistakes WHERE user_id = ? AND due <= ? ORDER BY due, id LIMIT ?", (user_id, now, limit)).fetchall()
+    return [_mistake(r) for r in rows], total
+
+
+def count_mistakes(user_id: int) -> tuple[int, int]:
+    """(all mistakes, the ones due for repetition now)"""
+    now = iso(now_utc())
+    with connect() as c:
+        allc = c.execute("SELECT COUNT(*) AS n FROM mistakes WHERE user_id = ?", (user_id,)).fetchone()["n"]
+        due = c.execute("SELECT COUNT(*) AS n FROM mistakes WHERE user_id = ? AND due <= ?", (user_id, now)).fetchone()["n"]
+    return allc, due
+
+
+def review_mistake(user_id: int, mistake_id: int, right: bool) -> dict | None:
+    """Leitner step: right -> next box and a later due date; wrong -> back to box 0, due now."""
+    with connect() as c:
+        c.execute("BEGIN IMMEDIATE")
+        row = c.execute("SELECT * FROM mistakes WHERE id = ? AND user_id = ?", (mistake_id, user_id)).fetchone()
+        if row is None:
+            return None
+        box = min(row["box"] + 1, len(LEITNER_DAYS) - 1) if right else 0
+        due = iso(now_utc() + timedelta(days=LEITNER_DAYS[box] if right else 0))
+        c.execute("UPDATE mistakes SET box = ?, due = ? WHERE id = ?", (box, due, mistake_id))
+        return {"id": mistake_id, "box": box, "due": due}
+
+
+def delete_mistake(user_id: int, mistake_id: int) -> bool:
+    with connect() as c:
+        return c.execute("DELETE FROM mistakes WHERE id = ? AND user_id = ?", (mistake_id, user_id)).rowcount > 0
+
+
+def has_claim(key: str) -> bool:
+    """True once a task (jti) or a paper ('paper:<id>') was checked: only then may the tutor talk about the right answers."""
+    with connect() as c:
+        return c.execute("SELECT 1 FROM checked_tasks WHERE jti = ?", (key,)).fetchone() is not None
+
+
+def consume_paper(owner: str, limit: int) -> tuple[bool, int]:
+    """Takes one mid-term paper from today's allowance of this owner ('u:<id>' / 'ip:<address>'). Returns (allowed, used_after)."""
+    with connect() as c:
+        c.execute("BEGIN IMMEDIATE")
+        c.execute("INSERT OR IGNORE INTO paper_usage (owner, day, count) VALUES (?, ?, 0)", (owner, _today()))
+        used = c.execute("SELECT count FROM paper_usage WHERE owner = ? AND day = ?", (owner, _today())).fetchone()["count"]
+        if used >= limit:
+            return False, used
+        c.execute("UPDATE paper_usage SET count = count + 1 WHERE owner = ? AND day = ?", (owner, _today()))
+        c.execute("DELETE FROM paper_usage WHERE day < date('now', '-7 days')")
+        return True, used + 1
 
 
 # ---------- e-mail verification and password reset ----------

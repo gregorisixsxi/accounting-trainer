@@ -10,6 +10,7 @@ FastAPI + SQLite + one-page `index.html` (Tailwind CDN). Live: https://accountin
   `midterm_templates.py`; `midterm.py` seals and marks them (Mid-term test paper: 30 minutes, auto hand-in; Balance Sheet tab: `/api/tables/*`).
   To add a type: generator + exemplar + builder in `midterm.py` + renderer `MT_RENDER[kind]` in `index.html` + a line in `table_types.py`.
   `python table_types.py` prints the catalogue with the rules. Never commit `midterm*` files to a public repo (real exam tasks).
+- **PRO perks:** the AI tutor (`tutor.py`: explain mistakes, chat, study plan; all token spending and limits are in that file, see RUNBOOK section 8), the study desk (skill statistics, mistake notebook with spaced repetition, practice plan: `db.py` tables `skill_stats`, `mistakes`; endpoints `/api/study/overview`, `/api/notebook*`, `/api/tutor/*`), unlimited mid-term papers (free: `FREE_PAPERS_PER_DAY`). The tutor never gets the right answers before a task is checked (`db.has_claim`).
 - Never print, log or commit secrets (`.env` is gitignored; values live in Render). Rotate a secret at its provider if it leaks.
 - Check Python changes with `python -I -m py_compile <files>`; the UI is verified by running `uvicorn app:app` and driving the page.
 - Reply to the owner in Russian. Do not commit or push unless asked.

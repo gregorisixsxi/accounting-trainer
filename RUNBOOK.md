@@ -78,6 +78,19 @@ If a secret leaked (pasted in chat, committed, screenshot): **rotate it at the p
 
 Render (service, logs, events, disk) · Resend (domain, logs) · Cloudflare DNS (`accountingtrainer.app`) · Lemon Squeezy (orders, webhooks) · developer.x.com (app, callback) · Anthropic console (usage, credit) · Formspree (feedback).
 
+## 8. AI spending (the tutor and the AI tasks)
+
+Where the tokens go: the AI tutor (explain / chat / study plan, `tutor.py`) and the AI task generator (`/api/generate/pro`). Both write what they really used into
+the table `ai_usage` (calls, input tokens, output tokens per user, day and feature).
+
+- **See it:** signed in as an account listed in `ADMIN_USERS`, open `/api/admin/ai-usage`: today's calls and tokens per feature, the top users and the limits in force.
+- **Turn the tutor off at once:** set `AI_DISABLED=1` on Render (the tutor says it is switched off; tasks and everything else keep working).
+- **The limits** (env vars, see `.env.example`): `AI_LIMIT_EXPLAIN/CHAT/PLAN` calls per user and day, `AI_USER_DAILY_TOKENS` per user and day, `AI_GLOBAL_DAILY_TOKENS` for everybody
+  (when reached the tutor and AI task generation rest until 00:00 UTC), `PRO_DAILY_LIMIT` AI tasks per user and day.
+- **Worst case per PRO user and day** is roughly `AI_USER_DAILY_TOKENS` for the tutor plus up to 4 times that for AI tasks. Pick the limits so that this stays well under the subscription price
+  at the current token prices (console.anthropic.com) and lower them if the report shows heavy users.
+- Answers are capped per feature (`MAX_OUT` in `tutor.py`), the chat remembers 8 messages, long texts are cut, thinking is off, the cheap model is used.
+
 ## Prompt for Claude (copy, fill in, paste)
 
 ```

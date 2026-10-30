@@ -228,6 +228,20 @@
   .mt-sub { margin-top: 20px; font-family: var(--font-head); font-weight: 700; font-size: 19px; }
   .mt-q { font-family: var(--font-head); font-weight: 700; }
   .mt-clock { font-family: var(--font-num); font-size: 15px; font-weight: 600; font-variant-numeric: slashed-zero tabular-nums; padding: 2px 8px; border: 2px solid transparent; border-radius: 3px; }
+  .tutor-msg { display: flex; } .tutor-msg.user { justify-content: flex-end; }
+  .tutor-msg .b { max-width: 92%; padding: 8px 12px; font-size: 14px; line-height: 1.5; white-space: pre-wrap; border: 2px solid var(--ink); border-radius: var(--radius); background: var(--paper); }
+  .tutor-msg.assistant .b { background: color-mix(in srgb, var(--mark) 22%, var(--paper)); }
+  .tutor-log { max-height: 22rem; overflow-y: auto; }
+  .plan-row + .plan-row { border-top: 1px solid var(--border); padding-top: .75rem; }
+  #printArea { display: none; }
+  @media print {
+    body > *:not(#printArea) { display: none !important; }
+    body::before { display: none !important; }
+    #printArea { display: block !important; color: #000; background: #fff; font-family: var(--font-ui); }
+    #printArea h1 { font-family: var(--font-head); font-size: 22px; margin-bottom: 4px; }
+    #printArea table { width: 100%; border-collapse: collapse; margin-top: 14px; font-size: 12px; }
+    #printArea th, #printArea td { border: 1px solid #000; padding: 4px 6px; text-align: left; vertical-align: top; }
+  }
   .mt-clock.low { background: var(--mark); color: #1B1A17; border-color: var(--ink); }          /* the last five minutes */
   @media (max-width: 1499px) { #sheetBox .sheet-two.wide-needed { grid-template-columns: minmax(0, 1fr); } }
   @media (min-width: 640px) { .sheet-row { grid-template-columns: minmax(0, 1fr) repeat(var(--n, 1), minmax(5.5rem, 8.5rem)); } }
@@ -590,6 +604,7 @@
       <button data-topic="balance_sheet" class="nav-item mode-btn"><span class="ico" data-icon="table"></span>Balance Sheet</button>
       <button data-topic="terminology" class="nav-item mode-btn"><span class="ico" data-icon="book"></span>Terminology</button>
       <button type="button" id="midtermBtn" data-midterm class="nav-item"><span class="ico" data-icon="clipboard"></span>Mid-term test</button>
+      <button type="button" id="studyBtn" data-study class="nav-item"><span class="ico" data-icon="bulb"></span>Study desk<span class="badge badge-pro" style="margin-left:auto">PRO</span></button>
 
       <span class="nav-label eyebrow">The Ledger</span>
       <button type="button" id="ratingBtn" data-rating class="nav-item"><span class="ico" data-icon="trophy"></span>The Ledger</button>
@@ -654,6 +669,23 @@
           <button type="button" id="tpNew" class="btn btn-quiet btn-lg ml-auto"><span class="ico" data-icon="refresh"></span>New task</button>
         </div>
         <p id="tpMsg" class="hidden note note-bad mt-4"></p>
+        <div id="tutorTables" class="mt-5"></div>
+      </section>
+
+      <!-- Study desk (PRO): today's practice, weak spots, the mistake notebook, spaced-repetition quiz -->
+      <section id="study" class="hidden fade-in mx-auto" style="max-width: 860px">
+        <p class="eyebrow">PRO</p>
+        <h2 class="serif mt-2 text-[32px] sm:text-4xl leading-tight">Study desk</h2>
+        <p class="mt-2 text-sm t-soft max-w-xl">Your weak spots, a plan for today, every mistake you made and a quiz that brings them back just before you forget them.</p>
+        <div id="studyLocked" class="hidden card p-5 mt-6"></div>
+        <div id="studyMain" class="hidden">
+          <div id="studyTabs" class="seg mt-6" role="tablist">
+            <button type="button" class="seg-btn active" data-tab="plan" role="tab">Plan</button>
+            <button type="button" class="seg-btn" data-tab="mistakes" role="tab">Mistakes</button>
+            <button type="button" class="seg-btn" data-tab="quiz" role="tab">Quiz <span id="studyDue" class="num"></span></button>
+          </div>
+          <div id="studyBody" class="mt-5"></div>
+        </div>
       </section>
 
       <!-- Mid-term test: choose a paper, sit it question by question, hand it in, see the marks -->
@@ -726,6 +758,7 @@
           <div id="ratingBox" class="hidden mt-4"></div>
           <p id="archiveNote" class="mt-3 text-xs t-faint"></p>
         </div>
+        <div id="tutorTask" class="mt-5"></div>
         </div><!-- /mainCol -->
         </div><!-- /taskGrid -->
       </section>
@@ -751,6 +784,9 @@
         <li class="check-li"><span class="ico" data-icon="check"></span>AI-generated Balance Sheet and Terminology tasks</li>
         <li class="check-li"><span class="ico" data-icon="check"></span>We remember what you solved: no repeats</li>
         <li class="check-li"><span class="ico" data-icon="check"></span>Full archive of every task and your answers</li>
+        <li class="check-li"><span class="ico" data-icon="check"></span>AI tutor: explains your mistakes and answers questions about any task</li>
+        <li class="check-li"><span class="ico" data-icon="check"></span>Mistake notebook with spaced repetition and a plan from your weak spots</li>
+        <li class="check-li"><span class="ico" data-icon="check"></span>Unlimited mid-term papers (free: one a day)</li>
       </ul>
     </div>
 
@@ -891,6 +927,8 @@
     </div>
   </div>
 </div>
+
+<div id="printArea"></div>
 
 <!-- ============ MID-TERM: time is over ============ -->
 <div id="mtTimeUp" class="hidden fixed inset-0 z-[60] grid place-items-center px-6" style="background: rgba(16,14,10,.72)" role="alertdialog" aria-live="assertive" aria-labelledby="mtTimeUpText">
@@ -1044,7 +1082,8 @@ window.addEventListener("popstate", (e) => {
 
 function panel(which) {             // "loading" | "error" | "task" | "rating" | "midterm"
   if (currentPanel === "midterm" && which !== "midterm") mtSave();        // keep what was typed in the open question of a paper
-  for (const id of ["loading", "error", "task", "tables", "rating", "midterm"]) $(id).classList.toggle("hidden", id !== which);
+  for (const id of ["loading", "error", "task", "tables", "rating", "midterm", "study"]) $(id).classList.toggle("hidden", id !== which);
+  $("studyBtn").classList.toggle("active", which === "study");
   $("ratingBtn").classList.toggle("active", which === "rating");
   $("midtermBtn").classList.toggle("active", which === "midterm");
   currentPanel = which;
@@ -1083,7 +1122,7 @@ function proPref() {
 const wantPro = () => !!(session && session.is_pro && proPref());
 function updateProRow() {
   const row = $("proRow");
-  row.classList.toggle("hidden", !session || currentPanel === "rating" || currentPanel === "midterm" || currentPanel === "tables");   // AI tasks exist for the classic sheets and terminology only
+  row.classList.toggle("hidden", !session || currentPanel === "rating" || currentPanel === "midterm" || currentPanel === "tables" || currentPanel === "study");   // AI tasks exist for the classic sheets and terminology only
   if (!session) return;
   const sw = $("proSwitch"), locked = !session.is_pro, on = wantPro();
   sw.setAttribute("aria-checked", on ? "true" : "false");
@@ -1102,7 +1141,15 @@ $("proSwitch").onclick = () => {
 // ---------- Balance Sheet tab: which table type to practise ----------
 // "Classic mix" is the sheet the tab always had (compile / totals, rated). The other chips are the table types of the mid-term (see table_types.py);
 // "Surprise me" picks a different one every time.
-let tableTypes = [], currentTable = "classic", lastSurprise = "", tq = null;
+let tableTypes = [], currentTable = "classic", lastSurprise = "", tq = null, tqChecked = false;
+function mountTutor(hostId, getCtx) { $(hostId).replaceChildren(tutorBox(getCtx)); }
+function tpAnswers() {
+  const q = tq;
+  if (q.kind === "test" || q.kind === "balance_sheet") { task = q.task; return collectAnswers().answers; }
+  const a = {};
+  Object.entries(paperFields).forEach(([id, f]) => (a[id] = f.input.value));
+  return a;
+}
 try { const s = localStorage.getItem("at-table-type"); if (s) currentTable = s; } catch (e) {}
 
 function resolveTable() {          // -> {variant} for the classic sheets, {table: id} for a table type with its own screen
@@ -1162,6 +1209,8 @@ async function loadTable(id) {
     MT_RENDER[tq.kind](tq, body, {});
     $("tpCheck").disabled = false;
     panel("tables");
+    tqChecked = false;
+    mountTutor("tutorTables", () => ({ token: tq.token, answers: tpAnswers(), checked: tqChecked }));
   } catch (e) {
     $("errorText").textContent = friendlyError(e, status);
     panel("error");
@@ -1173,20 +1222,20 @@ async function loadTable(id) {
 
 async function checkTable() {
   const q = tq, msg = $("tpMsg");
-  let answers;
-  if (q.kind === "test" || q.kind === "balance_sheet") { task = q.task; answers = collectAnswers().answers; }
-  else { answers = {}; Object.entries(paperFields).forEach(([id, f]) => (answers[id] = f.input.value)); }
+  const answers = tpAnswers();
   msg.classList.add("hidden");
   if (!Object.values(answers).some((v) => (Array.isArray(v) ? v.length : v !== null && v !== undefined && String(v).trim() !== ""))) {
     msg.textContent = "Enter at least one answer before checking."; msg.classList.remove("hidden"); return;
   }
   $("tpCheck").disabled = true;
   try {
-    const r = await fetch(API + "/api/tables/check", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token: q.token, answers }) });
+    const r = await fetch(API + "/api/tables/check", { method: "POST", headers: { "Content-Type": "application/json", ...authHeader() }, body: JSON.stringify({ token: q.token, answers }) });
     const d = await r.json().catch(() => ({}));
     if (!r.ok) throw new Error(typeof d.detail === "string" ? d.detail : "Could not check the answers.");
     mtApplyResult(q, d, $("tpBody"));
     $("tpStamp").replaceChildren(d.points >= d.max ? stampEl("Balanced ✓", "ok", true) : stampEl("Out of balance", "bad", true));
+    tqChecked = true;
+    refreshTutors();
   } catch (e) {
     msg.textContent = e.message === "Failed to fetch" ? "The server dropped the pen. Try again." : e.message;
     msg.classList.remove("hidden");
@@ -1273,6 +1322,7 @@ function render() {
   $("hintBtn").classList.toggle("hidden", isTest() && !task.hint);   // tests without a hint: no empty hint button
   isSheet() ? renderSheet() : renderTest();
   panel("task");
+  mountTutor("tutorTask", () => ({ token: task.token, answers: collectAnswers().answers, checked: !$("scoreCard").classList.contains("hidden") }));
 }
 
 // --- comparison helpers ---
@@ -1515,8 +1565,22 @@ async function showMidterm() {
 async function mtStart(n, btn) {
   if (btn) btn.disabled = true;
   try {
-    const r = await fetch(`${API}/api/midterm/${n}`, { cache: "no-store" });
-    if (!r.ok) throw new Error((await r.json().catch(() => ({}))).detail || "Could not prepare the paper.");
+    const r = await fetch(`${API}/api/midterm/${n}`, { cache: "no-store", headers: authHeader() });
+    if (!r.ok) {
+      const d = await r.json().catch(() => ({}));
+      if (d.code === "paper_limit") {
+        if (btn) btn.disabled = false;
+        const note = el("div", "note note-warn mb-4 col-span-full");
+        note.append(el("p", "", d.detail));
+        const up = el("button", "btn btn-accent btn-sm mt-3", session ? "Unlock unlimited papers" : "Sign in"); up.type = "button";
+        up.onclick = () => (session ? openUpgrade() : openAuth());
+        note.append(up);
+        $("mtPapers").querySelectorAll(".note").forEach((x) => x.remove());
+        $("mtPapers").prepend(note);
+        return;
+      }
+      throw new Error(d.detail || "Could not prepare the paper.");
+    }
     paper = await r.json();
   } catch (e) {
     if (btn) btn.disabled = false;
@@ -1591,7 +1655,7 @@ function mtShow(i) {
   head.append(el("h3", "mt-q text-[22px] leading-snug", `${q.no}. ${q.title}`), el("span", "badge", `${q.points} ${q.points === 1 ? "point" : "points"} · question ${q.no} of ${paper.questions.length}`));
   body.append(head);
   MT_RENDER[q.kind](q, body, saved);
-  if (paperResult) mtApplyResult(q, paperResult.questions[i]);
+  if (paperResult) { mtApplyResult(q, paperResult.questions[i]); body.append(el("div", "mt-5")); body.lastChild.append(tutorBox(() => ({ token: q.token, answers: paperAnswers[i] || {}, checked: true }))); }
   else if (paperLocked) mtLock();                                  // time is over: the paper can only be handed in
   mtNav();
   $("mtPrev").disabled = i === 0;
@@ -1877,6 +1941,286 @@ $("mtFinish").onclick = () => mtFinish();
 $("mtQuit").onclick = mtQuit;
 
 
+// ================= PRO: the AI tutor and the study desk (plan, mistake notebook, spaced repetition) =================
+let aiLeftCache = null;
+const aiLeftText = (l) => (l ? `${l.explain} explanations · ${l.chat} questions · ${l.plan} plans left today` : "");
+const authJson = () => ({ "Content-Type": "application/json", ...authHeader() });
+async function apiJson(path, opts = {}) {
+  const r = await fetch(API + path, { cache: "no-store", ...opts });
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) { const e = new Error(typeof d.detail === "string" ? d.detail : "Something went wrong. Please try again."); e.status = r.status; e.data = d; throw e; }
+  return d;
+}
+const friendlyNet = (e) => (e.message === "Failed to fetch" ? "The server dropped the pen. Try again." : e.message);
+
+function tutorLocked() {
+  const box = el("div", "card p-4 tutor-box");
+  box.append(el("p", "eyebrow", "AI tutor · PRO"), el("p", "mt-2 text-[14px] t-ink", "A tutor that knows your mistakes: it explains what went wrong and answers questions about this task."));
+  const b = el("button", "btn btn-accent btn-sm mt-3", session ? "Unlock with PRO" : "Sign in to unlock");
+  b.type = "button";
+  b.onclick = () => (session ? openUpgrade() : openAuth());
+  box.append(b);
+  return box;
+}
+
+// getCtx() -> {token, answers, checked}: what the tutor needs. Before the task is checked it only coaches; "Explain my mistakes" opens after the check.
+function tutorBox(getCtx) {
+  if (!session || !session.is_pro) return tutorLocked();
+  const msgs = [];
+  let busy = false;
+  const box = el("div", "card p-4 tutor-box"), head = el("div", "flex flex-wrap items-center justify-between gap-2"), left = el("span", "text-xs t-faint");
+  head.append(el("p", "eyebrow", "AI tutor"), left);
+  const log = el("div", "tutor-log mt-3 space-y-2");
+  const note = el("p", "hidden note note-bad mt-3");
+  const explainBtn = el("button", "btn btn-ghost btn-sm", "Explain my mistakes");
+  explainBtn.type = "button";
+  const hint = el("span", "text-xs t-faint", "Ask a question, or check your answers to get your mistakes explained.");
+  const row = el("div", "mt-3 flex flex-wrap items-center gap-2");
+  row.append(explainBtn, hint);
+  const form = el("form", "mt-3 flex gap-2"), input = el("input", "field field-sm flex-1"), send = el("button", "btn btn-primary btn-sm", "Send");
+  input.type = "text"; input.maxLength = 500; input.placeholder = "Ask the tutor about this task…"; input.autocomplete = "off"; input.setAttribute("aria-label", "Your question to the tutor");
+  send.type = "submit";
+  form.append(input, send);
+  box.append(head, log, note, row, form);
+
+  const refresh = () => {
+    const ok = getCtx().checked;
+    explainBtn.disabled = busy || !ok;
+    explainBtn.title = ok ? "" : "Check your answers first";
+    hint.classList.toggle("hidden", ok);
+    send.disabled = busy;
+  };
+  const onRefresh = () => { if (!box.isConnected) document.removeEventListener("tutor-refresh", onRefresh); else refresh(); };   // a replaced box stops listening
+  document.addEventListener("tutor-refresh", onRefresh);
+  box.addEventListener("pointerenter", refresh);
+  box.addEventListener("focusin", refresh);
+  refresh();
+  if (aiLeftCache) left.textContent = aiLeftText(aiLeftCache);
+  else apiJson("/api/study/overview", { headers: authHeader() }).then((d) => { aiLeftCache = d.ai_left; left.textContent = aiLeftText(d.ai_left); }).catch(() => {});
+
+  const bubble = (who, text) => { const m = el("div", "tutor-msg " + who), b = el("div", "b", text); m.append(b); log.append(m); m.scrollIntoView({ block: "nearest" }); return b; };
+  async function ask(path, body, shownQuestion) {
+    busy = true; refresh(); note.classList.add("hidden");
+    if (shownQuestion) bubble("user", shownQuestion);
+    const wait = bubble("assistant", "…");
+    try {
+      const d = await apiJson(path, { method: "POST", headers: authJson(), body: JSON.stringify(body) });
+      wait.textContent = d.text;
+      aiLeftCache = d.ai_left; left.textContent = aiLeftText(d.ai_left);
+      return d.text;
+    } catch (e) {
+      wait.parentElement.remove();
+      note.textContent = friendlyNet(e); note.classList.remove("hidden");
+      return null;
+    } finally { busy = false; refresh(); }
+  }
+  explainBtn.onclick = () => { const c = getCtx(); if (c.checked) ask("/api/tutor/explain", { token: c.token, answers: c.answers }, "Explain my mistakes"); };
+  form.onsubmit = async (ev) => {
+    ev.preventDefault();
+    const text = input.value.trim();
+    if (!text || busy) return;
+    input.value = "";
+    msgs.push({ role: "user", content: text });
+    const c = getCtx();
+    const answer = await ask("/api/tutor/chat", { token: c.token, answers: c.answers, messages: msgs }, text);
+    if (answer) msgs.push({ role: "assistant", content: answer }); else msgs.pop();
+  };
+  return box;
+}
+const refreshTutors = () => document.dispatchEvent(new Event("tutor-refresh"));
+
+// ---------------- study desk ----------------
+let studyTab = "plan", studyInfo = null, notebook = { items: [], total: 0, skill: "" }, quiz = null;
+
+async function showStudy() {
+  view("trainer");
+  document.querySelectorAll(".mode-btn").forEach((b) => b.classList.remove("active"));
+  panel("study");
+  await renderStudy();
+}
+
+async function renderStudy() {
+  const locked = $("studyLocked"), main = $("studyMain");
+  locked.classList.add("hidden"); main.classList.add("hidden");
+  locked.replaceChildren();
+  if (!session) {
+    locked.append(el("p", "text-[15px] t-ink", "Sign in to keep your statistics and your mistake notebook."));
+    const b = el("button", "btn btn-primary mt-3", "Sign in"); b.type = "button"; b.onclick = openAuth; locked.append(b);
+    locked.classList.remove("hidden");
+    return;
+  }
+  try { studyInfo = await apiJson("/api/study/overview", { headers: authHeader() }); }
+  catch (e) { locked.append(el("p", "note note-bad", friendlyNet(e))); locked.classList.remove("hidden"); return; }
+  if (!studyInfo.pro) {
+    locked.append(el("p", "text-[15px] t-ink", studyInfo.mistakes ? `${studyInfo.mistakes} of your mistakes are already saved.` : "Your mistakes are saved here as you practise."),
+      el("p", "mt-2 text-sm t-soft", "PRO unlocks the notebook, a spaced-repetition quiz on your mistakes, your weak-spot statistics, a practice plan for today and the AI tutor."));
+    const b = el("button", "btn btn-accent mt-4", "Unlock with PRO"); b.type = "button"; b.onclick = openUpgrade; locked.append(b);
+    locked.classList.remove("hidden");
+    return;
+  }
+  aiLeftCache = studyInfo.ai_left;
+  main.classList.remove("hidden");
+  document.querySelectorAll("#studyTabs .seg-btn").forEach((b) => b.classList.toggle("active", b.dataset.tab === studyTab));
+  $("studyDue").textContent = studyInfo.due ? String(studyInfo.due) : "";
+  const body = $("studyBody");
+  body.replaceChildren();
+  if (studyTab === "plan") studyPlan(body);
+  else if (studyTab === "mistakes") await studyMistakes(body, true);
+  else await studyQuiz(body);
+}
+
+function startPractice(item) {
+  if (item.action === "table") {
+    currentTable = item.id;
+    try { localStorage.setItem("at-table-type", item.id); } catch (e) {}
+    renderTableChips();
+    load("balance_sheet");
+  } else load("terminology");
+}
+
+function studyPlan(body) {
+  const d = studyInfo;
+  const plan = el("div", "card p-4");
+  plan.append(el("h3", "text-[18px] font-semibold serif", "Today's practice"));
+  if (!d.plan.length) plan.append(el("p", "mt-2 text-sm t-soft", "Solve a few tasks and your plan appears here."));
+  d.plan.forEach((p) => {
+    const row = el("div", "mt-3 flex flex-wrap items-center gap-3 plan-row");
+    const txt = el("div", "flex-1 min-w-[12rem]");
+    txt.append(el("p", "text-[14.5px] font-semibold", p.title), el("p", "text-xs t-faint", p.reason === "new" ? "You have not tried this table type yet." : `${p.accuracy}% over ${p.attempts} ${p.attempts === 1 ? "attempt" : "attempts"}: your weak spot.`));
+    const b = el("button", "btn btn-primary btn-sm", p.label); b.type = "button"; b.onclick = () => startPractice(p);
+    row.append(txt, b);
+    plan.append(row);
+  });
+  const skills = el("div", "card p-4 mt-4");
+  skills.append(el("h3", "text-[18px] font-semibold serif", "Where you stand"));
+  if (!d.skills.length) skills.append(el("p", "mt-2 text-sm t-soft", "No practice recorded yet."));
+  d.skills.forEach((s) => {
+    const row = el("div", "mt-3"), line = el("div", "flex items-baseline justify-between gap-3 text-[13.5px]");
+    line.append(el("span", "", s.title), el("span", "num t-soft", `${s.accuracy}% · ${s.attempts}×`));
+    const bar = el("div", "score-bar mt-1"), fill = el("i"); fill.style.width = s.accuracy + "%"; fill.style.background = s.accuracy < 70 ? "var(--mark)" : "var(--ink)";
+    bar.append(fill); row.append(line, bar); skills.append(row);
+  });
+  const ai = el("div", "card p-4 mt-4"), out = el("div", "hidden mt-3 tutor-msg assistant"), outB = el("div", "b"), err = el("p", "hidden note note-bad mt-3");
+  out.append(outB);
+  const go = el("button", "btn btn-ghost btn-sm mt-3", "Write my study plan (AI)"); go.type = "button";
+  const left = el("span", "ml-3 text-xs t-faint", aiLeftText(d.ai_left));
+  ai.append(el("h3", "text-[18px] font-semibold serif", "Study advice"), el("p", "mt-1 text-sm t-soft", "A short written plan for the next three days, from your statistics and your notebook."), go, left, out, err);
+  go.onclick = async () => {
+    go.disabled = true; err.classList.add("hidden");
+    try {
+      const r = await apiJson("/api/tutor/plan", { method: "POST", headers: authJson(), body: JSON.stringify({}) });
+      outB.textContent = r.text; out.classList.remove("hidden"); left.textContent = aiLeftText(r.ai_left); aiLeftCache = r.ai_left;
+    } catch (e) { err.textContent = friendlyNet(e); err.classList.remove("hidden"); } finally { go.disabled = false; }
+  };
+  body.append(plan, skills, ai);
+}
+
+async function studyMistakes(body, reset) {
+  if (reset) notebook = { items: [], total: 0, skill: notebook.skill || "" };
+  const tools = el("div", "flex flex-wrap items-center gap-3"), sel = el("select", "field field-sm"), print = el("button", "btn btn-ghost btn-sm", "Print / save as PDF");
+  sel.style.maxWidth = "18rem"; print.type = "button";
+  sel.append(new Option("All skills", ""));
+  (studyInfo.skills || []).forEach((s) => sel.append(new Option(s.title, s.skill)));
+  sel.value = notebook.skill;
+  sel.onchange = () => { notebook.skill = sel.value; const b = $("studyBody"); b.replaceChildren(); studyMistakes(b, true); };
+  print.onclick = printNotebook;
+  tools.append(sel, print);
+  body.append(tools);
+  const list = el("div", "mt-4 space-y-3");
+  body.append(list);
+  async function more() {
+    const d = await apiJson(`/api/notebook?limit=30&offset=${notebook.items.length}&skill=${encodeURIComponent(notebook.skill)}`, { headers: authHeader() });
+    notebook.total = d.total; d.items.forEach((m) => notebook.items.push(m));
+  }
+  try { await more(); } catch (e) { list.append(el("p", "note note-bad", friendlyNet(e))); return; }
+  const draw = () => {
+    list.replaceChildren();
+    if (!notebook.items.length) { list.append(el("p", "text-sm t-soft", notebook.skill ? "No mistakes in this skill." : "No mistakes saved yet. Wrong answers are collected here automatically.")); return; }
+    list.append(el("p", "text-xs t-faint", `${notebook.total} saved ${notebook.total === 1 ? "mistake" : "mistakes"}`));
+    notebook.items.forEach((m) => {
+      const card = el("div", "card p-3"), top = el("div", "flex items-start justify-between gap-3");
+      const left = el("div", "min-w-0");
+      left.append(el("span", "badge", m.title), el("p", "mt-2 text-[14.5px] font-semibold", m.label));
+      const x = el("button", "icon-btn", ""); x.type = "button"; x.title = "Remove from the notebook"; x.setAttribute("aria-label", "Remove from the notebook"); setIcon(x, "trash");
+      x.onclick = async () => { try { await apiJson("/api/notebook/" + m.id, { method: "DELETE", headers: authHeader() }); notebook.items = notebook.items.filter((i) => i.id !== m.id); notebook.total--; draw(); } catch (e) { alert(friendlyNet(e)); } };
+      top.append(left, x);
+      const ans = el("div", "mt-2 grid sm:grid-cols-2 gap-2 text-[13.5px]");
+      const you = el("div"), ok = el("div");
+      you.append(el("span", "eyebrow", "You wrote"), el("p", "num t-bad", m.yours || "(empty)"));
+      ok.append(el("span", "eyebrow", "Correct"), el("p", "num t-ok", m.expected));
+      ans.append(you, ok);
+      card.append(top, ans);
+      list.append(card);
+    });
+    if (notebook.items.length < notebook.total) {
+      const b = el("button", "btn btn-ghost w-full", "Load more"); b.type = "button";
+      b.onclick = async () => { b.disabled = true; try { await more(); draw(); } catch (e) { b.disabled = false; } };
+      list.append(b);
+    }
+  };
+  draw();
+}
+
+async function printNotebook() {
+  try {
+    const all = [];
+    for (let off = 0; off < 500; off += 100) {
+      const d = await apiJson(`/api/notebook?limit=100&offset=${off}&skill=${encodeURIComponent(notebook.skill)}`, { headers: authHeader() });
+      all.push(...d.items);
+      if (all.length >= d.total) break;
+    }
+    const area = $("printArea");
+    area.replaceChildren(el("h1", "", "Accounting Trainer: my mistakes"), el("p", "", new Date().toISOString().slice(0, 10) + " · " + all.length + " items"));
+    const t = el("table"), hd = el("tr");
+    ["Skill", "Item", "You wrote", "Correct"].forEach((h) => hd.append(el("th", "", h)));
+    t.append(hd);
+    all.forEach((m) => { const tr = el("tr"); [m.title, m.label, m.yours || "(empty)", m.expected].forEach((v) => tr.append(el("td", "", v))); t.append(tr); });
+    area.append(t);
+    window.print();
+  } catch (e) { alert(friendlyNet(e)); }
+}
+window.addEventListener("afterprint", () => $("printArea").replaceChildren());
+
+async function studyQuiz(body) {
+  let data;
+  try { data = await apiJson("/api/notebook/quiz", { headers: authHeader() }); } catch (e) { body.append(el("p", "note note-bad", friendlyNet(e))); return; }
+  quiz = { items: data.items, i: 0, done: 0, due: data.due };
+  const stage = el("div", "card p-5");
+  body.append(stage);
+  const draw = () => {
+    stage.replaceChildren();
+    if (quiz.i >= quiz.items.length) {
+      stage.append(el("h3", "serif text-[22px] font-semibold", quiz.done ? "Round finished" : "Nothing is due"),
+        el("p", "mt-2 text-sm t-soft", quiz.done ? `You reviewed ${quiz.done} ${quiz.done === 1 ? "mistake" : "mistakes"}. Right answers come back after 1, 3, 7, 14 and 30 days; wrong ones come back now.`
+          : "Your notebook has no mistake waiting for a repeat. New mistakes appear here as you practise."));
+      if (quiz.due > quiz.items.length) { const b = el("button", "btn btn-primary mt-4", "Next round"); b.type = "button"; b.onclick = () => renderStudy(); stage.append(b); }
+      return;
+    }
+    const m = quiz.items[quiz.i];
+    stage.append(el("p", "eyebrow", `Mistake ${quiz.i + 1} of ${quiz.items.length} · ${m.title}`), el("p", "mt-3 text-[17px] serif font-semibold leading-snug", m.label));
+    const reveal = el("button", "btn btn-ghost mt-4", "Show the answer"); reveal.type = "button";
+    const after = el("div", "hidden mt-4");
+    after.append(el("span", "eyebrow", "Correct"), el("p", "num t-ok text-[17px]", m.expected), el("p", "mt-2 text-xs t-faint", "Last time you wrote: " + (m.yours || "(empty)")));
+    const row = el("div", "mt-4 flex flex-wrap gap-2.5");
+    const knew = el("button", "btn btn-primary", "I knew it"), again = el("button", "btn btn-ghost", "Again");
+    knew.type = again.type = "button";
+    const rate = async (right) => {
+      knew.disabled = again.disabled = true;
+      try { await apiJson(`/api/notebook/${m.id}/review`, { method: "POST", headers: authJson(), body: JSON.stringify({ right }) }); quiz.done++; quiz.i++; draw(); }
+      catch (e) { knew.disabled = again.disabled = false; alert(friendlyNet(e)); }
+    };
+    knew.onclick = () => rate(true); again.onclick = () => rate(false);
+    row.append(knew, again); after.append(row);
+    reveal.onclick = () => { reveal.classList.add("hidden"); after.classList.remove("hidden"); };
+    stage.append(reveal, after);
+  };
+  draw();
+}
+
+document.querySelectorAll("[data-study]").forEach((b) => (b.onclick = showStudy));
+document.querySelectorAll("#studyTabs .seg-btn").forEach((b) => (b.onclick = () => { studyTab = b.dataset.tab; renderStudy(); }));
+
+
 // ---------- result card + archive saving ----------
 function showResult(res) {
   const ratio = res.total ? res.ok / res.total : 0;
@@ -1950,6 +2294,7 @@ async function doCheck() {
     isSheet() ? applySheetResult(data) : applyTestResult(data);
     showResult({ ok: data.score, total: data.total });
     showRatingChange(data.rating);
+    refreshTutors();
     $("archiveNote").textContent = data.archived ? "Saved to your archive ✓" : "";
     if (!data.signed_in) {
       $("archiveNote").replaceChildren("Results are not saved and do not count for a rating. ");

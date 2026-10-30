@@ -283,11 +283,11 @@ def _normalize(topic: str, raw: dict, variant: str | None) -> dict:
     return task
 
 
-def generate_task_from_claude(topic: str, avoid: list[str] | None = None) -> dict:
+def generate_task_from_claude(topic: str, avoid: list[str] | None = None, usage_cb=None) -> dict:
     """Generate a new exam-style task via the Claude API.
 
     avoid=None is the free fallback (no history); a list (even empty) is the PRO mode where the model
-    is told which tasks the user has already seen.
+    is told which tasks the user has already seen. usage_cb(input_tokens, output_tokens) is told what every attempt really cost.
     """
     if topic not in TOPIC_PROMPTS:
         raise KeyError(topic)
@@ -303,6 +303,10 @@ def generate_task_from_claude(topic: str, avoid: list[str] | None = None) -> dic
             **THINKING_ARGS,
         )
         raw_text = "".join(b.text for b in response.content if b.type == "text")
+        if usage_cb:
+            u = response.usage
+            usage_cb((getattr(u, "input_tokens", 0) or 0) + (getattr(u, "cache_creation_input_tokens", 0) or 0) + (getattr(u, "cache_read_input_tokens", 0) or 0),
+                     getattr(u, "output_tokens", 0) or 0)
 
         if response.stop_reason == "max_tokens":
             last_error = ValueError("Model response was cut off (max_tokens)")

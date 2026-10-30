@@ -29,6 +29,7 @@ import rating
 import pool
 import midterm
 import table_types
+import tutor
 from generator import TOPIC_PROMPTS, generate_task_from_claude
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -41,6 +42,7 @@ RATE_LIMITS = {
     "generate": (10, 60),  # 10 requests per minute
     "auth": (10, 60),
     "check": (60, 60),
+    "tutor": (20, 60),     # AI replies per minute and IP (on top of the per-user daily budget in tutor.py)
 }
 REQUEST_COUNTS = defaultdict(list)
 
@@ -76,6 +78,8 @@ def bucket_for(path: str) -> str | None:
         return "auth"
     if path in ("/api/check", "/api/midterm/grade", "/api/tables/check"):
         return "check"
+    if path.startswith("/api/tutor/"):
+        return "tutor"
     return None
 
 
@@ -477,6 +481,32 @@ def history_reset(user: dict = Depends(current_user)):
     return {"count": 0}
 
 
+# ---------------- what a student did: skill statistics and the mistake notebook ----------------
+CLASSIC_TITLES = {"classic_balance_sheet": "Balance sheet (classic)", "classic_terminology": "Terminology"}
+
+
+def claim_key(payload: dict) -> str:
+    """The key under which a checked question is remembered (db.claim_task); the tutor may reveal answers only after it exists."""
+    if payload.get("ex") == "practice":
+        return "tbl:" + payload["jti"]
+    return ("paper:" + payload["ex"]) if payload.get("ex") else payload["jti"]
+
+
+def record_study(user: dict, payload: dict, answers: dict) -> None:
+    """Adds a checked question to the student's skill statistics and stores the wrong answers in the notebook. Never breaks the request."""
+    try:
+        items = midterm.review_items(payload, answers)
+        if not items:
+            return
+        skill = payload.get("tid") or "classic_" + str(payload.get("topic", "other"))
+        title = payload.get("ttl") or CLASSIC_TITLES.get(skill, skill)
+        right = sum(1 for i in items if i["correct"])
+        db.record_skill(user["id"], skill, title, right / len(items), 1)
+        db.add_mistakes(user["id"], skill, title, items)
+    except Exception as e:
+        print(f"[study] could not record: {e!r}")
+
+
 # ---------------- checking answers (server-side grading, rating, archive) ----------------
 class CheckRequest(BaseModel):
     token: str = Field(max_length=20000)
@@ -510,6 +540,7 @@ def check_answers(body: CheckRequest, user: dict | None = Depends(optional_user)
         }))
         if first:
             db.mark_solved(user["id"], payload.get("fp", []))          # feeds the "Solved previously" tag
+            record_study(user, payload, body.answers)                  # skill statistics + mistake notebook
         if not first:
             rating_info = {"already_counted": True}
         elif (fresh := db.get_user(user["id"]) or user)["calibration_left"] > 0 and payload["topic"] not in rating.CALIBRATION_TOPICS:
@@ -557,12 +588,17 @@ class TableCheck(BaseModel):
 
 
 @app.post("/api/tables/check")
-def table_check(body: TableCheck):
+def table_check(body: TableCheck, user: dict | None = Depends(optional_user)):
     """Marks one table question and reveals the answers. Practice only: the Score is not affected."""
     try:
-        return midterm.grade_single(body.token, body.answers)
+        result = midterm.grade_single(body.token, body.answers)
+        payload = grading.open_token(body.token)
     except grading.TokenError as e:
         raise HTTPException(status_code=400, detail=str(e))
+    if result["answered"] and db.claim_task(claim_key(payload), user["id"] if user else None):     # the first check counts for the statistics
+        if user:
+            record_study(user, payload, body.answers)
+    return result
 
 
 @app.get("/api/midterm")
@@ -570,8 +606,20 @@ def midterm_papers():
     return {"papers": midterm.overview(), "time_limit": midterm.TIME_LIMIT_S}
 
 
+FREE_PAPERS_PER_DAY = int((os.environ.get("FREE_PAPERS_PER_DAY") or "1").strip() or 1)      # PRO: unlimited
+
+
 @app.get("/api/midterm/{n}")
-def midterm_start(n: int):
+def midterm_start(n: int, request: Request, user: dict | None = Depends(optional_user)):
+    if n not in midterm.PAPERS:
+        raise HTTPException(status_code=404, detail="There is no such midterm.")
+    if not (user and user["is_pro"]):                # free accounts (and guests) may sit a limited number of papers per day
+        owner = f"u:{user['id']}" if user else f"ip:{client_ip(request)}"
+        allowed, _used = db.consume_paper(owner, FREE_PAPERS_PER_DAY)
+        if not allowed:
+            return JSONResponse(status_code=403, content={
+                "code": "paper_limit",
+                "detail": f"The free plan includes {FREE_PAPERS_PER_DAY} mid-term paper per day. PRO has no limit. A new free paper opens at 00:00 UTC."})
     paper = midterm.build(n)
     if paper is None:
         raise HTTPException(status_code=404, detail="There is no such midterm.")
@@ -588,7 +636,177 @@ def midterm_grade(body: PaperSubmit, user: dict | None = Depends(optional_user))
         raise HTTPException(status_code=400, detail=str(e))
     if not db.claim_task("paper:" + result["exam_id"], user["id"] if user else None):
         raise HTTPException(status_code=409, detail="This paper has already been handed in. Start a new one.")
+    if user:                                         # every question of the paper feeds the statistics and the notebook
+        for item in body.items:
+            try:
+                record_study(user, grading.open_token(item.token), item.answers)
+            except grading.TokenError:
+                pass
     return result
+
+
+# ---------------- PRO: the study desk (plan, mistake notebook, spaced repetition) and the AI tutor ----------------
+def require_pro(user: dict) -> dict:
+    if not user["is_pro"]:
+        raise HTTPException(status_code=403, detail="This is a PRO feature.")
+    return user
+
+
+def _action_for(skill: str) -> dict:
+    """What button starts practice for a skill: a table type, the classic sheet or the terminology test."""
+    by_gen = {t["generator"]: t for t in table_types.TABLE_TYPES if t.get("generator")}
+    if skill in by_gen:
+        t = by_gen[skill]
+        return {"action": "table", "id": t["id"], "label": f"Practise {t['short']}"}
+    if skill == "classic_balance_sheet":
+        return {"action": "table", "id": "classic", "label": "Practise the classic sheet"}
+    return {"action": "topic", "topic": "terminology", "label": "Practise terminology"}
+
+
+def build_plan(user_id: int) -> list[dict]:
+    """Today's practice, from the statistics alone (no tokens): the weakest skills first, then a table type not tried yet."""
+    skills = db.get_skills(user_id)
+    weak = sorted((s for s in skills if s["accuracy"] is not None and s["accuracy"] < 85), key=lambda s: (s["accuracy"], s["updated_at"]))[:3]
+    plan = [{"skill": s["skill"], "title": s["title"], "accuracy": s["accuracy"], "attempts": s["attempts"], "reason": "weak", **_action_for(s["skill"])} for s in weak]
+    tried = {s["skill"] for s in skills}
+    for t in table_types.TABLE_TYPES:
+        if len(plan) >= 4:
+            break
+        if t.get("generator") and t["generator"] not in tried:
+            plan.append({"skill": t["generator"], "title": t["title"], "accuracy": None, "attempts": 0, "reason": "new", "action": "table", "id": t["id"], "label": f"Try {t['short']}"})
+    return plan
+
+
+@app.get("/api/study/overview")
+def study_overview(user: dict = Depends(current_user)):
+    mistakes_all, mistakes_due = db.count_mistakes(user["id"])
+    base = {"pro": bool(user["is_pro"]), "mistakes": mistakes_all, "due": mistakes_due}
+    if not user["is_pro"]:
+        return base                                  # a free account only sees that its mistakes are being saved
+    skills = sorted(db.get_skills(user["id"]), key=lambda s: (s["accuracy"] if s["accuracy"] is not None else 101))
+    return {**base, "skills": skills, "plan": build_plan(user["id"]), "ai_left": tutor.left(user["id"]), "ai_limits": tutor.LIMITS, "tutor_on": not tutor.DISABLED}
+
+
+@app.get("/api/notebook")
+def notebook_list(skill: str = "", limit: int = 30, offset: int = 0, user: dict = Depends(current_user)):
+    require_pro(user)
+    items, total = db.list_mistakes(user["id"], skill or None, max(1, min(limit, 100)), max(0, offset))
+    return {"items": items, "total": total}
+
+
+@app.get("/api/notebook/quiz")
+def notebook_quiz(user: dict = Depends(current_user)):
+    require_pro(user)
+    items, total_due = db.due_mistakes(user["id"], 10)
+    return {"items": items, "due": total_due}
+
+
+class NotebookReview(BaseModel):
+    right: bool
+
+
+@app.post("/api/notebook/{mistake_id}/review")
+def notebook_review(mistake_id: int, body: NotebookReview, user: dict = Depends(current_user)):
+    require_pro(user)
+    result = db.review_mistake(user["id"], mistake_id, body.right)
+    if result is None:
+        raise HTTPException(status_code=404, detail="No such mistake.")
+    return result
+
+
+@app.delete("/api/notebook/{mistake_id}")
+def notebook_delete(mistake_id: int, user: dict = Depends(current_user)):
+    require_pro(user)
+    if not db.delete_mistake(user["id"], mistake_id):
+        raise HTTPException(status_code=404, detail="No such mistake.")
+    return {"ok": True}
+
+
+class TutorItem(BaseModel):
+    token: str = Field(max_length=60000)
+    answers: dict = Field(default_factory=dict)
+
+
+class ChatMessage(BaseModel):
+    role: Literal["user", "assistant"]
+    content: str = Field(max_length=2000)
+
+
+class TutorChat(TutorItem):
+    messages: list[ChatMessage] = Field(max_length=40)
+
+
+class TutorPlan(BaseModel):
+    items: list[TutorItem] | None = Field(default=None, max_length=30)      # the questions of a paper that was just handed in
+
+
+def _tutor_payload(token: str) -> dict:
+    try:
+        return grading.open_token(token)
+    except grading.TokenError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+def _tutor_call(fn, *args):
+    try:
+        return fn(*args)
+    except tutor.TutorError as e:
+        raise HTTPException(status_code=e.status, detail=str(e))
+
+
+@app.post("/api/tutor/explain")
+def tutor_explain(body: TutorItem, user: dict = Depends(current_user)):
+    """Explains the student's mistakes in a checked task. Only after the check: before it nothing about the right answers is said."""
+    require_pro(user)
+    payload = _tutor_payload(body.token)
+    if not db.has_claim(claim_key(payload)):
+        raise HTTPException(status_code=409, detail="Check the answers first, then ask for an explanation.")
+    items = midterm.review_items(payload, body.answers)
+    text = _tutor_call(tutor.explain, user["id"], payload, items)
+    return {"text": text, "ai_left": tutor.left(user["id"])}
+
+
+@app.post("/api/tutor/chat")
+def tutor_chat(body: TutorChat, user: dict = Depends(current_user)):
+    """Chat about the task in hand. Before the check the tutor only coaches (it is not given the answers); after it, it can explain everything."""
+    require_pro(user)
+    payload = _tutor_payload(body.token)
+    checked = db.has_claim(claim_key(payload))
+    items = midterm.review_items(payload, body.answers) if checked else None
+    text = _tutor_call(tutor.chat, user["id"], payload, items, checked, [m.model_dump() for m in body.messages])
+    return {"text": text, "checked": checked, "ai_left": tutor.left(user["id"])}
+
+
+@app.post("/api/tutor/plan")
+def tutor_plan(body: TutorPlan, user: dict = Depends(current_user)):
+    """A short written study plan from the statistics (and, right after a paper, from that paper's result)."""
+    require_pro(user)
+    lines = ["Skills (accuracy over attempts):"]
+    skills = sorted(db.get_skills(user["id"]), key=lambda x: (x["accuracy"] if x["accuracy"] is not None else 101))
+    lines += [f"- {x['title']}: {x['accuracy']}% over {x['attempts']} attempts" for x in skills[:10]] or ["- no practice yet"]
+    mistakes, total = db.list_mistakes(user["id"], None, 6, 0)
+    lines.append(f"Notebook: {total} saved mistakes. Recent: " + "; ".join(f"{m['title']}: {m['label'][:70]}" for m in mistakes) if mistakes else "Notebook: empty.")
+    if body.items:
+        payloads = [(_tutor_payload(i.token), i.answers) for i in body.items]
+        if not all(db.has_claim(claim_key(p)) for p, _a in payloads):
+            raise HTTPException(status_code=409, detail="Hand in the paper first.")
+        lines.append("Last mid-term paper:")
+        for p, a in sorted(payloads, key=lambda x: x[0].get("no", 0)):
+            r = midterm.grade_one(p, a)
+            wrong = [i["label"][:60] for i in midterm.review_items(p, a) if not i["correct"]][:3]
+            lines.append(f"- Q{p.get('no')} {p.get('ttl', '')}: {r['points']}/{r['max']}" + (f"; wrong: {', '.join(wrong)}" if wrong else ""))
+    text = _tutor_call(tutor.study_plan, user["id"], "\n".join(lines))
+    return {"text": text, "ai_left": tutor.left(user["id"])}
+
+
+@app.get("/api/admin/ai-usage")
+def admin_ai_usage(user: dict = Depends(current_user)):
+    """Today's AI spending by feature and the biggest users (only usernames listed in ADMIN_USERS)."""
+    if user["username"].lower() not in ADMIN_USERS:
+        raise HTTPException(status_code=403, detail="Not allowed.")
+    report = db.ai_usage_report()
+    report["limits"] = {"calls_per_user_per_day": tutor.LIMITS, "tokens_per_user_per_day": tutor.USER_TOKENS, "tokens_everybody_per_day": tutor.GLOBAL_TOKENS, "tutor_disabled": tutor.DISABLED}
+    return report
 
 
 @app.get("/api/archive")
@@ -934,6 +1152,11 @@ def generate_pro(body: ProRequest, user: dict = Depends(current_user)):
     if body.topic not in PRO_TOPICS:
         raise HTTPException(status_code=404, detail=f"Unknown PRO topic. Available: {', '.join(PRO_TOPICS)}")
 
+    over = db.ai_over_budget(user["id"], tutor.USER_TOKENS * 4, tutor.GLOBAL_TOKENS)       # generation is bigger than a tutor reply: its own, wider per-user cap
+    if over == "global":
+        raise HTTPException(status_code=503, detail="AI tasks are resting for today. Try again after 00:00 UTC.")
+    if over == "user_tokens":
+        raise HTTPException(status_code=429, detail="You have reached today's AI limit. It resets at 00:00 UTC.")
     allowed, used = db.consume_pro_quota(user["id"])
     if not allowed:
         raise HTTPException(
@@ -947,7 +1170,7 @@ def generate_pro(body: ProRequest, user: dict = Depends(current_user)):
 
     try:
         for _ in range(PRO_ATTEMPTS):
-            task = generate_task_from_claude(body.topic, avoid=avoid)
+            task = generate_task_from_claude(body.topic, avoid=avoid, usage_cb=lambda i, o: db.ai_record(user["id"], "generate", i, o, count_call=True))
             summary, key = task_summary(body.topic, task)
             if key not in seen_keys:
                 break

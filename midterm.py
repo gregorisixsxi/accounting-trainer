@@ -51,8 +51,12 @@ def overview() -> list[dict]:
 
 
 # ---------------------------------------------------------------- building a paper
-def _num(f: dict, fid: str, value) -> None:
-    f[fid] = {"t": "n", "v": value}
+def _num(f: dict, fid: str, value, label: str = "") -> None:
+    f[fid] = {"t": "n", "v": value, "l": label}
+
+
+def _fm(v) -> str:
+    return f"{v:,}" if isinstance(v, (int, float)) else str(v)
 
 
 def _income_statement(t: dict):
@@ -61,15 +65,18 @@ def _income_statement(t: dict):
         row = {"no": r["no"], "label": r["label"], "bold": bool(r.get("bold"))}
         if r.get("answer") is not None:              # rows without data have no answer cell
             row["id"] = f"r{i}"
-            _num(f, row["id"], r["answer"])
+            _num(f, row["id"], r["answer"], f"Income statement · {r['no']} {r['label']}")
         rows.append(row)
     public = {"company": t.get("company", ""), "unit": t.get("unit", ""), "description": t["description"], "information": t["information"],
               "instruction": t["instruction"], "answer_format": t.get("answer_format", []), "rows": rows}
-    return public, {"f": f, "x": t.get("explanation", "")}
+    info = "; ".join((g.get("heading", "") + ": " if g.get("heading") else "") + ", ".join(f"{l['label']} {_fm(l['amount'])}" for l in g["lines"]) for g in t["information"])
+    ctx = f"{t['description']} Data: {info}. Rows to fill: " + ", ".join(f"{r['no']} {r['label']}" for r in t["rows"] if r.get("answer") is not None) + ". Method: nature of expense."
+    return public, {"f": f, "x": t.get("explanation", "")}, ctx
 
 
 def _event_impact(t: dict):
     f, events, notes = {}, [], []
+    ctx_events = []
     for ev in t["events"]:
         n, bs, inc = ev["no"], ev["balance_sheet"], ev["income_statement"]
 
@@ -81,42 +88,47 @@ def _event_impact(t: dict):
                     row.update(change=ln["change"], closing=ln["closing"])
                 else:
                     row["cid"], row["zid"] = f"e{n}.{tag}{i}.c", f"e{n}.{tag}{i}.z"
-                    _num(f, row["cid"], ln["change"])
-                    _num(f, row["zid"], ln["closing"])
+                    _num(f, row["cid"], ln["change"], f"Event {n} · {ln['label']} · change")
+                    _num(f, row["zid"], ln["closing"], f"Event {n} · {ln['label']} · closing")
                 out.append(row)
             return out
 
         totals = {}
-        for tag, src in (("ta", "total_assets"), ("tl", "total_equity_and_liabilities")):
+        for tag, src, name in (("ta", "total_assets", "Total assets"), ("tl", "total_equity_and_liabilities", "Total equity and liabilities")):
             totals[tag] = {"cid": f"e{n}.{tag}.c", "zid": f"e{n}.{tag}.z"}
-            _num(f, totals[tag]["cid"], bs[src]["change"])
-            _num(f, totals[tag]["zid"], bs[src]["closing"])
+            _num(f, totals[tag]["cid"], bs[src]["change"], f"Event {n} · {name} · change")
+            _num(f, totals[tag]["zid"], bs[src]["closing"], f"Event {n} · {name} · closing")
         statement = {}
-        for tag, src in (("i", "income"), ("x", "expense_cost")):
+        for tag, src, name in (("i", "income", "Income"), ("x", "expense_cost", "Expense/cost")):
             part = inc[src]
             statement[tag] = {"sid": f"e{n}.{tag}.s", "cid": f"e{n}.{tag}.c", "zid": f"e{n}.{tag}.z"}
-            f[statement[tag]["sid"]] = {"t": "s", "v": part["item"]}
-            _num(f, statement[tag]["cid"], part["change"])
-            _num(f, statement[tag]["zid"], part["closing"])
+            f[statement[tag]["sid"]] = {"t": "s", "v": part["item"], "l": f"Event {n} · {name} item (drop-down)"}
+            _num(f, statement[tag]["cid"], part["change"], f"Event {n} · {name} · change")
+            _num(f, statement[tag]["zid"], part["closing"], f"Event {n} · {name} · closing")
         statement["p"] = {"cid": f"e{n}.p.c", "zid": f"e{n}.p.z"}
-        _num(f, statement["p"]["cid"], inc["profit_or_loss"]["change"])
-        _num(f, statement["p"]["zid"], inc["profit_or_loss"]["closing"])
+        _num(f, statement["p"]["cid"], inc["profit_or_loss"]["change"], f"Event {n} · Profit or loss · change")
+        _num(f, statement["p"]["zid"], inc["profit_or_loss"]["closing"], f"Event {n} · Profit or loss · closing")
         events.append({"no": n, "text": ev["text"], "assets": lines("assets", "a"), "equity_and_liabilities": lines("equity_and_liabilities", "l"),
                        "totals": totals, "statement": statement})
         notes.append(f"Event {n}: {ev.get('explanation', '')}")
+        ctx_events.append(f"Event {n}: {ev['text']}")
+    ob = t["opening_balance_sheet"]
+    opening = "Assets " + ", ".join(f"{l['label']} {_fm(l['amount'])}" for l in ob["assets"]) + "; equity and liabilities " + ", ".join(f"{l['label']} {_fm(l['amount'])}" for l in ob["equity_and_liabilities"])
     public = {"company": t.get("company", ""), "unit": t.get("unit", ""), "description": t.get("description", ""), "instructions": t.get("instructions", []),
-              "opening": t["opening_balance_sheet"], "options": t["income_statement_options"], "events": events}
-    return public, {"f": f, "x": "\n".join(notes)}
+              "opening": ob, "options": t["income_statement_options"], "events": events}
+    ctx = f"{t.get('description', '')} Opening balance sheet: {opening}. " + " ".join(ctx_events) + " Closing values of event 1 are the base of event 2."
+    return public, {"f": f, "x": "\n".join(notes)}, ctx
 
 
 def _journal(t: dict):
     f, entries = {}, []
     for e in t["entries"]:
         entries.append({"no": e["no"], "text": e["text"], "amount": e["amount"], "did": f"j{e['no']}.d", "cid": f"j{e['no']}.c"})
-        f[f"j{e['no']}.d"] = {"t": "s", "v": e["debit"]}
-        f[f"j{e['no']}.c"] = {"t": "s", "v": e["credit"]}
+        f[f"j{e['no']}.d"] = {"t": "s", "v": e["debit"], "l": f"Transaction {e['no']} ({e['text'][:70]}) · account to debit"}
+        f[f"j{e['no']}.c"] = {"t": "s", "v": e["credit"], "l": f"Transaction {e['no']} ({e['text'][:70]}) · account to credit"}
     public = {"description": t["description"], "options": t["account_options"], "entries": entries}
-    return public, {"f": f, "x": t.get("explanation", "")}
+    ctx = t["description"] + " " + " ".join(f"{e['no']}. {e['text']} (amount {_fm(e['amount'])})" for e in t["entries"])
+    return public, {"f": f, "x": t.get("explanation", "")}, ctx
 
 
 def _trial_balance(t: dict):
@@ -125,25 +137,27 @@ def _trial_balance(t: dict):
         row = {"account": r["account"], "asked": bool(r.get("asked"))}
         if row["asked"]:
             row["did"], row["cid"] = f"t{i}.d", f"t{i}.c"
-            _num(f, row["did"], r["debit"])
-            _num(f, row["cid"], r["credit"])
+            _num(f, row["did"], r["debit"], f"Trial balance · {r['account']} · debit")
+            _num(f, row["cid"], r["credit"], f"Trial balance · {r['account']} · credit")
         else:
             row.update(debit=r["debit"], credit=r["credit"])
         rows.append(row)
     totals = {}
-    for tag, src in (("bs", "balance_sheet_accounts_total"), ("pl", "profit_and_loss_accounts_total")):
+    for tag, src, name in (("bs", "balance_sheet_accounts_total", "Balance sheet accounts total"), ("pl", "profit_and_loss_accounts_total", "Profit and loss accounts total")):
         totals[tag] = {"did": f"tot.{tag}.d", "cid": f"tot.{tag}.c"}
-        _num(f, totals[tag]["did"], t["trial_balance_totals"][src]["debit"])
-        _num(f, totals[tag]["cid"], t["trial_balance_totals"][src]["credit"])
+        _num(f, totals[tag]["did"], t["trial_balance_totals"][src]["debit"], f"Trial balance · {name} · debit")
+        _num(f, totals[tag]["cid"], t["trial_balance_totals"][src]["credit"], f"Trial balance · {name} · credit")
     closing = {}
     for side in ("assets", "equity_and_liabilities"):
         closing[side] = []
         for i, r in enumerate(t["closing_balance_sheet"][side]):
             fid = f"cb.{side[0]}{i}"
             closing[side].append({"label": r["label"], "id": fid})
-            _num(f, fid, r["answer"])
+            _num(f, fid, r["answer"], f"Closing balance sheet · {r['label']}")
     public = {"unit": t.get("unit", ""), "description": t["description"], "ledger": t["ledger"], "rows": rows, "totals": totals, "closing": closing}
-    return public, {"f": f, "x": t.get("explanation", "")}
+    ledger = "; ".join(f"{a['account']}: debit side {', '.join(map(str, a['debit'])) or '-'} | credit side {', '.join(map(str, a['credit'])) or '-'}" for a in t["ledger"])
+    ctx = f"{t['description']} Ledger accounts: {ledger}. Net balance of an account = difference of its two sides."
+    return public, {"f": f, "x": t.get("explanation", "")}, ctx
 
 
 def _ledger_posting(t: dict):
@@ -155,15 +169,17 @@ def _ledger_posting(t: dict):
         acc = {"name": a["name"], "opening": a.get("opening"), "dn": max(len(sides["debit"]), 1), "cn": max(len(sides["credit"]), 1)}
         acc["did"] = [f"l{i}.d{k}" for k in range(acc["dn"])]
         acc["cid"] = [f"l{i}.c{k}" for k in range(acc["cn"])]
-        m[f"l{i}.d"] = {"ids": acc["did"], "v": sorted(sides["debit"])}
-        m[f"l{i}.c"] = {"ids": acc["cid"], "v": sorted(sides["credit"])}
+        m[f"l{i}.d"] = {"ids": acc["did"], "v": sorted(sides["debit"]), "l": f"{a['name']} · amounts on the debit side"}
+        m[f"l{i}.c"] = {"ids": acc["cid"], "v": sorted(sides["credit"]), "l": f"{a['name']} · amounts on the credit side"}
         accounts.append(acc)
     questions = []
     for i, q in enumerate(t["questions"]):
         questions.append({"id": f"q{i}", "prompt": q["prompt"], "format": q.get("format", "")})
-        _num(f, f"q{i}", q["answer"])
+        _num(f, f"q{i}", q["answer"], q["prompt"])
     public = {"unit": t.get("unit", ""), "events": t["economic_events"], "task": t["task"], "accounts": accounts, "questions": questions}
-    return public, {"f": f, "m": m, "x": t.get("explanation", "")}
+    opens = "; ".join(f"{a['name']} opening {a['opening']['side']} {_fm(a['opening']['amount'])}" for a in t["accounts"] if a.get("opening"))
+    ctx = f"{t['task']} Events: " + " ".join(f"{i}. {e}" for i, e in enumerate(t["economic_events"], 1)) + f" Opening balances: {opens or 'none'}. Questions: " + " / ".join(q["prompt"] for q in t["questions"])
+    return public, {"f": f, "m": m, "x": t.get("explanation", "")}, ctx
 
 
 BUILDERS = {"income_statement": _income_statement, "event_impact": _event_impact, "journal": _journal,
@@ -186,17 +202,18 @@ def _seal_question(no: int, group: dict, t: dict, exam_id: str) -> dict:
         sealed = grading.seal(task, "midterm", "free", fp=[])
         q["kind"] = "test"
         q["task"] = {k: v for k, v in sealed.items() if k != "token"}
-        q["token"] = _repack(sealed["token"], ex=exam_id, no=no, pts=points)
+        q["token"] = _repack(sealed["token"], ex=exam_id, no=no, pts=points, tid=group.get("type_id", ""), ttl=group.get("title", ""))
     elif kind == "balance_sheet":
         raw = {k: v for k, v in t.items() if k not in ("id", "type_id", "kind", "points", "variant")}
         task = exam.normalize_balance_sheet(copy.deepcopy(raw), "compile")
         sealed = grading.seal(task, "midterm", "free", fp=[])
         q["task"] = {k: v for k, v in sealed.items() if k != "token"}
-        q["token"] = _repack(sealed["token"], ex=exam_id, no=no, pts=points)
+        q["token"] = _repack(sealed["token"], ex=exam_id, no=no, pts=points, tid=group.get("type_id", ""), ttl=group.get("title", ""))
     elif kind in BUILDERS:
-        public, key = BUILDERS[kind](t)
+        public, key, ctx = BUILDERS[kind](t)
         q["body"] = public
-        q["token"] = grading.pack({"v": 1, "jti": secrets.token_urlsafe(12), "iat": int(time.time()), "kind": kind, "ex": exam_id, "no": no, "pts": points, "key": key})
+        q["token"] = grading.pack({"v": 1, "jti": secrets.token_urlsafe(12), "iat": int(time.time()), "kind": kind, "ex": exam_id, "no": no, "pts": points, "key": key,
+                                   "tid": group.get("type_id", ""), "ttl": group.get("title", ""), "ctx": ctx[:3000]})
     else:
         raise ValueError(f"unknown question kind {kind!r}")
     return q
@@ -286,11 +303,16 @@ def practice(type_id: str) -> dict | None:
 
 
 # ---------------------------------------------------------------- marking
-def _grade_fields(key: dict, answers: dict) -> tuple[dict, int, int, bool]:
-    fields, good, units, answered = {}, 0, 0, False
+def _yours(answers: dict, fid: str) -> str:
+    raw = answers.get(fid)
+    return "" if raw is None else str(raw)[:80].strip()
+
+
+def _grade_fields(key: dict, answers: dict) -> dict:
+    """Marks every answer cell of a table question. Returns the verdicts, the point units and the labelled items (for the tutor and the notebook)."""
+    fields, items, good, units, answered = {}, [], 0, 0, False
     for fid, spec in key.get("f", {}).items():
-        raw = answers.get(fid)
-        raw = "" if raw is None else str(raw)[:80].strip()
+        raw = _yours(answers, fid)
         if spec["t"] == "n":
             got = grading.parse_amount(raw)
             ok = got is not None and abs(got - spec["v"]) <= TOL
@@ -300,29 +322,45 @@ def _grade_fields(key: dict, answers: dict) -> tuple[dict, int, int, bool]:
         units += 1
         good += ok
         fields[fid] = {"correct": ok, "expected": spec["v"]}
+        items.append({"label": spec.get("l") or fid, "yours": raw, "expected": grading._fmt(spec["v"]) if spec["t"] == "n" else spec["v"], "correct": ok})
     for gid, spec in key.get("m", {}).items():       # a side of a ledger account: the amounts written there, in any order
-        mine = []
+        mine, shown = [], []
         for fid in spec["ids"]:
-            raw = answers.get(fid)
-            raw = "" if raw is None else str(raw)[:80].strip()
+            raw = _yours(answers, fid)
             if raw:
                 answered = True
                 got = grading.parse_amount(raw)
                 mine.append(got if got is not None else float("nan"))
+                shown.append(raw)
         mine.sort()
         ok = len(mine) == len(spec["v"]) and all(abs(a - b) <= TOL for a, b in zip(mine, spec["v"]))
         units += 1
         good += ok
         fields[gid] = {"correct": ok, "expected": spec["v"], "ids": spec["ids"]}
-    return fields, good, units, answered
+        items.append({"label": spec.get("l") or gid, "yours": ", ".join(shown), "expected": ", ".join(grading._fmt(v) for v in spec["v"]) or "nothing", "correct": ok})
+    return {"fields": fields, "good": good, "units": units, "answered": answered, "items": items}
+
+
+def _blank_if_empty(answers: dict) -> dict:
+    if not isinstance(answers, dict) or len(answers) > 200:
+        raise grading.TokenError("Invalid answers.")
+    if not any(str(v).strip() for v in answers.values() if v is not None and not (isinstance(v, list) and not v)):
+        return {}                     # nothing typed or chosen: marked as a blank page (no free points for empty sides of a ledger account)
+    return answers
+
+
+def review_items(payload: dict, answers: dict) -> list[dict]:
+    """[{label, yours, expected, correct}] for every answer cell of a sealed question: what the tutor explains and the notebook stores."""
+    answers = _blank_if_empty(answers)
+    if payload["kind"] in ("balance_sheet", "test"):
+        res = grading.grade(payload, answers)
+        return [{"label": r["label"], "yours": r["yours"], "expected": r["expected"], "correct": r["correct"]} for r in res["review"]]
+    return _grade_fields(payload["key"], answers)["items"]
 
 
 def grade_one(payload: dict, answers: dict) -> dict:
-    if not isinstance(answers, dict) or len(answers) > 200:
-        raise grading.TokenError("Invalid answers.")
+    answers = _blank_if_empty(answers)
     kind, pts = payload["kind"], payload["pts"]
-    if not any(str(v).strip() for v in answers.values() if v is not None and not (isinstance(v, list) and not v)):
-        answers = {}                  # nothing typed or chosen: marked as a blank page (no free points for empty sides of a ledger account)
     if kind in ("balance_sheet", "test"):
         res = grading.grade(payload, answers)
         frac = res["score"] / res["total"] if res["total"] else 0
@@ -330,9 +368,10 @@ def grade_one(payload: dict, answers: dict) -> dict:
         detail["explanation"] = res.get("explanation", "")
         answered = res["answered"]
     else:
-        fields, good, units, answered = _grade_fields(payload["key"], answers)
-        frac = good / units if units and answered else 0
-        detail = {"fields": fields, "explanation": payload["key"].get("x", "")}
+        g = _grade_fields(payload["key"], answers)
+        answered = g["answered"]
+        frac = g["good"] / g["units"] if g["units"] and answered else 0
+        detail = {"fields": g["fields"], "explanation": payload["key"].get("x", "")}
     return {"no": payload["no"], "kind": kind, "max": pts, "points": round(pts * frac, 2), "answered": answered, "detail": detail}
 
 
