@@ -28,6 +28,7 @@ import grading
 import rating
 import pool
 import midterm
+import table_types
 from generator import TOPIC_PROMPTS, generate_task_from_claude
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -73,7 +74,7 @@ def bucket_for(path: str) -> str | None:
         return None if topic in pool.POOL_TOPICS and path != "/api/generate/pro" else "generate"
     if path in AUTH_RATE_LIMITED_PATHS:
         return "auth"
-    if path in ("/api/check", "/api/midterm/grade"):
+    if path in ("/api/check", "/api/midterm/grade", "/api/tables/check"):
         return "check"
     return None
 
@@ -535,9 +536,38 @@ class PaperSubmit(BaseModel):
     items: list[PaperItem] = Field(max_length=30)
 
 
+@app.get("/api/tables")
+def table_types_list():
+    """The table types of the Balance Sheet tab (see table_types.py)."""
+    return {"types": table_types.catalog()}
+
+
+@app.get("/api/tables/{type_id}")
+def table_practice(type_id: str):
+    """One fresh question of a table type that has its own screen (everything except the classic compile/totals sheets)."""
+    question = midterm.practice(type_id)
+    if question is None:
+        raise HTTPException(status_code=404, detail="There is no such table type.")
+    return question
+
+
+class TableCheck(BaseModel):
+    token: str = Field(max_length=60000)
+    answers: dict = Field(default_factory=dict)
+
+
+@app.post("/api/tables/check")
+def table_check(body: TableCheck):
+    """Marks one table question and reveals the answers. Practice only: the Score is not affected."""
+    try:
+        return midterm.grade_single(body.token, body.answers)
+    except grading.TokenError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
 @app.get("/api/midterm")
 def midterm_papers():
-    return {"papers": midterm.overview()}
+    return {"papers": midterm.overview(), "time_limit": midterm.TIME_LIMIT_S}
 
 
 @app.get("/api/midterm/{n}")
@@ -852,10 +882,11 @@ def with_solved_flag(sealed: dict, user: dict | None) -> dict:
 
 
 @app.get("/api/generate/{topic}")
-def generate_task(topic: str, exclude: str = "", user: dict | None = Depends(optional_user)):
-    """Free mode: tasks come from the local pools (no API cost); other topics fall back to Claude."""
+def generate_task(topic: str, exclude: str = "", variant: str = "", user: dict | None = Depends(optional_user)):
+    """Free mode: tasks come from the local pools (no API cost); other topics fall back to Claude.
+    variant: "compile" or "totals" picks the table type of a balance sheet task (default: a mix)."""
     recent = {x for x in exclude.split(",") if x}
-    task = pool.get_task(topic, recent)
+    task = pool.get_task(topic, recent, variant if variant in ("compile", "totals") else None)
     if task is not None:
         return with_solved_flag(grading.seal(task, topic, "free"), user)
     if topic not in FREE_TOPICS:

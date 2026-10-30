@@ -162,9 +162,9 @@ POOL_TOPICS = {t for t, items in POOL.items() if items}
 QUESTIONS_PER_TEST = {"terminology": 8}
 
 
-def _pick_many(topic: str, exclude: set[str], n: int) -> list[dict]:
-    """n distinct items, preferring ones the student has not just seen."""
-    items = POOL[topic]
+def _pick_many(topic: str, exclude: set[str], n: int, accept=None) -> list[dict]:
+    """n distinct items, preferring ones the student has not just seen. accept: optional filter on the pool items."""
+    items = [t for t in POOL[topic] if accept is None or accept(t)] or POOL[topic]
     fresh = [t for t in items if t["id"] not in exclude]
     stale = [t for t in items if t["id"] in exclude]
     random.shuffle(fresh)
@@ -255,12 +255,13 @@ def _finish(t: dict, variant: str, built: tuple[dict, str, str, str]) -> dict:
     return exam.normalize_balance_sheet(raw, variant)
 
 
-def _balance_sheet_task(t: dict) -> dict:
+def _balance_sheet_task(t: dict, want: str | None = None) -> dict:
+    """want: "compile" or "totals" to choose the table type of the classic balance sheet task; None = a mix."""
     if "midterm_raw" in t:     # a ready "compile" task from the midterm files: same format the AI generator produces
         task = exam.normalize_balance_sheet(copy.deepcopy(t["midterm_raw"]), "compile")
         task["id"] = t["id"]
         return task
-    variant = random.choices([v for v, _ in BS_VARIANTS], [w for _, w in BS_VARIANTS])[0]
+    variant = want or random.choices([v for v, _ in BS_VARIANTS], [w for _, w in BS_VARIANTS])[0]
     task = None
     if variant == "compile":
         built = _compile_raw(t)
@@ -289,11 +290,13 @@ def _test_task(picks: list[dict]) -> dict:
     return task
 
 
-def get_task(topic: str, exclude: set[str] | None = None) -> dict | None:
+def get_task(topic: str, exclude: set[str] | None = None, variant: str | None = None) -> dict | None:
     """Returns a task in the frontend format, or None if the topic has no pool."""
     if topic not in POOL_TOPICS:
         return None
     exclude = exclude or set()
     if topic == "balance_sheet":
-        return _balance_sheet_task(_pick_many(topic, exclude, 1)[0])
+        # "totals" needs a pool entry with plain line items; "compile" works with every entry (midterm files and pool alike)
+        accept = (lambda t: "midterm_raw" not in t) if variant == "totals" else None
+        return _balance_sheet_task(_pick_many(topic, exclude, 1, accept)[0], variant if variant in ("compile", "totals") else None)
     return _test_task(_pick_many(topic, exclude, QUESTIONS_PER_TEST[topic]))

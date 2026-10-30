@@ -5,6 +5,11 @@ FastAPI + SQLite + one-page `index.html` (Tailwind CDN). Live: https://accountin
 - **Incident / "the site is on fire":** follow `RUNBOOK.md` first. Health check: `GET /api/health`. Backup: `python scripts/backup_db.py`.
 - Files: `app.py` (routes), `db.py` (SQLite), `rating.py` (Score/levels; Score is called `elo` in code and DB), `grading.py` (signed tasks, server-side grading),
   `generator.py` (Claude API), `email_service.py` (Resend), `twitter_auth.py` (X OAuth2), `exam.py`, `pool.py`, `index.html`.
+- **Table task types** (the mid-term tables): named and listed in `table_types.py` (BS-COMPILE, BS-TOTALS, IS-NATURE, EVENTS-2, JOURNAL, TRIAL-BALANCE, T-ACCOUNTS).
+  Fresh tasks of every type come from the generators in `scripts/build_midterm_tasks.py` (`rng -> task body`); the exemplars and their KEEP/VARY rules are in
+  `midterm_templates.py`; `midterm.py` seals and marks them (Mid-term test paper: 30 minutes, auto hand-in; Balance Sheet tab: `/api/tables/*`).
+  To add a type: generator + exemplar + builder in `midterm.py` + renderer `MT_RENDER[kind]` in `index.html` + a line in `table_types.py`.
+  `python table_types.py` prints the catalogue with the rules. Never commit `midterm*` files to a public repo (real exam tasks).
 - Never print, log or commit secrets (`.env` is gitignored; values live in Render). Rotate a secret at its provider if it leaks.
 - Check Python changes with `python -I -m py_compile <files>`; the UI is verified by running `uvicorn app:app` and driving the page.
 - Reply to the owner in Russian. Do not commit or push unless asked.

@@ -16,7 +16,7 @@ sys.path.insert(0, str(ROOT))
 import exam  # noqa: E402
 from midterm_templates import ASSET_KEYS, COMPILE_DESCRIPTION, ROWS, sheet_sides  # noqa: E402
 
-SEED = int(sys.argv[1]) if len(sys.argv) > 1 else 20261029
+DEFAULT_SEED = 20261029            # the command line is read in main() only: the website imports this module for its generators
 CUR = "th USD"          # unit of the table tasks; the real exam says thHUF, the site is English/USD only (see generator.ENGLISH_RULE)
 NOT_AFFECTED = "Not affected by the event!"
 
@@ -778,8 +778,9 @@ def build(midterm: str, rng_seed: int) -> dict:
 
 
 def main():
+    seed = int(sys.argv[1]) if len(sys.argv) > 1 else DEFAULT_SEED
     for midterm in TYPES:
-        data = build(midterm, SEED)
+        data = build(midterm, seed)
         path = ROOT / f"{midterm}_tasks.json"
         path.write_text(json.dumps(data, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
         print(f"{path.name}: " + ", ".join(f"{t['type_id']}x{len(t['tasks'])}" for t in data["types"]))

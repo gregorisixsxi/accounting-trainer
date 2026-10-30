@@ -227,7 +227,8 @@
   .t-account .field-sm { margin-top: 4px; min-width: 0; }
   .mt-sub { margin-top: 20px; font-family: var(--font-head); font-weight: 700; font-size: 19px; }
   .mt-q { font-family: var(--font-head); font-weight: 700; }
-  .mt-clock { font-family: var(--font-num); font-size: 15px; font-weight: 600; font-variant-numeric: slashed-zero tabular-nums; }
+  .mt-clock { font-family: var(--font-num); font-size: 15px; font-weight: 600; font-variant-numeric: slashed-zero tabular-nums; padding: 2px 8px; border: 2px solid transparent; border-radius: 3px; }
+  .mt-clock.low { background: var(--mark); color: #1B1A17; border-color: var(--ink); }          /* the last five minutes */
   @media (max-width: 1499px) { #sheetBox .sheet-two.wide-needed { grid-template-columns: minmax(0, 1fr); } }
   @media (min-width: 640px) { .sheet-row { grid-template-columns: minmax(0, 1fr) repeat(var(--n, 1), minmax(5.5rem, 8.5rem)); } }
   .sheet-head { padding: 0 0 .55rem; border-bottom: 2px solid var(--ink); }
@@ -610,6 +611,12 @@
         <span id="proSwitchState" class="stamp-font switch-state"></span>
       </div>
 
+      <!-- Balance Sheet tab: which table type to practise (the classic sheets, or any table of the mid-term) -->
+      <div id="tableRow" class="hidden mb-5">
+        <p class="eyebrow">Table type</p>
+        <div id="tableChips" class="mt-2 flex flex-wrap gap-2" role="tablist" aria-label="Table type"></div>
+      </div>
+
       <div id="loading" class="hidden flex flex-col items-center gap-4 py-28 t-soft">
         <span class="pencil"></span><span class="text-sm">Sharpening pencils&hellip;</span>
         <span id="slowHint" class="hidden text-xs t-faint">Waking up the server. It's a morning person, just a very slow one.</span>
@@ -633,12 +640,28 @@
         <div id="ratingList" class="mt-4 space-y-2"></div>
       </section>
 
+      <!-- A table of the mid-term, one at a time (Balance Sheet tab): fill it in, check, see the right answers -->
+      <section id="tables" class="hidden fade-in">
+        <div class="flex flex-wrap items-baseline justify-between gap-3">
+          <div><p id="tpCode" class="eyebrow"></p><h2 id="tpTitle" class="serif mt-1 text-[28px] sm:text-[34px] leading-tight"></h2></div>
+          <span id="tpPoints" class="badge"></span>
+        </div>
+        <p class="mt-1 text-xs t-faint">Practice only: this table type does not change your Score.</p>
+        <div id="tpBody"></div>
+        <div class="mt-5 flex flex-wrap items-center gap-2.5">
+          <button type="button" id="tpCheck" class="btn btn-primary btn-lg">Check answer</button>
+          <span id="tpStamp"></span>
+          <button type="button" id="tpNew" class="btn btn-quiet btn-lg ml-auto"><span class="ico" data-icon="refresh"></span>New task</button>
+        </div>
+        <p id="tpMsg" class="hidden note note-bad mt-4"></p>
+      </section>
+
       <!-- Mid-term test: choose a paper, sit it question by question, hand it in, see the marks -->
       <section id="midterm" class="hidden fade-in">
         <div id="mtMenu">
           <p class="eyebrow">Practice paper</p>
           <h2 class="serif mt-2 text-[32px] sm:text-4xl leading-tight">Mid-term test</h2>
-          <p class="mt-2 text-sm t-soft max-w-xl">A whole paper in the order and point values of the real exam. Answers stay hidden until you hand the paper in. It does not change your Score.</p>
+          <p class="mt-2 text-sm t-soft max-w-xl">A whole paper in the order and point values of the real exam. You have 30 minutes: when the time is over the paper is handed in for you. Answers stay hidden until then. It does not change your Score.</p>
           <div id="mtPapers" class="mt-8 grid md:grid-cols-2 gap-8 max-w-3xl"></div>
         </div>
         <div id="mtPaper" class="hidden">
@@ -869,6 +892,14 @@
   </div>
 </div>
 
+<!-- ============ MID-TERM: time is over ============ -->
+<div id="mtTimeUp" class="hidden fixed inset-0 z-[60] grid place-items-center px-6" style="background: rgba(16,14,10,.72)" role="alertdialog" aria-live="assertive" aria-labelledby="mtTimeUpText">
+  <div class="text-center">
+    <div id="mtTimeUpStamp"></div>
+    <p id="mtTimeUpText" class="mt-6 text-lg" style="color: #F2EBD9">Pens down. Handing in your paper&hellip;</p>
+  </div>
+</div>
+
 <!-- ============ GIVEAWAY MODAL ============ -->
 <div id="gwModal" class="hidden modal" role="dialog" aria-modal="true" aria-labelledby="gwTitle">
   <div id="gwBackdrop" class="modal-backdrop"></div>
@@ -1013,11 +1044,12 @@ window.addEventListener("popstate", (e) => {
 
 function panel(which) {             // "loading" | "error" | "task" | "rating" | "midterm"
   if (currentPanel === "midterm" && which !== "midterm") mtSave();        // keep what was typed in the open question of a paper
-  for (const id of ["loading", "error", "task", "rating", "midterm"]) $(id).classList.toggle("hidden", id !== which);
+  for (const id of ["loading", "error", "task", "tables", "rating", "midterm"]) $(id).classList.toggle("hidden", id !== which);
   $("ratingBtn").classList.toggle("active", which === "rating");
   $("midtermBtn").classList.toggle("active", which === "midterm");
   currentPanel = which;
   updateProRow();
+  updateTableRow();
 }
 
 function setActive(topic) {
@@ -1025,7 +1057,7 @@ function setActive(topic) {
 }
 
 function setBusy(busy) {
-  document.querySelectorAll(".mode-btn, #newBtn, #checkBtn, #hintBtn, #proSwitch").forEach((b) => (b.disabled = busy));
+  document.querySelectorAll(".mode-btn, #newBtn, #checkBtn, #hintBtn, #proSwitch, #tpNew").forEach((b) => (b.disabled = busy));
 }
 
 const LOAD_TIMEOUT_MS = 70000;   // a sleeping free-tier server + a Claude call can take a while
@@ -1051,7 +1083,7 @@ function proPref() {
 const wantPro = () => !!(session && session.is_pro && proPref());
 function updateProRow() {
   const row = $("proRow");
-  row.classList.toggle("hidden", !session || currentPanel === "rating" || currentPanel === "midterm");
+  row.classList.toggle("hidden", !session || currentPanel === "rating" || currentPanel === "midterm" || currentPanel === "tables");   // AI tasks exist for the classic sheets and terminology only
   if (!session) return;
   const sw = $("proSwitch"), locked = !session.is_pro, on = wantPro();
   sw.setAttribute("aria-checked", on ? "true" : "false");
@@ -1067,11 +1099,114 @@ $("proSwitch").onclick = () => {
   if (currentTopic) load(currentTopic);                         // the next task already follows the new setting
 };
 
+// ---------- Balance Sheet tab: which table type to practise ----------
+// "Classic mix" is the sheet the tab always had (compile / totals, rated). The other chips are the table types of the mid-term (see table_types.py);
+// "Surprise me" picks a different one every time.
+let tableTypes = [], currentTable = "classic", lastSurprise = "", tq = null;
+try { const s = localStorage.getItem("at-table-type"); if (s) currentTable = s; } catch (e) {}
+
+function resolveTable() {          // -> {variant} for the classic sheets, {table: id} for a table type with its own screen
+  let id = currentTable;
+  if (id === "surprise") {
+    const others = tableTypes.filter((t) => t.id !== lastSurprise);
+    id = others.length ? others[Math.floor(Math.random() * others.length)].id : "classic";
+    lastSurprise = id;
+  }
+  const spec = tableTypes.find((t) => t.id === id);
+  if (!spec) return {};
+  return spec.classic ? { variant: spec.classic } : { table: id };
+}
+function renderTableChips() {
+  const chips = [{ id: "classic", short: "Classic mix", blurb: "Compile and totals sheets, as before. These count for your Score." }, ...tableTypes,
+                 { id: "surprise", short: "Surprise me", blurb: "A different table type every time." }];
+  $("tableChips").replaceChildren(...chips.map((t) => {
+    const b = el("button", "chip" + (t.id === currentTable ? " active" : ""), t.short);
+    b.type = "button"; b.title = t.blurb + (t.rated === false ? " (practice only)" : "");
+    b.setAttribute("role", "tab"); b.setAttribute("aria-selected", t.id === currentTable ? "true" : "false");
+    b.onclick = () => {
+      if (currentTable === t.id && currentPanel !== "error") return;
+      currentTable = t.id;
+      try { localStorage.setItem("at-table-type", t.id); } catch (e) {}
+      renderTableChips();
+      load("balance_sheet");
+    };
+    return b;
+  }));
+}
+function updateTableRow() {
+  const show = tableTypes.length && currentTopic === "balance_sheet" && ["task", "loading", "error", "tables"].includes(currentPanel);
+  $("tableRow").classList.toggle("hidden", !show);
+}
+fetch(API + "/api/tables").then((r) => r.json()).then((d) => { tableTypes = d.types || []; if (currentTable !== "classic" && currentTable !== "surprise" && !tableTypes.some((t) => t.id === currentTable)) currentTable = "classic"; renderTableChips(); updateTableRow(); }).catch(() => {});
+
+async function loadTable(id) {
+  setBusy(true);
+  panel("loading");
+  $("slowHint").classList.add("hidden");
+  const ctrl = new AbortController(), killTimer = setTimeout(() => ctrl.abort(), LOAD_TIMEOUT_MS);
+  let status = 0;
+  try {
+    const res = await fetch(`${API}/api/tables/${id}?t=${Date.now()}`, { signal: ctrl.signal, cache: "no-store" });
+    status = res.status;
+    if (!res.ok) { let msg = res.statusText; try { msg = (await res.json()).detail || msg; } catch {} throw new Error(typeof msg === "string" ? msg : "Request failed"); }
+    tq = await res.json();
+    const spec = tableTypes.find((t) => t.id === id) || {};
+    $("tpCode").textContent = spec.code || "";
+    $("tpTitle").textContent = tq.title;
+    $("tpPoints").textContent = `${tq.points} ${tq.points === 1 ? "point" : "points"}`;
+    $("tpStamp").replaceChildren();
+    $("tpMsg").classList.add("hidden");
+    paperFields = {};
+    const body = $("tpBody");
+    body.replaceChildren();
+    MT_RENDER[tq.kind](tq, body, {});
+    $("tpCheck").disabled = false;
+    panel("tables");
+  } catch (e) {
+    $("errorText").textContent = friendlyError(e, status);
+    panel("error");
+  } finally {
+    clearTimeout(killTimer);
+    setBusy(false);
+  }
+}
+
+async function checkTable() {
+  const q = tq, msg = $("tpMsg");
+  let answers;
+  if (q.kind === "test" || q.kind === "balance_sheet") { task = q.task; answers = collectAnswers().answers; }
+  else { answers = {}; Object.entries(paperFields).forEach(([id, f]) => (answers[id] = f.input.value)); }
+  msg.classList.add("hidden");
+  if (!Object.values(answers).some((v) => (Array.isArray(v) ? v.length : v !== null && v !== undefined && String(v).trim() !== ""))) {
+    msg.textContent = "Enter at least one answer before checking."; msg.classList.remove("hidden"); return;
+  }
+  $("tpCheck").disabled = true;
+  try {
+    const r = await fetch(API + "/api/tables/check", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token: q.token, answers }) });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(typeof d.detail === "string" ? d.detail : "Could not check the answers.");
+    mtApplyResult(q, d, $("tpBody"));
+    $("tpStamp").replaceChildren(d.points >= d.max ? stampEl("Balanced ✓", "ok", true) : stampEl("Out of balance", "bad", true));
+  } catch (e) {
+    msg.textContent = e.message === "Failed to fetch" ? "The server dropped the pen. Try again." : e.message;
+    msg.classList.remove("hidden");
+    $("tpCheck").disabled = false;
+  }
+}
+$("tpCheck").onclick = checkTable;
+$("tpNew").onclick = () => load("balance_sheet");
+
 async function load(topic, pro = wantPro()) {
   currentTopic = topic;
   currentPro = pro;
   setActive(topic);
   view("trainer");
+  let variant = "";
+  if (topic === "balance_sheet") {                             // the table type chosen in the Balance Sheet tab
+    const r = resolveTable();
+    if (r.table) { currentPro = false; return loadTable(r.table); }
+    variant = r.variant || "";
+  }
   setBusy(true);
   panel("loading");
   $("slowHint").classList.add("hidden");
@@ -1087,7 +1222,7 @@ async function load(topic, pro = wantPro()) {
           body: JSON.stringify({ topic }),
           signal: ctrl.signal,
         })
-      : await fetch(`${API}/api/generate/${topic}?exclude=${recentIds.join(",")}&t=${Date.now()}`, { signal: ctrl.signal, cache: "no-store" });
+      : await fetch(`${API}/api/generate/${topic}?exclude=${recentIds.join(",")}&variant=${variant}&t=${Date.now()}`, { signal: ctrl.signal, cache: "no-store" });
     status = res.status;
     if (res.status === 401 && pro) { setSession(null); renderAuth(); }
     if (!res.ok) {
@@ -1342,7 +1477,8 @@ function collectAnswers() {
 }
 
 // ================= Mid-term test: a whole paper, handed in at the end =================
-let paper = null, paperIdx = 0, paperAnswers = [], paperResult = null, paperFields = {}, paperClock = null, paperStart = 0;
+let paper = null, paperIdx = 0, paperAnswers = [], paperResult = null, paperFields = {}, paperClock = null, paperStart = 0, paperLimit = 1800, paperLocked = false;
+const fmtClock = (s) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
 const fmtPts = (x) => String(+Number(x).toFixed(2));
 const mtTd = (c, cls = "") => { const td = el("td", cls); if (c instanceof Node) td.append(c); else td.textContent = c == null ? "" : c; return td; };
 const mtTr = (cells, cls = "") => { const tr = el("tr", cls); cells.forEach((c) => tr.append(c instanceof HTMLTableCellElement ? c : mtTd(c))); return tr; };
@@ -1367,7 +1503,7 @@ async function showMidterm() {
     box.replaceChildren(...d.papers.map((p) => {
       const b = el("button", "feature");
       b.type = "button";
-      b.append(el("span", "tab", "Paper " + p.n), el("h3", "", p.title), el("p", "", `${p.questions} questions · ${p.points} points. A fresh variant of every question each time.`), el("span", "go", "Take a seat"));
+      b.append(el("span", "tab", "Paper " + p.n), el("h3", "", p.title), el("p", "", `${p.questions} questions · ${p.points} points · ${Math.round((d.time_limit || 1800) / 60)} minutes. Fresh numbers every time.`), el("span", "go", "Take a seat"));
       b.onclick = () => mtStart(p.n, b);
       return b;
     }));
@@ -1388,12 +1524,36 @@ async function mtStart(n, btn) {
     return;
   }
   paperIdx = 0; paperAnswers = paper.questions.map(() => ({})); paperResult = null; paperStart = Date.now();
+  paperLimit = paper.time_limit || 1800; paperLocked = false;
   $("mtError").classList.add("hidden");
   clearInterval(paperClock);
-  const tick = () => { const s = Math.floor((Date.now() - paperStart) / 1000); $("mtClock").textContent = `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`; };
-  tick(); paperClock = setInterval(tick, 1000);
+  paperClock = setInterval(mtTick, 1000);
+  mtTick();
   mtPane("mtPaper");
   mtShow(0);
+}
+
+// The paper has a time limit. The clock counts down; when it reaches zero the answers are locked, "Time is over" is shown
+// and the paper is handed in as it stands (exactly as if the student had pressed the button), then the results open.
+function mtTick() {
+  if (!paper || paperResult) return;
+  const left = Math.max(0, paperLimit - Math.floor((Date.now() - paperStart) / 1000)), clock = $("mtClock");
+  clock.textContent = fmtClock(left) + " left";
+  clock.classList.toggle("low", left <= 300);
+  if (left <= 0) mtTimeUp();
+}
+function mtLock() { $("mtBody").querySelectorAll("input, select").forEach((x) => (x.disabled = true)); }
+function mtTimeUp() {
+  if (!paper || paperResult || paperLocked) return;
+  paperLocked = true;
+  clearInterval(paperClock);
+  $("mtClock").textContent = "00:00 left";
+  const st = stampEl("Time is over", "bad");
+  st.style.fontSize = "46px"; st.style.padding = "8px 28px"; st.style.background = "rgba(242,235,217,.12)";
+  $("mtTimeUpStamp").replaceChildren(st);
+  $("mtTimeUp").classList.remove("hidden");
+  if (currentPanel === "midterm") mtLock();
+  setTimeout(() => mtFinish(true), 2300);
 }
 
 function mtCollect() {
@@ -1403,7 +1563,7 @@ function mtCollect() {
   Object.entries(paperFields).forEach(([id, f]) => (a[id] = f.input.value));
   return a;
 }
-function mtSave() { if (paper && !paperResult && $("mtBody").childElementCount) paperAnswers[paperIdx] = mtCollect(); }
+function mtSave() { if (paper && !paperResult && currentPanel === "midterm" && $("mtBody").childElementCount) paperAnswers[paperIdx] = mtCollect(); }
 
 function mtNav() {
   const nav = $("mtNav");
@@ -1432,6 +1592,7 @@ function mtShow(i) {
   body.append(head);
   MT_RENDER[q.kind](q, body, saved);
   if (paperResult) mtApplyResult(q, paperResult.questions[i]);
+  else if (paperLocked) mtLock();                                  // time is over: the paper can only be handed in
   mtNav();
   $("mtPrev").disabled = i === 0;
   $("mtNext").classList.toggle("hidden", i === paper.questions.length - 1);
@@ -1627,7 +1788,7 @@ function mtMarkField(fid, f) {
   }
 }
 
-function mtApplyResult(q, r) {
+function mtApplyResult(q, r, host = $("mtBody")) {
   if (!r) return;
   const d = r.detail || {};
   if (q.kind === "balance_sheet") { task = q.task; applySheetResult({ cells: d.cells }); }
@@ -1636,16 +1797,17 @@ function mtApplyResult(q, r) {
   const tone = r.points >= r.max ? "note-ok" : r.points > 0 ? "note-warn" : "note-bad";
   const strip = el("div", "note mt-5 " + tone);
   strip.append(el("b", "", `${fmtPts(r.points)} / ${r.max} ${r.max === 1 ? "point" : "points"}.`), document.createTextNode(d.explanation ? " " + d.explanation : ""));
-  $("mtBody").append(strip);
-  $("mtBody").querySelectorAll("input, select").forEach((x) => (x.disabled = true));
+  host.append(strip);
+  host.querySelectorAll("input, select").forEach((x) => (x.disabled = true));
 }
 
 // ---- handing in
-async function mtFinish() {
+async function mtFinish(auto = false) {            // auto: the time ran out, nobody is asked anything
   if (paperResult) return mtShowResult();
+  if (!paper) return;
   mtSave();
   const blank = paperAnswers.filter((a) => !mtSavedAny(a)).length;
-  if (blank && !confirm(`${blank} of ${paper.questions.length} questions have no answer yet. Hand in the paper anyway?`)) return;
+  if (!auto && !paperLocked && blank && !confirm(`${blank} of ${paper.questions.length} questions have no answer yet. Hand in the paper anyway?`)) return;
   const btn = $("mtFinish"), err = $("mtError");
   err.classList.add("hidden");
   btn.disabled = true;
@@ -1657,12 +1819,16 @@ async function mtFinish() {
     const d = await r.json().catch(() => ({}));
     if (!r.ok) throw new Error(typeof d.detail === "string" ? d.detail : "Could not mark the paper.");
     paperResult = d;
-    paperResult.spent = Math.floor((Date.now() - paperStart) / 1000);
+    paperResult.auto = auto === true || paperLocked;
+    paperResult.spent = Math.min(Math.floor((Date.now() - paperStart) / 1000), paperLimit);
     clearInterval(paperClock);
-    mtShowResult();
+    $("mtTimeUp").classList.add("hidden");
+    showMidterm();                                       // the results open, wherever the student was when the time ran out
   } catch (e) {
-    err.textContent = e.message === "Failed to fetch" ? "The server dropped the pen. Try again." : e.message;
+    $("mtTimeUp").classList.add("hidden");
+    err.textContent = e.message === "Failed to fetch" ? "The server dropped the pen. Press “Hand in the paper” to try again." : e.message;
     err.classList.remove("hidden");
+    if (currentPanel !== "midterm") showMidterm();
   } finally {
     btn.disabled = false;
   }
@@ -1677,7 +1843,9 @@ function mtShowResult() {
   const left = el("div");
   left.append(el("p", "eyebrow", paper.title + " · marked"), el("h2", "serif mt-1 text-[32px] sm:text-4xl leading-tight", `${fmtPts(res.points)} / ${res.max} points`),
     el("p", "mt-1 text-sm t-soft", `${pct}% · time ${Math.floor(spent / 60)} min ${spent % 60} s`));
-  head.append(left, stampEl("Paper marked", "probation"));
+  if (res.auto) left.append(el("p", "mt-2 text-sm", "Time is over: the paper was handed in for you with the answers you had."));
+  else if (res.late) left.append(el("p", "mt-2 text-sm t-faint", "This paper was handed in after the time limit."));
+  head.append(left, res.auto ? stampEl("Time is over", "bad") : stampEl("Paper marked", "probation"));
   const card = el("div", "card p-4 mt-6"), { t, tb } = mtTable(["Question", "Points"]);
   paper.questions.forEach((q, i) => {
     const r = res.questions[i], tone = r.points >= r.max ? "ok" : r.points > 0 ? "mid" : "bad";
@@ -1696,16 +1864,16 @@ function mtShowResult() {
 }
 
 function mtQuit() {
-  if (paper && !paperResult && !confirm("Quit this paper? Your answers will be lost.")) return;
+  if (paper && !paperResult && !paperLocked && !confirm("Quit this paper? Your answers will be lost.")) return;
   clearInterval(paperClock);
-  paper = null; paperResult = null;
+  paper = null; paperResult = null; paperLocked = false;
   showMidterm();
 }
 
 document.querySelectorAll("[data-midterm]").forEach((b) => (b.onclick = showMidterm));
 $("mtPrev").onclick = () => paperIdx > 0 && mtShow(paperIdx - 1);
 $("mtNext").onclick = () => paperIdx < paper.questions.length - 1 && mtShow(paperIdx + 1);
-$("mtFinish").onclick = mtFinish;
+$("mtFinish").onclick = () => mtFinish();
 $("mtQuit").onclick = mtQuit;
 
 

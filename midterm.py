@@ -8,6 +8,7 @@ The whole paper is marked in one go by grade_paper(), after the student hands it
 Question kinds: mcq (a one-question test), balance_sheet (compile), income_statement, event_impact, journal, trial_balance, ledger_posting.
 """
 import copy
+import importlib.util
 import json
 import random
 import secrets
@@ -16,10 +17,14 @@ from pathlib import Path
 
 import exam
 import grading
+import table_types
 
 BASE_DIR = Path(__file__).resolve().parent
 FILES = {1: BASE_DIR / "midterm1_tasks.json", 2: BASE_DIR / "midterm2_tasks.json"}
+GENERATORS = BASE_DIR / "scripts" / "build_midterm_tasks.py"      # its functions make fresh tasks of every type (rng -> task body)
 PAPER_TOKEN_TTL = 8 * 3600       # a paper may take a long time; grading.open_token itself allows 6 h, the exam is packed with its own limit
+TIME_LIMIT_S = 30 * 60           # a paper is 30 minutes; the browser hands it in when the time is over
+LATE_GRACE_S = 90                # a hand-in later than this after the limit is marked "late" (it is still marked)
 TOL = 0.5
 
 
@@ -197,25 +202,87 @@ def _seal_question(no: int, group: dict, t: dict, exam_id: str) -> dict:
     return q
 
 
+_gen_module = None
+_gen_failed = False
+
+
+def _generator_for(type_id: str):
+    """The generator function of a question type (build_midterm_tasks.py), or None. The script is loaded once."""
+    global _gen_module, _gen_failed
+    if _gen_failed:
+        return None
+    if _gen_module is None:
+        try:
+            spec = importlib.util.spec_from_file_location("build_midterm_tasks", GENERATORS)
+            _gen_module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(_gen_module)
+        except Exception as e:
+            _gen_failed = True
+            print(f"[midterm] generators unavailable, the ready-made variants are used: {e!r}")
+            return None
+    for specs in _gen_module.TYPES.values():
+        for tid, _title, _kind, gen, _count in specs:
+            if tid == type_id:
+                return gen
+    return None
+
+
+def fresh_task(group: dict) -> dict | None:
+    """A brand-new task of this question type (new company, new numbers), made on the spot. None if the type has no generator."""
+    gen = _generator_for(group["type_id"])
+    if gen is None:
+        return None
+    rng = random.Random(secrets.randbits(64))
+    for _ in range(5):
+        body = gen(rng)
+        if body is not None:
+            task = {"id": f"{group['type_id']}_live", "type_id": group["type_id"], "kind": group["kind"]}
+            task.update(body)
+            return task
+    return None
+
+
+def _seal_any(no: int, group: dict, exam_id: str) -> dict:
+    """A fresh task if the type has a generator, else (or if that fails) one of the ready-made variants; a bad one is skipped and logged."""
+    candidates = []
+    live = None
+    try:
+        live = fresh_task(group)
+    except Exception as e:
+        print(f"[midterm] generator of {group['type_id']} failed: {e!r}")
+    if live:
+        candidates.append(live)
+    variants = group["tasks"][:]
+    random.shuffle(variants)
+    for t in candidates + variants:
+        try:
+            return _seal_question(no, group, t, exam_id)
+        except Exception as e:
+            print(f"[midterm] {t.get('id')} skipped: {e!r}")
+    raise RuntimeError(f"no valid task for {group['type_id']}")
+
+
 def build(n: int) -> dict | None:
-    """One practice paper: a random variant of every question type, in the order of the real exam."""
+    """One practice paper: a fresh task of every question type, in the order and with the points of the real exam."""
     types = PAPERS.get(n)
     if not types:
         return None
     exam_id = secrets.token_urlsafe(10)
-    questions = []
-    for no, group in enumerate(types, start=1):
-        variants = group["tasks"][:]
-        random.shuffle(variants)
-        for t in variants:                      # a variant that fails to build is skipped (and logged) so one bad entry cannot break the paper
-            try:
-                questions.append(_seal_question(no, group, t, exam_id))
-                break
-            except Exception as e:
-                print(f"[midterm] {t.get('id')} skipped: {e!r}")
-        else:
-            raise RuntimeError(f"no valid variant for question {no} of midterm {n}")
-    return {"exam_id": exam_id, "n": n, "title": f"Midterm {n}", "total_points": sum(q["points"] for q in questions), "questions": questions}
+    questions = [_seal_any(no, group, exam_id) for no, group in enumerate(types, start=1)]
+    return {"exam_id": exam_id, "n": n, "title": f"Midterm {n}", "time_limit": TIME_LIMIT_S,
+            "total_points": sum(q["points"] for q in questions), "questions": questions}
+
+
+def practice(type_id: str) -> dict | None:
+    """One question of a table type (see table_types.py) for the Balance Sheet tab, in the same sealed format as a paper question."""
+    spec = table_types.BY_ID.get(type_id)
+    if not spec or not spec.get("generator") or spec.get("classic"):
+        return None
+    for types in PAPERS.values():
+        for group in types:
+            if group["type_id"] == spec["generator"]:
+                return _seal_any(1, group, "practice")
+    return None
 
 
 # ---------------------------------------------------------------- marking
@@ -286,4 +353,14 @@ def grade_paper(items: list[dict]) -> dict:
         seen.add(p["no"])
         payloads.append((p, it.get("answers") or {}))
     results = sorted((grade_one(p, a) for p, a in payloads), key=lambda r: r["no"])
-    return {"exam_id": exam_id, "points": round(sum(r["points"] for r in results), 2), "max": sum(r["max"] for r in results), "questions": results}
+    elapsed = int(time.time() - min(p.get("iat", 0) for p, _ in payloads))
+    return {"exam_id": exam_id, "points": round(sum(r["points"] for r in results), 2), "max": sum(r["max"] for r in results), "questions": results,
+            "elapsed": elapsed, "time_limit": TIME_LIMIT_S, "late": elapsed > TIME_LIMIT_S + LATE_GRACE_S}
+
+
+def grade_single(token: str, answers: dict) -> dict:
+    """Marks one practice question (Balance Sheet tab, table types). The Score is not affected."""
+    p = grading.open_token(token)
+    if "pts" not in p or "no" not in p:
+        raise grading.TokenError("This is not a table question.")
+    return grade_one(p, answers)
